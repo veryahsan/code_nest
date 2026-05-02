@@ -1,0 +1,64 @@
+<%
+  # Required locals:
+  #   label:   visible label text
+  # Optional locals:
+  #   variant:     :primary | :secondary | :danger | :ghost | :link  (default: :primary)
+  #   size:        :sm | :md | :lg                                    (default: :md)
+  #   type:        :button | :submit | :reset                         (default: :button)
+  #   href:        present → renders <a> instead of <button>
+  #   disabled:    true/false
+  #   loading:     true/false  → shows spinner, disables
+  #   icon_only:   true/false  → square padding for icon-only buttons
+  #   extra_class: additional classes
+  #   data:        hash of data attributes
+
+  v = local_assigns.fetch(:variant, :primary).to_sym
+  sz = local_assigns.fetch(:size, :md).to_sym
+  btn_type = local_assigns.fetch(:type, :button)
+  btn_href = local_assigns.fetch(:href, nil)
+  btn_disabled = local_assigns.fetch(:disabled, false)
+  btn_loading = local_assigns.fetch(:loading, false)
+  icon_only = local_assigns.fetch(:icon_only, false)
+  extra_class = local_assigns.fetch(:extra_class, nil)
+  btn_data = local_assigns.fetch(:data, {})
+  btn_label = local_assigns.fetch(:label, nil)
+
+  variant_cls = {
+    primary:   "btn-primary",
+    secondary: "btn-secondary",
+    danger:    "btn-danger",
+    ghost:     "btn-ghost",
+    link:      "btn-link",
+  }[v] || "btn-primary"
+
+  size_cls = icon_only ? {
+    sm: "btn-icon-sm", md: "btn-icon-md", lg: "btn-icon-lg"
+  }[sz] : {
+    sm: "btn-sm", md: "btn-md", lg: "btn-lg"
+  }[sz]
+
+  classes = ["btn-base", variant_cls, size_cls, extra_class].compact.join(" ")
+  is_disabled = btn_disabled || btn_loading
+%>
+
+<% if btn_href.present? %>
+  <%= link_to btn_href,
+      class: classes,
+      aria: { disabled: is_disabled ? "true" : nil },
+      **btn_data.transform_keys { |k| "data-#{k}" }.transform_keys(&:to_sym) do %>
+    <% if btn_loading %>
+      <%= render "components/spinner", size: :sm, label: nil %>
+    <% end %>
+    <%= btn_label %>
+  <% end %>
+<% else %>
+  <button type="<%= btn_type %>"
+          class="<%= classes %>"
+          <%= "disabled" if is_disabled %>
+          <% btn_data.each do |k, v_attr| %> data-<%= k %>="<%= v_attr %>"<% end %>>
+    <% if btn_loading %>
+      <%= render "components/spinner", size: :sm, label: nil %>
+    <% end %>
+    <%= btn_label %>
+  </button>
+<% end %>

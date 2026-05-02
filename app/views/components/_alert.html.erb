@@ -1,0 +1,64 @@
+<%
+  # Required:  message
+  # Optional:  variant      :success | :warning | :danger | :info | :neutral
+  #            title        optional bold heading
+  #            dismissible  true/false
+  #            icon         true/false (default true)
+  #            extra_class
+
+  alert_message  = local_assigns.fetch(:message, "")
+  v              = local_assigns.fetch(:variant, :info).to_sym
+  alert_title    = local_assigns.fetch(:title, nil)
+  dismissible    = local_assigns.fetch(:dismissible, false)
+  show_icon      = local_assigns.fetch(:icon, true)
+  extra_class    = local_assigns.fetch(:extra_class, nil)
+
+  variant_cls = {
+    success: "alert-success",
+    warning: "alert-warning",
+    danger:  "alert-danger",
+    info:    "alert-info",
+    neutral: "alert-neutral",
+  }[v] || "alert-info"
+
+  # Inline SVG icons per variant
+  icons = {
+    success: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />',
+    warning: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />',
+    danger:  '<path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />',
+    info:    '<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />',
+    neutral: '<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />',
+  }
+
+  classes = ["alert-base", variant_cls, extra_class].compact.join(" ")
+%>
+
+<div role="alert"
+     class="<%= classes %>"
+     <% if dismissible %>data-controller="dismissible"<% end %>>
+
+  <% if show_icon %>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+         stroke-width="1.5" stroke="currentColor"
+         class="h-5 w-5 shrink-0 mt-0.5">
+      <%= icons[v]&.html_safe %>
+    </svg>
+  <% end %>
+
+  <div class="flex-1 min-w-0">
+    <% if alert_title.present? %>
+      <p class="font-semibold mb-1"><%= alert_title %></p>
+    <% end %>
+    <p><%= alert_message %></p>
+  </div>
+
+  <% if dismissible %>
+    <button type="button"
+            data-action="dismissible#dismiss"
+            class="shrink-0 ml-auto -mr-1 -mt-1 rounded p-1 opacity-60 hover:opacity-100 transition-opacity">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+      </svg>
+    </button>
+  <% end %>
+</div>

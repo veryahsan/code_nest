@@ -1,0 +1,116 @@
+<% page_title "Dashboard — #{@organisation.name}" %>
+
+<% content_for :page_actions do %>
+  <%= render "components/btn", label: "Account", href: edit_user_registration_path, variant: :secondary, size: :sm %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @organisation.name,
+      description: "Your organisation workspace — teams, projects, and open invitations." %>
+
+<div class="section-stack">
+  <div class="flex flex-wrap items-center gap-2">
+    <% if current_user.organisation_admin? %>
+      <%= badge_tag "Organisation admin", variant: :brand, dot: true %>
+    <% else %>
+      <%= badge_tag "Member", variant: :neutral, dot: true %>
+    <% end %>
+    <span class="text-xs text-muted-color font-mono"><%= @organisation.slug %></span>
+  </div>
+
+  <div class="card-grid-3">
+    <%= render "components/card", title: "Teams", description: "Membership groups inside your org" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @teams.size %></p>
+    <% end %>
+    <%= render "components/card", title: "Projects", description: "Tracked workspaces & stacks" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @projects.size %></p>
+    <% end %>
+    <%= render "components/card", title: "Pending invites", description: "Awaiting acceptance" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @organisation.invitations.pending.count %></p>
+    <% end %>
+  </div>
+
+  <div class="card-grid-2">
+    <%= render "components/card", title: "Teams" do %>
+      <% if @teams.any? %>
+        <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+          <% @teams.each do |team| %>
+            <li class="py-3 first:pt-0">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= team.name %></p>
+                  <p class="text-xs text-muted-color font-mono mt-0.5"><%= team.slug %></p>
+                </div>
+                <%= badge_tag "#{team.users.size} #{'member'.pluralize(team.users.size)}", variant: :neutral %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <%= render "components/empty_state",
+              icon: :folder,
+              title: "No teams yet",
+              description: "Teams help you group people and projects. Add them from the admin tools or future team UI." %>
+      <% end %>
+    <% end %>
+
+    <%= render "components/card", title: "Projects" do %>
+      <% if @projects.any? %>
+        <div class="overflow-x-auto -mx-1">
+          <table class="w-full text-sm text-left">
+            <thead>
+              <tr class="text-xs text-muted-color border-b border-zinc-200 dark:border-zinc-800">
+                <th class="pb-2 pr-4 font-medium">Name</th>
+                <th class="pb-2 pr-4 font-medium">Team</th>
+                <th class="pb-2 font-medium">Slug</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+              <% @projects.each do |project| %>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100"><%= project.name %></td>
+                  <td class="py-2.5 pr-4 text-muted-color">
+                    <% if project.team %>
+                      <%= project.team.name %>
+                    <% else %>
+                      <span class="italic">Unassigned</span>
+                    <% end %>
+                  </td>
+                  <td class="py-2.5 font-mono text-xs text-muted-color"><%= project.slug %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <%= render "components/empty_state",
+              icon: :inbox,
+              title: "No projects yet",
+              description: "Projects capture languages, technologies, docs, and integrations for each codebase." %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @pending_invitations.any? %>
+    <%= render "components/card", title: "Recent invitations" do %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <% @pending_invitations.each do |invitation| %>
+          <li class="py-3 first:pt-0 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= invitation.email %></p>
+              <p class="text-xs text-muted-color mt-0.5">
+                <%= invitation.invited_by&.email || "System / platform" %>
+                <% if invitation.expires_at %>
+                  · <%= invitation.expires_at.strftime("%d %b %Y") %>
+                <% else %>
+                  · No expiry
+                <% end %>
+              </p>
+            </div>
+            <%= badge_tag invitation.invite_admin? ? "Admin" : "Member", variant: invitation.invite_admin? ? :brand : :neutral %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+</div>

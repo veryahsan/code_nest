@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="h-full bg-surface antialiased"
+      data-controller="theme"
+      data-theme-default-value="system">
+  <head>
+    <title><%= content_for(:title) || "Code Nest" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
+
+    <%# Avoid FOUC: apply stored theme before first paint %>
+    <script>
+      (function() {
+        const t = localStorage.getItem("cn-theme") || "system";
+        const dark = t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) document.documentElement.classList.add("dark");
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      })();
+    </script>
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-full flex flex-col bg-surface text-base-color">
+    <%= render "shared/navbar" %>
+
+    <main class="flex-1 relative z-0 isolate">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </div>
+    </main>
+
+    <%= render "shared/footer" %>
+  </body>
+</html>

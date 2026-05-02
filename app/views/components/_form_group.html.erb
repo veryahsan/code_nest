@@ -1,0 +1,55 @@
+<%#
+  Usage:
+    render "components/form_group",
+           label: "Email address",
+           required: true,
+           hint: "We'll never share your email.",
+           error: @user.errors[:email].first do
+      f.email_field :email, class: cn("input", @user.errors[:email].any? && "input-error")
+    end
+
+  Optional locals:
+    label       visible label text
+    for_id      id of the input (auto-associates the label)
+    hint        helper text below the input
+    error       error message string
+    required    true/false
+    extra_class
+%>
+<%
+  fg_label    = local_assigns.fetch(:label, nil)
+  for_id      = local_assigns.fetch(:for_id, nil)
+  hint_text   = local_assigns.fetch(:hint, nil)
+  error_msg   = local_assigns.fetch(:error, nil)
+  is_required = local_assigns.fetch(:required, false)
+  extra_class = local_assigns.fetch(:extra_class, nil)
+  has_error   = error_msg.present?
+%>
+
+<div class="<%= ["space-y-1", extra_class].compact.join(" ") %>">
+  <% if fg_label.present? %>
+    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+           <%= for_id.present? ? "for=\"#{for_id}\"".html_safe : "" %>>
+      <%= fg_label %>
+      <% if is_required %>
+        <span class="text-rose-500 ml-0.5" aria-hidden="true">*</span>
+      <% end %>
+    </label>
+  <% end %>
+
+  <%= yield %>
+
+  <% if has_error %>
+    <p class="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
+           class="h-3.5 w-3.5 shrink-0">
+        <path fill-rule="evenodd"
+              d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm0-10a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 5Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+              clip-rule="evenodd" />
+      </svg>
+      <%= error_msg %>
+    </p>
+  <% elsif hint_text.present? %>
+    <p class="text-xs text-muted-color"><%= hint_text %></p>
+  <% end %>
+</div>

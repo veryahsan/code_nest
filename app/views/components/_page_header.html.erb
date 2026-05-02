@@ -1,0 +1,50 @@
+<%
+  # Required:  title
+  # Optional:
+  #   description   sub-title
+  #   breadcrumbs   array of { label:, href: } hashes (last item is current page)
+  #   extra_class
+
+  ph_title     = local_assigns.fetch(:title, "")
+  ph_desc      = local_assigns.fetch(:description, nil)
+  breadcrumbs  = local_assigns.fetch(:breadcrumbs, [])
+  extra_class  = local_assigns.fetch(:extra_class, nil)
+%>
+
+<div class="<%= ["mb-6", extra_class].compact.join(" ") %>">
+  <% if breadcrumbs.any? %>
+    <nav class="flex items-center gap-1.5 text-xs text-muted-color mb-2" aria-label="Breadcrumb">
+      <% breadcrumbs.each_with_index do |crumb, i| %>
+        <% is_last = i == breadcrumbs.length - 1 %>
+        <% if i > 0 %>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+               class="h-3 w-3 shrink-0 text-zinc-400">
+            <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        <% end %>
+        <% if is_last %>
+          <span class="text-zinc-700 dark:text-zinc-300 font-medium" aria-current="page"><%= crumb[:label] %></span>
+        <% else %>
+          <%= link_to crumb[:label], crumb[:href], class: "hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors" %>
+        <% end %>
+      <% end %>
+    </nav>
+  <% end %>
+
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h1 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+        <%= ph_title %>
+      </h1>
+      <% if ph_desc.present? %>
+        <p class="mt-1 text-sm text-muted-color"><%= ph_desc %></p>
+      <% end %>
+    </div>
+
+    <% if content_for?(:page_actions) %>
+      <div class="flex shrink-0 items-center gap-2">
+        <%= yield :page_actions %>
+      </div>
+    <% end %>
+  </div>
+</div>

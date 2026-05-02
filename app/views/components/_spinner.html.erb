@@ -1,0 +1,27 @@
+<%
+  # Optional:
+  #   size   :sm | :md | :lg  (default :md)
+  #   label  accessible label  (default "Loading…")
+  #   color  extra Tailwind text-* class (default: current color)
+
+  sz         = local_assigns.fetch(:size, :md).to_sym
+  spin_label = local_assigns.fetch(:label, "Loading\u2026")
+  color_cls  = local_assigns.fetch(:color, nil)
+
+  dim_cls = { sm: "h-4 w-4", md: "h-5 w-5", lg: "h-8 w-8" }[sz] || "h-5 w-5"
+  classes = ["animate-spin", dim_cls, color_cls || "text-current"].compact.join(" ")
+%>
+
+<svg class="<%= classes %>"
+     xmlns="http://www.w3.org/2000/svg"
+     fill="none" viewBox="0 0 24 24"
+     aria-hidden="<%= spin_label.blank? ? 'true' : 'false' %>"
+     <% if spin_label.present? %>role="status"<% end %>>
+  <% if spin_label.present? %>
+    <title><%= spin_label %></title>
+  <% end %>
+  <circle class="opacity-25" cx="12" cy="12" r="10"
+          stroke="currentColor" stroke-width="4"></circle>
+  <path class="opacity-75" fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+</svg>

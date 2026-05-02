@@ -1,0 +1,19 @@
+<%# Flash messages use the alert component + dismissible controller for consistency. %>
+<div id="flash-messages" class="space-y-2 mb-6">
+  <% flash.each do |key, message| %>
+    <% next if message.blank? %>
+    <%
+      variant = case key.to_sym
+                when :notice  then :success
+                when :alert   then :danger
+                when :warning then :warning
+                when :info    then :info
+                else               :neutral
+                end
+    %>
+    <%= render "components/alert",
+          message: message,
+          variant: variant,
+          dismissible: true %>
+  <% end %>
+</div>

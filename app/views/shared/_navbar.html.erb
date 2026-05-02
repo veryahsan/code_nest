@@ -1,0 +1,83 @@
+<%# < md: inline theme + links (no burger). md+: single burger toggles dropdown (`hidden` via Stimulus). %>
+<%# Surfaces match design tokens (border-surface, bg-surface-raised, shadow-card). %>
+<nav class="relative z-10 border-b border-surface bg-surface-raised">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 min-w-0 items-center justify-between gap-3 sm:gap-4">
+
+      <%= link_to root_path,
+            class: "flex min-w-0 shrink items-center gap-2 rounded-md font-semibold text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-brand-600 dark:text-zinc-100" do %>
+        <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white">CN</span>
+        <span class="truncate">Code Nest</span>
+      <% end %>
+
+      <%# inline-flex shrink-wraps to the button so the panel anchors under the icon. %>
+      <div class="relative shrink-0 md:inline-flex" data-controller="navbar">
+        <button type="button"
+                class="btn-base btn-ghost btn-icon-md shrink-0 text-zinc-700 dark:text-zinc-200"
+                data-navbar-target="toggle"
+                data-action="click->navbar#toggle"
+                aria-controls="navbar-drawer"
+                aria-expanded="false"
+                aria-haspopup="true"
+                aria-label="Open navigation menu">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+
+        <%# Same surface pattern as dropdown_controller + cards: border-surface, bg-surface-raised, shadow-card %>
+        <div id="navbar-drawer"
+             data-navbar-target="panel"
+             class="absolute right-0 top-full z-50 mt-1 hidden min-w-56 w-max max-w-[min(18rem,calc(100vw-2rem))] max-h-[min(70vh,calc(100dvh-5rem))] origin-top-right overflow-y-auto rounded-xl border border-surface bg-surface-raised py-1 shadow-card"
+             role="navigation"
+             aria-label="Menu">
+          <div class="flex items-center justify-between border-b border-zinc-100 px-3 py-2 dark:border-zinc-800">
+            <span class="text-xs font-medium text-muted-color">Theme</span>
+            <button type="button"
+                    data-action="click->theme#toggle"
+                    class="btn-base btn-ghost btn-icon-sm text-zinc-600 dark:text-zinc-400"
+                    aria-label="Toggle colour theme">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="hidden h-5 w-5 dark:block">
+                <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06L5.404 4.343a.75.75 0 0 0-1.06 1.06l1.06 1.06Z"/>
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="block h-5 w-5 dark:hidden">
+                <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
+          <div class="flex flex-col gap-0.5 p-1">
+            <% if user_signed_in? %>
+              <% if current_user.organisation.present? %>
+                <%= link_to "Dashboard", dashboard_path,
+                      class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+              <% end %>
+              <% if current_user.super_admin? %>
+                <%= link_to "Admin", admin_root_path,
+                      class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+              <% end %>
+              <%= link_to "Logout", destroy_user_session_path,
+                    data: { turbo_method: :delete },
+                    class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+            <% else %>
+              <div class="flex flex-col gap-2 px-1 pb-1 pt-1">
+                <%= render "components/btn",
+                      label: "Sign In",
+                      href: new_user_session_path,
+                      variant: :secondary,
+                      size: :sm,
+                      extra_class: "w-full justify-center" %>
+                <%= render "components/btn",
+                      label: "Sign Up",
+                      href: new_user_registration_path,
+                      variant: :primary,
+                      size: :sm,
+                      extra_class: "w-full justify-center" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,39 @@
+<% page_title "Code Nest" %>
+
+<%= render "components/page_header",
+      title: "Organise projects, teams, and knowledge",
+      description: "A workspace for your organisation’s engineering footprint — projects, languages, technologies, and documents in one place." %>
+
+<div class="section-stack">
+  <div class="card-grid-3">
+    <%= render "components/card", title: "Multi-tenant by design", shadow: true do %>
+      <p class="text-sm text-muted-color">
+        Each customer organisation is isolated. Invite teammates, structure teams, and ship without stepping on other tenants’ data.
+      </p>
+    <% end %>
+
+    <%= render "components/card", title: "Projects that reflect reality", shadow: true do %>
+      <p class="text-sm text-muted-color">
+        Track languages, stacks, remote resources, and links to docs — so onboarding and audits stay grounded in what you actually run.
+      </p>
+    <% end %>
+
+    <%= render "components/card", title: "Built for operators", shadow: true do %>
+      <p class="text-sm text-muted-color">
+        Platform staff use Active Admin; everyone else signs in here. Same visual language end to end via shared Tailwind components.
+      </p>
+    <% end %>
+  </div>
+
+  <%= render "components/card", title: "Get started" do %>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <p class="text-sm text-muted-color">
+        Create an organisation and your account in one step, or sign in if you already belong to a workspace.
+      </p>
+      <div class="flex flex-wrap gap-2 shrink-0">
+        <%= render "components/btn", label: "Sign in", href: new_user_session_path, variant: :secondary %>
+        <%= render "components/btn", label: "Create organisation", href: new_user_registration_path, variant: :primary %>
+      </div>
+    </div>
+  <% end %>
+</div>

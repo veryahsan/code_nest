@@ -1,0 +1,31 @@
+<%
+  # Optional:
+  #   title        card heading
+  #   description  subtitle below title
+  #   padded       true/false  (default: true)
+  #   shadow       true/false  (default: false – border only)
+  #   extra_class
+
+  card_title   = local_assigns.fetch(:title, nil)
+  card_desc    = local_assigns.fetch(:description, nil)
+  padded       = local_assigns.fetch(:padded, true)
+  show_shadow  = local_assigns.fetch(:shadow, false)
+  extra_class  = local_assigns.fetch(:extra_class, nil)
+
+  wrapper_cls = ["card", show_shadow ? "shadow-card" : nil, extra_class].compact.join(" ")
+%>
+
+<div class="<%= wrapper_cls %>">
+  <% if card_title.present? %>
+    <div class="card-header">
+      <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= card_title %></h3>
+      <% if card_desc.present? %>
+        <p class="mt-0.5 text-xs text-muted-color"><%= card_desc %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="<%= padded ? "card-body" : "" %>">
+    <%= yield %>
+  </div>
+</div>

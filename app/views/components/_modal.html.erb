@@ -1,0 +1,72 @@
+<%
+  # Usage: render "components/modal", id: "my-modal", title: "Confirm action" do
+  #          <p>Modal body content here.</p>
+  #        end
+  #
+  # To open:  data-action="modal#open" data-modal-outlet="#my-modal"
+  # Or call:  document.getElementById('my-modal')?.dispatchEvent(new CustomEvent('modal:open'))
+  #
+  # Optional:
+  #   id           unique HTML id (required for targeting)
+  #   title        modal heading
+  #   size         :sm | :md | :lg | :xl  (default :md)
+  #   hide_close   true/false  (default false)
+
+  modal_id    = local_assigns.fetch(:id, "modal-#{rand(10_000)}")
+  modal_title = local_assigns.fetch(:title, nil)
+  sz          = local_assigns.fetch(:size, :md).to_sym
+  hide_close  = local_assigns.fetch(:hide_close, false)
+
+  size_cls = {
+    sm: "max-w-sm",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
+  }[sz] || "max-w-lg"
+%>
+
+<div id="<%= modal_id %>"
+     data-controller="modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     <% if modal_title.present? %>aria-labelledby="<%= modal_id %>-title"<% end %>>
+
+  <%# Backdrop %>
+  <div data-action="click->modal#closeOnBackdrop"
+       class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+       aria-hidden="true"></div>
+
+  <%# Panel %>
+  <div data-modal-target="panel"
+       class="relative z-10 w-full <%= size_cls %> rounded-xl bg-white shadow-overlay
+              dark:bg-zinc-900 transform transition-all">
+
+    <% if modal_title.present? || !hide_close %>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+        <% if modal_title.present? %>
+          <h2 id="<%= modal_id %>-title"
+              class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            <%= modal_title %>
+          </h2>
+        <% end %>
+        <% unless hide_close %>
+          <button type="button"
+                  data-action="modal#close"
+                  class="ml-auto -mr-1 rounded-lg p-1.5 text-zinc-400 hover:text-zinc-700
+                         hover:bg-zinc-100 transition-colors dark:hover:bg-zinc-800
+                         dark:hover:text-zinc-200 ring-focus"
+                  aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+            </svg>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="px-6 py-4">
+      <%= yield %>
+    </div>
+  </div>
+</div>

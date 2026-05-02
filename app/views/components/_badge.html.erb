@@ -1,0 +1,38 @@
+<%
+  # Required:  label
+  # Optional:  variant  :neutral | :brand | :success | :warning | :danger | :info
+  #            dot      true/false – prepend a coloured dot
+  #            extra_class
+
+  badge_label    = local_assigns.fetch(:label, "")
+  v              = local_assigns.fetch(:variant, :neutral).to_sym
+  show_dot       = local_assigns.fetch(:dot, false)
+  extra_class    = local_assigns.fetch(:extra_class, nil)
+
+  variant_cls = {
+    neutral: "badge-neutral",
+    brand:   "badge-brand",
+    success: "badge-success",
+    warning: "badge-warning",
+    danger:  "badge-danger",
+    info:    "badge-info",
+  }[v] || "badge-neutral"
+
+  dot_cls = {
+    neutral: "bg-zinc-400",
+    brand:   "bg-brand-500",
+    success: "bg-success-500",
+    warning: "bg-warning-500",
+    danger:  "bg-danger-500",
+    info:    "bg-info-500",
+  }[v]
+
+  classes = ["badge-base", variant_cls, extra_class].compact.join(" ")
+%>
+
+<span class="<%= classes %>">
+  <% if show_dot %>
+    <span class="h-1.5 w-1.5 rounded-full <%= dot_cls %>"></span>
+  <% end %>
+  <%= badge_label %>
+</span>
