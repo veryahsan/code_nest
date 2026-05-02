@@ -36,6 +36,7 @@ Optional body (1-2 short lines):
 4. Do not use vague messages like "update stuff" or "changes".
 5. Do not mention Cursor anywhere.
 6. Avoid very long paragraphs; keep body to 1-2 short lines when needed.
+7. Do not add any `Co-authored-by:` trailer lines.
 
 ## Good Examples
 
@@ -98,4 +99,5 @@ These are too vague and do not help another reader understand the commit.
 - Is the summary clear in under one line?
 - Does it explain real impact in plain language?
 - Is there any mention of Cursor? (If yes, remove it.)
+- Is there any `Co-authored-by:` line? (If yes, remove it.)
 - Is the body short and useful?
