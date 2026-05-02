@@ -55,7 +55,7 @@ gem "rack-cors", require: "rack/cors"
 # ---------------------------------------------------------------------------
 # Encryption helpers
 # ---------------------------------------------------------------------------
-gem "lockbox", "~> 1.3" # for encrypting RemoteResource credentials beyond Rails' built-in attr_encrypted
+gem "lockbox", "~> 2.2" # for encrypting RemoteResource credentials beyond Rails' built-in attr_encrypted
 
 # ---------------------------------------------------------------------------
 # Observability, audit & analytics
