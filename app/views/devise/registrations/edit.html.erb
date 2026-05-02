@@ -1,0 +1,62 @@
+<% page_title "Account — Code Nest" %>
+
+<%= render "components/page_header",
+      title: "Account settings",
+      description: "Update your email or password." %>
+
+<div class="max-w-lg">
+  <%= render "components/card", title: "Profile & security" do %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, class: "space-y-4" }) do |f| %>
+      <%= render "components/form_group",
+            label: "Email",
+            for_id: "user_email",
+            required: true,
+            error: resource.errors[:email].first do %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email",
+              class: input_classes(resource.errors[:email].any?) %>
+      <% end %>
+
+      <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+        <%= render "components/alert",
+              variant: :info,
+              message: "Currently waiting confirmation for: #{resource.unconfirmed_email}",
+              dismissible: false %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "New password",
+            for_id: "user_password",
+            hint: "Leave blank if you don’t want to change it." do %>
+        <%= f.password_field :password, autocomplete: "new-password",
+              class: input_classes(resource.errors[:password].any?) %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "Confirm new password",
+            for_id: "user_password_confirmation" do %>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password",
+              class: input_classes(resource.errors[:password_confirmation].any?) %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "Current password",
+            for_id: "user_current_password",
+            hint: "Required to confirm changes.",
+            required: true,
+            error: resource.errors[:current_password].first do %>
+        <%= f.password_field :current_password, autocomplete: "current-password",
+              class: input_classes(resource.errors[:current_password].any?) %>
+      <% end %>
+
+      <div class="flex flex-wrap gap-2 pt-2">
+        <%= render "components/btn", label: "Save changes", type: :submit, variant: :primary %>
+        <%= render "components/btn",
+              label: "Cancel",
+              href: (current_user.super_admin? ? admin_root_path : dashboard_path),
+              variant: :ghost %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

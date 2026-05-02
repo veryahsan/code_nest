@@ -1,0 +1,16 @@
+<%# List markup keeps spacing predictable even if flex gap utilities fail to load. %>
+<nav aria-label="Account navigation">
+  <ul class="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-sm list-none m-0 p-0">
+    <% if controller_name != "sessions" %>
+      <li><%= link_to "Sign in", new_session_path(resource_name), class: "btn-link font-medium" %></li>
+    <% end %>
+
+    <% if devise_mapping.registerable? && controller_name != "registrations" %>
+      <li><%= link_to "Create organisation", new_registration_path(resource_name), class: "btn-link font-medium" %></li>
+    <% end %>
+
+    <% if devise_mapping.recoverable? && controller_name != "passwords" && controller_name != "registrations" %>
+      <li><%= link_to "Forgot password?", new_password_path(resource_name), class: "btn-link font-medium" %></li>
+    <% end %>
+  </ul>
+</nav>

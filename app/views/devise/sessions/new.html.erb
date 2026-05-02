@@ -1,0 +1,35 @@
+<% page_title "Sign in — Code Nest" %>
+
+<%# relative z-10 keeps the form card painting above the sticky header stack when needed %>
+<div class="mx-auto w-full max-w-md relative z-10">
+  <%= render "components/card",
+        title: "Welcome back",
+        description: "Sign in with your organisation email and password." do %>
+
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
+      <%= form_group_tag label: "Email", for_id: "user_email", required: true do %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email",
+              class: input_classes(false) %>
+      <% end %>
+
+      <%= form_group_tag label: "Password", for_id: "user_password", required: true do %>
+        <%= f.password_field :password, autocomplete: "current-password",
+              class: input_classes(false) %>
+      <% end %>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="flex items-center gap-2">
+          <%= f.check_box :remember_me,
+                class: "rounded border-zinc-300 text-brand-600 focus:ring-brand-500 dark:border-zinc-600 dark:bg-zinc-900" %>
+          <%= f.label :remember_me, "Remember me", class: "text-sm text-zinc-700 dark:text-zinc-300" %>
+        </div>
+      <% end %>
+
+      <%= render "components/btn", label: "Sign in", type: :submit, variant: :primary, extra_class: "w-full" %>
+
+      <div class="pt-2">
+        <%= render "devise/shared/links" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

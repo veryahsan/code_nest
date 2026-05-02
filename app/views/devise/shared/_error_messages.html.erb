@@ -1,0 +1,7 @@
+<% if resource.errors.any? %>
+  <%= render "components/alert",
+        variant: :danger,
+        title: "#{pluralize(resource.errors.count, 'issue')} prevented saving",
+        message: resource.errors.full_messages.to_sentence,
+        dismissible: false %>
+<% end %>
