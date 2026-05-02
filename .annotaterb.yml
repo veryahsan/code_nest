@@ -1,0 +1,26 @@
+---
+:position: before
+:position_in_class: before
+:position_in_factory: before
+:position_in_fixture: before
+:position_in_routes: before
+:position_in_serializer: before
+:position_in_test: before
+:show_complete_foreign_keys: true
+:show_foreign_keys: true
+:show_indexes: true
+:simple_indexes: false
+:include_version: false
+:routes: false
+:models: true
+:exclude_factories: false
+:exclude_fixtures: false
+:exclude_scaffolds: true
+:exclude_serializers: false
+:exclude_sti_subclasses: false
+:exclude_tests: false
+:format_bare: true
+:trace: false
+:wrapper_close: ''
+:wrapper_open: ''
+:with_comment: false

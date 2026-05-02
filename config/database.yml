@@ -1,0 +1,26 @@
+# PostgreSQL configuration.
+# In all environments we prefer reading DATABASE_URL when it is set
+# (Render injects it automatically, and local dev can use a .env file).
+# When DATABASE_URL is not set we fall back to a conventional local database name.
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  variables:
+    statement_timeout: <%= ENV.fetch("DB_STATEMENT_TIMEOUT_MS", 15_000) %>
+
+development:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL", nil) %>
+  database: code_nest_development
+
+test:
+  <<: *default
+  url: <%= ENV.fetch("TEST_DATABASE_URL", nil) %>
+  database: code_nest_test
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
