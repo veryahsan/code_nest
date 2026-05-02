@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  RUBY_YJIT_ENABLE: "1"
+
+jobs:
+  brakeman:
+    name: Brakeman (security)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - run: bundle exec brakeman --no-pager --quiet
+
+  bundler_audit:
+    name: bundler-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - run: bundle exec bundle-audit check --update
+
+  importmap_audit:
+    name: importmap audit (JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - run: bin/importmap audit
+
+  rubocop:
+    name: RuboCop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - run: bundle exec rubocop --parallel -f github
+
+  rspec:
+    name: RSpec
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: code_nest
+          POSTGRES_PASSWORD: code_nest
+          POSTGRES_DB: code_nest_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U code_nest"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://code_nest:code_nest@localhost:5432/code_nest_test
+      REDIS_URL: redis://localhost:6379/0
+      LOCKBOX_MASTER_KEY: "00000000000000000000000000000000000000000000000000000000000000ff"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libvips
+
+      - name: Prepare database
+        run: |
+          bin/rails db:create db:schema:load --trace || bin/rails db:create db:migrate --trace
+
+      - name: Run RSpec
+        run: bundle exec rspec --format progress

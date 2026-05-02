@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+if ! gem list foreman -i --silent; then
+  echo "Installing foreman..."
+  gem install foreman
+fi
+
+# Guard against stale precompiled assets shadowing live dev builds.
+# `public/assets/` is a production artefact (created by `assets:precompile`).
+# If it exists locally, Rails serves those fingerprinted files via
+# ActionDispatch::Static instead of the live `app/assets/builds/*.css`,
+# so Tailwind/Sass changes appear "not to apply" until you delete it.
+# Removing it on every `bin/dev` start makes the dev loop self-healing.
+if [ -d "public/assets" ]; then
+  echo "==> Removing stale public/assets/ so dev serves live builds."
+  rm -rf public/assets
+fi
+
+# Default to port 3000 if not specified
+export PORT="${PORT:-3000}"
+
+# Let the debug gem allow remote connections,
+# but avoid loading until `debugger` is called
+export RUBY_DEBUG_OPEN="true"
+export RUBY_DEBUG_LAZY="true"
+
+exec foreman start -f Procfile.dev "$@"

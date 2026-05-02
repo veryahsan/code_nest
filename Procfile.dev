@@ -1,0 +1,4 @@
+web: bin/rails server -p ${PORT:-3000}
+css: bin/rails tailwindcss:watch
+dartsass: bin/rails dartsass:watch
+worker: bundle exec sidekiq -C config/sidekiq.yml

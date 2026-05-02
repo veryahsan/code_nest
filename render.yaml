@@ -1,0 +1,125 @@
+# Render Blueprint for Code Nest.
+# Apply with: https://render.com/docs/blueprint-spec
+#
+# Free-tier notes:
+#   - Web Service: free plan supported, auto-sleeps after 15 minutes of inactivity.
+#   - Postgres:    free plan supported (1 GB, expires 90 days; renewable).
+#   - Key Value:   free plan supported (25 MB Redis-compatible).
+#   - Worker:      free worker plans are limited; if not available, change
+#                  `plan: starter` to `plan: free` or comment the worker out
+#                  and temporarily set `config.active_job.queue_adapter = :async`
+#                  in production to avoid the extra service.
+
+databases:
+  - name: code-nest-postgres
+    plan: free
+    databaseName: code_nest_production
+    user: code_nest
+    postgresMajorVersion: 16
+
+services:
+  - type: keyvalue
+    name: code-nest-redis
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  - type: web
+    name: code-nest
+    runtime: ruby
+    plan: free
+    region: oregon
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "./bin/render-start.sh"
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: RAILS_SERVE_STATIC_FILES
+        value: "true"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: RAILS_MAX_THREADS
+        value: "3"
+      - key: BOOTSNAP_CACHE_DIR
+        value: /opt/render/project/src/tmp/cache/bootsnap
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: APP_HOSTS
+        sync: false
+      - key: APP_VERSION
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: code-nest-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: code-nest-redis
+          property: connectionString
+      - key: SIDEKIQ_USERNAME
+        sync: false
+      - key: SIDEKIQ_PASSWORD
+        sync: false
+      - key: LOCKBOX_MASTER_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: worker
+    name: code-nest-worker
+    runtime: ruby
+    plan: starter   # Render free tier does not yet include workers; switch to free if/when available.
+    region: oregon
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec sidekiq -C config/sidekiq.yml"
+    autoDeploy: true
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: code-nest-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: code-nest-redis
+          property: connectionString
+      - key: SECRET_KEY_BASE
+        fromService:
+          type: web
+          name: code-nest
+          envVarKey: SECRET_KEY_BASE
+      - key: LOCKBOX_MASTER_KEY
+        fromService:
+          type: web
+          name: code-nest
+          envVarKey: LOCKBOX_MASTER_KEY
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: code-nest
+          envVarKey: SENTRY_DSN
+      - key: GOOGLE_CLIENT_ID
+        fromService:
+          type: web
+          name: code-nest
+          envVarKey: GOOGLE_CLIENT_ID
+      - key: GOOGLE_CLIENT_SECRET
+        fromService:
+          type: web
+          name: code-nest
+          envVarKey: GOOGLE_CLIENT_SECRET
