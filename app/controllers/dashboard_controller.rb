@@ -2,25 +2,15 @@
 
 class DashboardController < ApplicationController
   before_action :authenticate_user!
-  before_action :ensure_org_workspace!
+  before_action :redirect_super_admin!
 
   def show
-    @organisation = current_user.organisation
-    @teams = @organisation.teams.order(:name).includes(:users)
-    @projects = @organisation.projects.order(:name).includes(:team)
-    @pending_invitations = @organisation.invitations.pending.order(created_at: :desc).limit(10)
+    @facade = DashboardFacade.call(user: current_user).value
   end
 
   private
 
-  def ensure_org_workspace!
-    if current_user.super_admin?
-      redirect_to admin_root_path
-      return
-    end
-
-    return if current_user.organisation.present?
-
-    redirect_to root_path, alert: "Your account is not linked to an organisation."
+  def redirect_super_admin!
+    redirect_to admin_root_path if current_user.super_admin?
   end
 end
