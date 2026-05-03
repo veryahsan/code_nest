@@ -1,0 +1,11 @@
+Hi <%= @email %>,
+
+Welcome to Code Nest! Confirm your email address to activate your account
+and finish signing in.
+
+Confirm my email:
+<%= confirmation_url(@resource, confirmation_token: @token) %>
+
+This link expires in <%= time_ago_in_words(Devise.confirm_within.from_now) %>.
+
+Didn't sign up for Code Nest? You can safely ignore this message.
