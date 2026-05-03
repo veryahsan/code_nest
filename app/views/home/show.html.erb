@@ -24,16 +24,4 @@
       </p>
     <% end %>
   </div>
-
-  <%= render "components/card", title: "Get started" do %>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <p class="text-sm text-muted-color">
-        Create an organisation and your account in one step, or sign in if you already belong to a workspace.
-      </p>
-      <div class="flex flex-wrap gap-2 shrink-0">
-        <%= render "components/btn", label: "Sign in", href: new_user_session_path, variant: :secondary %>
-        <%= render "components/btn", label: "Create organisation", href: new_user_registration_path, variant: :primary %>
-      </div>
-    </div>
-  <% end %>
 </div>

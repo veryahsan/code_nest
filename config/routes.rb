@@ -3,12 +3,12 @@ require "sidekiq/web"
 Rails.application.routes.draw do
   devise_for :users,
              path: "",
-             controllers: { registrations: "users/registrations" },
              path_names: {
                sign_in: "login",
                sign_out: "logout",
                registration: "",
-               sign_up: "register"
+               sign_up: "register",
+               confirmation: "verify"
              }
 
   ActiveAdmin.routes(self)
@@ -37,4 +37,8 @@ Rails.application.routes.draw do
 
   get "design-system", to: "design_system#show", as: :design_system
   get "dashboard", to: "dashboard#show", as: :dashboard
+
+  # Tenant bootstrap: confirmed users who aren't auto-joined to an existing
+  # organisation create their own here and become its admin.
+  resources :organisations, only: %i[new create]
 end

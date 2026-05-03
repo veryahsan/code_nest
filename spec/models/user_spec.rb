@@ -18,10 +18,9 @@ RSpec.describe User, type: :model do
   end
 
   describe "validations" do
-    it "requires an organisation for normal users" do
-      user = build(:user, organisation: nil, super_admin: false)
-      expect(user).not_to be_valid
-      expect(user.errors[:organisation]).to include("can't be blank")
+    it "allows non-super-admin users to exist without an organisation" do
+      user = build(:user, :without_organisation)
+      expect(user).to be_valid
     end
 
     it "allows no organisation for platform super admins" do
@@ -46,6 +45,55 @@ RSpec.describe User, type: :model do
     it "organisation_admin? reflects org admin role" do
       expect(build(:user).organisation_admin?).to be false
       expect(build(:user, :organisation_admin).organisation_admin?).to be true
+    end
+  end
+
+  describe "confirmable" do
+    it "includes Devise's confirmable module" do
+      expect(described_class.devise_modules).to include(:confirmable)
+    end
+
+    it "creates new accounts in an unconfirmed state" do
+      user = described_class.create!(
+        email: "newbie@example.com",
+        password: "password12345",
+        password_confirmation: "password12345",
+      )
+
+      expect(user.confirmed?).to be false
+      expect(user.confirmation_token).to be_present
+      expect(user.active_for_authentication?).to be false
+      expect(user.inactive_message).to eq(:unconfirmed)
+    end
+
+    it "auto-confirms platform super admins on creation" do
+      user = described_class.create!(
+        email: "platform@example.com",
+        password: "password12345",
+        password_confirmation: "password12345",
+        super_admin: true,
+      )
+
+      expect(user.confirmed?).to be true
+      expect(user.active_for_authentication?).to be true
+    end
+  end
+
+  describe "#after_confirmation (Devise hook)" do
+    # The hook is intentionally a thin trigger: it delegates to the facade
+    # without doing any branching of its own. The facade owns the policy
+    # and is covered exhaustively by spec/facades/users/post_confirmation_facade_spec.rb.
+    it "delegates to Users::PostConfirmationFacade" do
+      user = described_class.create!(
+        email: "trigger@example.com",
+        password: "password12345",
+        password_confirmation: "password12345",
+      )
+      allow(Users::PostConfirmationFacade).to receive(:call)
+
+      user.after_confirmation
+
+      expect(Users::PostConfirmationFacade).to have_received(:call).with(user: user)
     end
   end
 end

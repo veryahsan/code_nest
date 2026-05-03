@@ -47,12 +47,11 @@
           </div>
           <div class="flex flex-col gap-0.5 p-1">
             <% if user_signed_in? %>
-              <% if current_user.organisation.present? %>
-                <%= link_to "Dashboard", dashboard_path,
-                      class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
-              <% end %>
               <% if current_user.super_admin? %>
                 <%= link_to "Admin", admin_root_path,
+                      class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+              <% else %>
+                <%= link_to "Dashboard", dashboard_path,
                       class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
               <% end %>
               <%= link_to "Logout", destroy_user_session_path,

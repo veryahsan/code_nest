@@ -18,6 +18,9 @@ if Rails.env.development?
         user.organisation = organisation
         user.org_role = org_role
       end
+      # Dev fixtures bypass the email-confirmation gate so all sample logins work
+      # immediately. Real sign-ups still go through the Devise confirmation flow.
+      user.skip_confirmation! if user.new_record? && user.respond_to?(:skip_confirmation!)
       user.save!
       user
     end

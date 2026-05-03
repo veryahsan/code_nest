@@ -18,4 +18,8 @@ RSpec.describe Organisation, type: :model do
     it { is_expected.to validate_presence_of(:slug) }
     it { is_expected.to validate_uniqueness_of(:slug).ignoring_case_sensitivity }
   end
+
+  # Slug generation and email-domain lookups live in the services layer:
+  #   * spec/services/organisations/generate_unique_slug_service_spec.rb
+  #   * spec/services/organisations/find_by_email_domain_service_spec.rb
 end

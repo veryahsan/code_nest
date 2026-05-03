@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# A tenant root. Pure data + integrity rules — all creation, slug
+# generation, and domain-matching logic lives in app/services and
+# app/facades (see Organisations::CreationFacade,
+# Organisations::GenerateUniqueSlugService,
+# Organisations::FindByEmailDomainService).
 class Organisation < ApplicationRecord
   include Sluggable
 

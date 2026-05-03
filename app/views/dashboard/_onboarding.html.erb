@@ -1,0 +1,28 @@
+<%= render "components/page_header",
+      title: "Welcome to Code Nest",
+      description: "You're verified! Set up your workspace by creating an organisation, or wait for a teammate to add you." %>
+
+<div class="card-grid-2">
+  <%= render "components/card",
+        title: "Create your organisation",
+        description: "You'll be the organisation admin. Anyone signing up later from your email domain will join automatically." do %>
+    <p class="text-sm text-muted-color">
+      No one from your email domain has set up an organisation yet, so you get to start one.
+    </p>
+    <div class="pt-4">
+      <%= render "components/btn",
+            label: "Create organisation",
+            href: new_organisation_path,
+            variant: :primary %>
+    </div>
+  <% end %>
+
+  <%= render "components/card",
+        title: "Joining a teammate?",
+        description: "If a colleague has already created your organisation, sign up with the same email domain and we’ll connect you automatically when you confirm your address." do %>
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "Waiting on an invite?",
+          description: "Ask an admin in your organisation to send an invitation to your work email." %>
+  <% end %>
+</div>
