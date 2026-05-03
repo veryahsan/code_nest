@@ -45,6 +45,10 @@ module CodeNest
     # Background jobs run on Sidekiq (matches stack.md).
     config.active_job.queue_adapter = :sidekiq
 
+    # Route all ActionMailer deliver_later jobs to the dedicated mailers queue
+    # so they are processed with the correct priority defined in sidekiq.yml.
+    config.action_mailer.deliver_later_queue_name = :mailers
+
     # Default time zone; can be overridden per organisation later.
     config.time_zone = ENV.fetch("APP_TIME_ZONE", "UTC")
 

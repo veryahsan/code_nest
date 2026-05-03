@@ -24,6 +24,12 @@ class User < ApplicationRecord
   # so they should never be blocked by the email-confirmation gate.
   before_create :auto_confirm_super_admin
 
+  # Enqueue all Devise notification emails through Active Job so they are
+  # processed by a Sidekiq worker instead of blocking the request thread.
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
+
   # Devise hook: fires once the email confirmation token is consumed.
   # Business logic lives in Users::PostConfirmationFacade — keep this method
   # a one-line trigger.
