@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_04_020001) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_07_045500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -39,6 +39,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_04_020001) do
     t.index ["manager_id"], name: "index_employees_on_manager_id"
     t.index ["organisation_id"], name: "index_employees_on_organisation_id"
     t.index ["user_id"], name: "index_employees_on_user_id", unique: true
+  end
+
+  create_table "identities", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "provider", null: false
+    t.string "uid", null: false
+    t.string "email"
+    t.jsonb "raw_info", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider", "uid"], name: "index_identities_on_provider_and_uid", unique: true
+    t.index ["user_id"], name: "index_identities_on_user_id"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -181,6 +193,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_04_020001) do
   add_foreign_key "employees", "employees", column: "manager_id"
   add_foreign_key "employees", "organisations"
   add_foreign_key "employees", "users"
+  add_foreign_key "identities", "users"
   add_foreign_key "invitations", "organisations"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "project_documents", "projects"
