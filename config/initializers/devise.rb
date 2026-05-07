@@ -266,9 +266,39 @@ Devise.setup do |config|
   config.sign_out_via = :delete
 
   # ==> OmniAuth
-  # Add a new OmniAuth provider. Check the wiki for more information on setting
-  # up on your models and hooks.
-  # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
+  # Single sign-on via Google and GitHub. The full sign-in / link / sign-up
+  # flow is orchestrated by `Users::OmniauthAuthenticationFacade` (which
+  # delegates to `Users::FindByOmniauthIdentityService`,
+  # `Users::LinkOmniauthIdentityService`, and
+  # `Users::CreateFromOmniauthService`) and is documented in `docs/sso.md`.
+  # Provider apps must be registered with the callback URLs:
+  #
+  #   /users/auth/google_oauth2/callback
+  #   /users/auth/github/callback
+  #
+  # `devise_for :users, path: ""` in config/routes.rb would otherwise strip
+  # the `/users` prefix off OmniAuth routes and turn them into
+  # `/auth/<provider>/callback`, which Google / GitHub then reject as
+  # `redirect_uri_mismatch`. Pin the prefix explicitly so the URL stays
+  # stable regardless of route customisations.
+  config.omniauth_path_prefix = "/users/auth"
+
+  # Credentials come from the environment so they can differ per Rails env;
+  # missing values disable the provider gracefully on the sign-in page.
+  config.omniauth :google_oauth2,
+    ENV["GOOGLE_CLIENT_ID"],
+    ENV["GOOGLE_CLIENT_SECRET"],
+    scope: "email,profile",
+    prompt: "select_account",
+    access_type: "online"
+
+  # `scope: "user:email"` lets the strategy fetch the user's primary
+  # *verified* email even when their public profile email is empty, so we
+  # can trust the address returned in `auth.info.email`.
+  config.omniauth :github,
+    ENV["GITHUB_CLIENT_ID"],
+    ENV["GITHUB_CLIENT_SECRET"],
+    scope: "user:email"
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

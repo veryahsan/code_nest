@@ -2,10 +2,12 @@
 
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable, :confirmable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable,
+         :omniauthable, omniauth_providers: %i[google_oauth2 github]
 
   belongs_to :organisation, optional: true, inverse_of: :users
 
+  has_many :identities, dependent: :destroy
   has_many :team_memberships, dependent: :destroy
   has_many :teams, through: :team_memberships
   has_one :employee, dependent: :destroy
@@ -40,6 +42,17 @@ class User < ApplicationRecord
 
   def organisation_admin?
     org_admin?
+  end
+
+  # SSO-only users have no usable password — Devise generates a random
+  # one in `Users::CreateFromOmniauthService` so :validatable still
+  # passes on creation, but we don't want to force them to type one when
+  # they edit their profile later. A user qualifies as "SSO-only" the
+  # moment any identity is linked to them.
+  def password_required?
+    return false if persisted? && identities.exists?
+
+    super
   end
 
   private
