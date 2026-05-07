@@ -1,35 +1,67 @@
 <% page_title "Sign in — Code Nest" %>
 
-<%# relative z-10 keeps the form card painting above the sticky header stack when needed %>
-<div class="mx-auto w-full max-w-md relative z-10">
+<div class="flex justify-center">
   <%= render "components/card",
         title: "Welcome back",
-        description: "Sign in with your organisation email and password." do %>
+        description: "Sign in to continue collaborating with your team.",
+        extra_class: "w-full max-w-lg" do %>
 
-    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
-      <%= form_group_tag label: "Email", for_id: "user_email", required: true do %>
-        <%= f.email_field :email, autofocus: true, autocomplete: "email",
-              class: input_classes(false) %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <%= form_for(resource,
+          as: resource_name,
+          url: session_path(resource_name),
+          html: { class: "space-y-4" }) do |f| %>
+
+      <%= render "components/form_group",
+            label: "Email",
+            for_id: "user_email",
+            required: true,
+            error: resource.errors[:email].first do %>
+
+        <%= f.email_field :email,
+              autofocus: true,
+              autocomplete: "email",
+              class: input_classes(resource.errors[:email].any?) %>
+
       <% end %>
 
-      <%= form_group_tag label: "Password", for_id: "user_password", required: true do %>
-        <%= f.password_field :password, autocomplete: "current-password",
-              class: input_classes(false) %>
+      <%= render "components/form_group",
+            label: "Password",
+            for_id: "user_password",
+            required: true,
+            error: resource.errors[:password].first do %>
+
+        <%= f.password_field :password,
+              autocomplete: "current-password",
+              class: input_classes(resource.errors[:password].any?) %>
+
       <% end %>
 
       <% if devise_mapping.rememberable? %>
         <div class="flex items-center gap-2">
           <%= f.check_box :remember_me,
                 class: "rounded border-zinc-300 text-brand-600 focus:ring-brand-500 dark:border-zinc-600 dark:bg-zinc-900" %>
-          <%= f.label :remember_me, "Remember me", class: "text-sm text-zinc-700 dark:text-zinc-300" %>
+
+          <%= f.label :remember_me,
+                "Remember me",
+                class: "text-sm text-zinc-700 dark:text-zinc-300" %>
         </div>
       <% end %>
 
-      <%= render "components/btn", label: "Sign in", type: :submit, variant: :primary, extra_class: "w-full" %>
+      <div class="space-y-4 pt-2">
+        <%= render "components/btn",
+              label: "Sign in",
+              type: :submit,
+              variant: :primary,
+              extra_class: "w-full" %>
 
-      <div class="pt-2">
-        <%= render "devise/shared/links" %>
+        <div class="flex justify-center text-sm">
+          <%= render "devise/shared/links" %>
+        </div>
       </div>
+
     <% end %>
+
   <% end %>
 </div>
