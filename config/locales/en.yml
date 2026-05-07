@@ -29,3 +29,8 @@
 
 en:
   hello: "Hello world"
+  devise:
+    omniauth:
+      providers:
+        google_oauth2: "Continue with Google"
+        github: "Continue with GitHub"

@@ -9,6 +9,9 @@ Rails.application.routes.draw do
                registration: "",
                sign_up: "register",
                confirmation: "verify"
+             },
+             controllers: {
+               omniauth_callbacks: "users/omniauth_callbacks"
              }
 
   ActiveAdmin.routes(self)

@@ -1,0 +1,31 @@
+<%#
+  Renders POST buttons for every provider currently enabled in
+  `Devise.omniauth_providers`. POST (not GET) is required by the
+  `omniauth-rails_csrf_protection` gem, which is why we use `button_to`.
+
+  `data: { turbo: false }` is important: OmniAuth redirects the browser
+  to a third-party origin (accounts.google.com / github.com) and Turbo
+  Drive cannot follow cross-origin redirects via fetch.
+
+  Optional locals:
+    title:  heading text   (default: "Or continue with")
+%>
+<%
+  providers = resource_class.respond_to?(:omniauth_providers) ? resource_class.omniauth_providers : []
+%>
+
+<% if providers.any? %>
+  <div class="space-y-3 py-4">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-<%= providers.size %>">
+      <% providers.each do |provider| %>
+        <%= button_to omniauth_authorize_path(resource_name, provider),
+              method: :post,
+              data: { turbo: false },
+              class: "btn-base btn-secondary btn-md w-full justify-center inline-flex items-center gap-2" do %>
+          <%= render "devise/shared/omniauth_icon", provider: provider %>
+          <span><%= t("devise.omniauth.providers.#{provider}", default: provider.to_s.titleize) %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
