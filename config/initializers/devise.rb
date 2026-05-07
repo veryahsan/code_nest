@@ -9,12 +9,15 @@
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
-  # The secret key used by Devise. Devise uses this key to generate
-  # random tokens. Changing this key will render invalid all existing
-  # confirmation, reset password and unlock tokens in the database.
-  # Devise will use the `secret_key_base` as its `secret_key`
-  # by default. You can change it below and use your own secret key.
-  # config.secret_key = '3d448c15af9d436a831ee799e927af69344c158953392fb2c1beeebb2074354a5e53ec18cc2875faf362ef75f491627fd532ebbc59175d1aebb9bbc78a0baa43'
+  # The secret key used by Devise to sign confirmation, reset-password and
+  # unlock tokens. When `DEVISE_SECRET_KEY` is set in the environment we
+  # use it explicitly; otherwise we let Devise fall back to
+  # `Rails.application.secret_key_base` (which itself comes from Rails
+  # credentials). Rotating this value invalidates every outstanding
+  # token, so only change it on purpose.
+  if ENV["DEVISE_SECRET_KEY"].present?
+    config.secret_key = ENV["DEVISE_SECRET_KEY"]
+  end
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
@@ -36,7 +39,7 @@ Devise.setup do |config|
   # Load and configure the ORM. Supports :active_record (default) and
   # :mongoid (bson_ext recommended) by default. Other ORMs may be
   # available as additional gems.
-  require 'devise/orm/active_record'
+  require "devise/orm/active_record"
 
   # ==> Configuration for any authentication mechanism
   # Configure which keys are used when authenticating a user. The default is
@@ -58,12 +61,12 @@ Devise.setup do |config|
   # Configure which authentication keys should be case-insensitive.
   # These keys will be downcased upon creating or modifying a user and when used
   # to authenticate or find a user. Default is :email.
-  config.case_insensitive_keys = [:email]
+  config.case_insensitive_keys = [ :email ]
 
   # Configure which authentication keys should have whitespace stripped.
   # These keys will have whitespace before and after removed upon creating or
   # modifying a user and when used to authenticate or find a user. Default is :email.
-  config.strip_whitespace_keys = [:email]
+  config.strip_whitespace_keys = [ :email ]
 
   # Tell if authentication through request.params is enabled. True by default.
   # It can be set to an array that will enable params authentication only for the
@@ -97,7 +100,7 @@ Devise.setup do |config|
   # Notice that if you are skipping storage for all authentication paths, you
   # may want to disable generating routes to Devise's sessions controller by
   # passing skip: :sessions to `devise_for` in your config/routes.rb
-  config.skip_session_storage = [:http_auth]
+  config.skip_session_storage = [ :http_auth ]
 
   # By default, Devise cleans up the CSRF token on authentication to
   # avoid CSRF token fixation attacks. This means that, when using AJAX
@@ -125,8 +128,13 @@ Devise.setup do |config|
   # a value of 20 is already extremely slow: approx. 60 seconds for 1 calculation).
   config.stretches = Rails.env.test? ? 1 : 12
 
-  # Set up a pepper to generate the hashed password.
-  # config.pepper = '575f15fbafba4705f6481611115dedce759beeaa0cc1294c1b4ee57a1980864da6853c92ed367774bd566e50429ddd94d1a8ede03320428687a987524d8f6875'
+  # Server-side bcrypt pepper. Appended to every password before hashing,
+  # so a stolen DB dump still can't be cracked without also stealing the
+  # pepper. Read from `DEVISE_PEPPER` so it lives in the same env file as
+  # the rest of our auth secrets. Leave the env var unset to disable
+  # peppering (Devise's default). NEVER rotate without also re-hashing
+  # every password — old hashes will stop matching.
+  config.pepper = ENV["DEVISE_PEPPER"].presence
 
   # Send a notification to the original email when the user's email is changed.
   # config.send_email_changed_notification = false
