@@ -22,7 +22,7 @@ RSpec.describe Users::OmniauthAuthenticationFacade, type: :facade do
           result = described_class.call(auth: auth)
           expect(result).to be_success
           expect(result.value).to eq(existing_user)
-        }.not_to change { [User.count, Identity.count] }
+        }.not_to change { [ User.count, Identity.count ] }
       end
     end
 
@@ -118,7 +118,7 @@ RSpec.describe Users::OmniauthAuthenticationFacade, type: :facade do
           result = described_class.call(auth: emailless)
           expect(result).to be_failure
           expect(result.error).to eq(described_class::EMAIL_MISSING_ERROR)
-        }.not_to change { [User.count, Identity.count] }
+        }.not_to change { [ User.count, Identity.count ] }
       end
     end
   end

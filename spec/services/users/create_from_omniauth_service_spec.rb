@@ -40,7 +40,7 @@ RSpec.describe Users::CreateFromOmniauthService, type: :service do
 
         expect(result).to be_failure
         expect(result.error).to be_present
-      }.not_to change { [User.count, Identity.count] }
+      }.not_to change { [ User.count, Identity.count ] }
     end
 
     it "returns a failure with validation messages when the email is invalid" do

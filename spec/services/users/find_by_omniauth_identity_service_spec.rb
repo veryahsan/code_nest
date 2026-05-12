@@ -36,7 +36,7 @@ RSpec.describe Users::FindByOmniauthIdentityService, type: :service do
       expect {
         described_class.call(provider: "google_oauth2", uid: "g-1")
         described_class.call(provider: "google_oauth2", uid: "miss")
-      }.not_to change { [User.count, Identity.count] }
+      }.not_to change { [ User.count, Identity.count ] }
     end
   end
 end
