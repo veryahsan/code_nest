@@ -1,0 +1,21 @@
+<h2>You've been invited to <%= @organisation.name %></h2>
+
+<p>
+  <% if @inviter %>
+    <%= @inviter.email %>
+  <% else %>
+    A teammate
+  <% end %>
+  has invited you to join <strong><%= @organisation.name %></strong> on Code Nest as a
+  <strong><%= @invitation.invite_admin? ? "organisation administrator" : "member" %></strong>.
+</p>
+
+<p>
+  <a href="<%= @accept_url %>">Accept your invitation</a>
+</p>
+
+<% if @invitation.expires_at %>
+  <p>This invitation expires on <%= @invitation.expires_at.strftime("%-d %b %Y") %>.</p>
+<% end %>
+
+<p>If you weren't expecting this email, you can ignore it.</p>

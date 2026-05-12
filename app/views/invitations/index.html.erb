@@ -1,0 +1,65 @@
+<% page_title "Invitations — #{current_organisation.name}" %>
+
+<% content_for :page_actions do %>
+  <%= render "components/btn", label: "Send invitation", href: new_invitation_path, variant: :primary, size: :sm %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Invitations",
+      description: "Outstanding and recently accepted invitations.",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Invitations" },
+      ] %>
+
+<div class="card-grid-2">
+  <%= render "components/card", title: "Pending" do %>
+    <% if @pending.any? %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <% @pending.each do |inv| %>
+          <li class="py-3 first:pt-0 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= inv.email %></p>
+              <p class="text-xs text-muted-color">
+                <%= inv.invited_by&.email || "System" %>
+                <% if inv.expires_at %>
+                  · Expires <%= inv.expires_at.strftime("%-d %b %Y") %>
+                <% else %>
+                  · No expiry
+                <% end %>
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= badge_tag inv.invite_admin? ? "Admin" : "Member", variant: inv.invite_admin? ? :brand : :neutral %>
+              <%= button_to "Revoke",
+                    invitation_path(inv),
+                    method: :delete,
+                    data: { turbo_confirm: "Revoke the invitation for #{inv.email}?" },
+                    class: "btn-base btn-ghost btn-sm" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= render "components/empty_state",
+            icon: :inbox,
+            title: "No pending invitations",
+            description: "Send a new invitation to add a teammate." %>
+    <% end %>
+  <% end %>
+
+  <%= render "components/card", title: "Recently accepted" do %>
+    <% if @accepted.any? %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <% @accepted.each do |inv| %>
+          <li class="py-3 first:pt-0">
+            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= inv.email %></p>
+            <p class="text-xs text-muted-color">Accepted <%= inv.accepted_at&.strftime("%-d %b %Y") %></p>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-muted-color">No invitations have been accepted yet.</p>
+    <% end %>
+  <% end %>
+</div>

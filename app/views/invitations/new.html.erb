@@ -1,0 +1,61 @@
+<% page_title "New invitation" %>
+
+<%= render "components/page_header",
+      title: "Send an invitation",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Invitations", href: invitations_path },
+        { label: "New" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-lg" do %>
+    <%= form_with model: @invitation, url: invitations_path, method: :post, class: "space-y-4" do |f| %>
+      <% if @invitation.errors.any? %>
+        <%= render "components/alert",
+              variant: :danger,
+              title: "#{pluralize(@invitation.errors.count, 'issue')} prevented saving",
+              message: @invitation.errors.full_messages.to_sentence,
+              dismissible: false %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "Email",
+            for_id: "invitation_email",
+            required: true,
+            error: @invitation.errors[:email].first do %>
+        <%= f.email_field :email,
+              id: "invitation_email",
+              autocomplete: "email",
+              autofocus: true,
+              class: input_classes(@invitation.errors[:email].any?) %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "Role",
+            for_id: "invitation_org_role",
+            error: @invitation.errors[:org_role].first do %>
+        <%= f.select :org_role,
+              [["Member", "member"], ["Administrator", "admin"]],
+              {},
+              id: "invitation_org_role",
+              class: input_classes %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "Expires at",
+            for_id: "invitation_expires_at",
+            hint: "Leave blank for the default (14 days from now).",
+            error: @invitation.errors[:expires_at].first do %>
+        <%= f.datetime_local_field :expires_at,
+              id: "invitation_expires_at",
+              class: input_classes(@invitation.errors[:expires_at].any?) %>
+      <% end %>
+
+      <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+        <%= link_to "Cancel", invitations_path, class: "btn-link text-sm font-medium" %>
+        <%= render "components/btn", label: "Send invitation", type: :submit, variant: :primary %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
