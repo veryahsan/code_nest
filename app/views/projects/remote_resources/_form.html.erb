@@ -1,0 +1,56 @@
+<%= form_with model: resource, url: form_url, method: form_method, scope: :remote_resource, class: "space-y-4" do |f| %>
+  <% if resource.errors.any? %>
+    <%= render "components/alert",
+          variant: :danger,
+          title: "#{pluralize(resource.errors.count, 'issue')} prevented saving",
+          message: resource.errors.full_messages.to_sentence,
+          dismissible: false %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Name",
+        for_id: "remote_resource_name",
+        required: true,
+        error: resource.errors[:name].first do %>
+    <%= f.text_field :name,
+          id: "remote_resource_name",
+          autofocus: true,
+          class: input_classes(resource.errors[:name].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Kind",
+        for_id: "remote_resource_kind",
+        required: true,
+        hint: "e.g. api_key, oauth_app, webhook",
+        error: resource.errors[:kind].first do %>
+    <%= f.text_field :kind,
+          id: "remote_resource_kind",
+          class: input_classes(resource.errors[:kind].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "URL",
+        for_id: "remote_resource_url",
+        error: resource.errors[:url].first do %>
+    <%= f.url_field :url,
+          id: "remote_resource_url",
+          class: input_classes(resource.errors[:url].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Credentials (JSON)",
+        for_id: "remote_resource_credentials_json",
+        hint: "Optional. Leave blank to keep existing credentials. Stored encrypted at rest.",
+        error: resource.errors[:credentials].first do %>
+    <%= f.text_area :credentials_json,
+          id: "remote_resource_credentials_json",
+          rows: 6,
+          class: input_classes(resource.errors[:credentials].any?) + " font-mono text-xs" %>
+  <% end %>
+
+  <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+    <%= link_to "Cancel", project_remote_resources_path(@project), class: "btn-link text-sm font-medium" %>
+    <%= render "components/btn", label: submit_label, type: :submit, variant: :primary %>
+  </div>
+<% end %>

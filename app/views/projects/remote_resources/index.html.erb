@@ -1,0 +1,38 @@
+<% page_title "Resources — #{@project.name}" %>
+
+<% if policy(RemoteResource).create? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "New resource", href: new_project_remote_resource_path(@project), variant: :primary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Remote resources",
+      description: "Connected APIs and services for #{@project.name}.",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Resources" },
+      ] %>
+
+<%= render "components/card" do %>
+  <% if @resources.any? %>
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <% @resources.each do |r| %>
+        <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+          <div>
+            <%= link_to r.name, project_remote_resource_path(@project, r),
+                  class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>
+            <p class="text-xs text-muted-color"><%= r.url.presence || "No URL" %></p>
+          </div>
+          <%= badge_tag r.kind, variant: :brand %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "No resources yet",
+          description: "Add an external API or service that this project uses." %>
+  <% end %>
+<% end %>

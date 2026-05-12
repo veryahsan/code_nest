@@ -1,0 +1,62 @@
+<% page_title "#{@resource.name} — Resources" %>
+
+<% if policy(@resource).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_project_remote_resource_path(@project, @resource), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @resource.name,
+      description: @resource.kind.humanize,
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Resources", href: project_remote_resources_path(@project) },
+        { label: @resource.name },
+      ] %>
+
+<%= render "components/card", title: "Connection" do %>
+  <dl class="grid grid-cols-1 gap-y-3 text-sm">
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-muted-color">URL</dt>
+      <dd>
+        <% if @resource.url.present? %>
+          <a href="<%= @resource.url %>" target="_blank" rel="noopener" class="btn-link"><%= @resource.url %></a>
+        <% else %>
+          <span class="italic text-muted-color">—</span>
+        <% end %>
+      </dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-muted-color">Kind</dt>
+      <dd class="text-zinc-900 dark:text-zinc-100"><%= @resource.kind %></dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-muted-color">Credentials</dt>
+      <dd>
+        <% if @show_credentials %>
+          <% if @resource.credentials.present? %>
+            <pre class="text-xs bg-zinc-100 dark:bg-zinc-900 rounded p-3 overflow-x-auto"><%= @resource.credentials %></pre>
+          <% else %>
+            <span class="italic text-muted-color">No credentials stored.</span>
+          <% end %>
+        <% else %>
+          <span class="italic text-muted-color">Hidden — only org admins can view.</span>
+        <% end %>
+      </dd>
+    </div>
+  </dl>
+<% end %>
+
+<% if policy(@resource).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone" do %>
+      <%= button_to "Delete resource",
+            project_remote_resource_path(@project, @resource),
+            method: :delete,
+            data: { turbo_confirm: "Delete #{@resource.name}? Encrypted credentials will be removed." },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,21 @@
+<% page_title "Edit resource — #{@resource.name}" %>
+
+<%= render "components/page_header",
+      title: "Edit remote resource",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Resources", href: project_remote_resources_path(@project) },
+        { label: @resource.name, href: project_remote_resource_path(@project, @resource) },
+        { label: "Edit" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
+    <%= render "projects/remote_resources/form",
+          resource: @resource,
+          form_url: project_remote_resource_path(@project, @resource),
+          form_method: :patch,
+          submit_label: "Save changes" %>
+  <% end %>
+</div>
