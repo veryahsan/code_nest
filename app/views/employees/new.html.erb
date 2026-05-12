@@ -1,0 +1,21 @@
+<% page_title "New employee" %>
+
+<%= render "components/page_header",
+      title: "Add employee",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Employees", href: employees_path },
+        { label: "New" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-lg" do %>
+    <%= render "employees/form",
+          employee: @employee,
+          assignable_users: @assignable_users,
+          assignable_managers: @assignable_managers,
+          form_url: employees_path,
+          form_method: :post,
+          submit_label: "Add employee" %>
+  <% end %>
+</div>

@@ -1,0 +1,22 @@
+<% page_title "Edit employee — #{@employee.user.email}" %>
+
+<%= render "components/page_header",
+      title: "Edit employee",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Employees", href: employees_path },
+        { label: @employee.display_name.presence || @employee.user.email, href: employee_path(@employee) },
+        { label: "Edit" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-lg" do %>
+    <%= render "employees/form",
+          employee: @employee,
+          assignable_users: [],
+          assignable_managers: @assignable_managers,
+          form_url: employee_path(@employee),
+          form_method: :patch,
+          submit_label: "Save changes" %>
+  <% end %>
+</div>

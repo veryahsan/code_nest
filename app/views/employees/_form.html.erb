@@ -1,0 +1,60 @@
+<%= form_with model: employee, url: form_url, method: form_method, class: "space-y-4" do |f| %>
+  <% if employee.errors.any? %>
+    <%= render "components/alert",
+          variant: :danger,
+          title: "#{pluralize(employee.errors.count, 'issue')} prevented saving",
+          message: employee.errors.full_messages.to_sentence,
+          dismissible: false %>
+  <% end %>
+
+  <% if employee.new_record? %>
+    <%= render "components/form_group",
+          label: "User",
+          for_id: "employee_user_id",
+          required: true,
+          error: employee.errors[:user_id].first || employee.errors[:user].first do %>
+      <%= f.select :user_id,
+            assignable_users.map { |u| [u.email, u.id] },
+            { include_blank: "Select a user" },
+            id: "employee_user_id",
+            class: input_classes(employee.errors[:user_id].any? || employee.errors[:user].any?) %>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-muted-color">User: <%= employee.user.email %></p>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Display name",
+        for_id: "employee_display_name",
+        error: employee.errors[:display_name].first do %>
+    <%= f.text_field :display_name,
+          id: "employee_display_name",
+          class: input_classes(employee.errors[:display_name].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Job title",
+        for_id: "employee_job_title",
+        error: employee.errors[:job_title].first do %>
+    <%= f.text_field :job_title,
+          id: "employee_job_title",
+          class: input_classes(employee.errors[:job_title].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Manager",
+        for_id: "employee_manager_id",
+        hint: "Optional. Pick another employee from the same organisation.",
+        error: employee.errors[:manager_id].first || employee.errors[:manager].first do %>
+    <%= f.select :manager_id,
+          assignable_managers.map { |m| [(m.display_name.presence || m.user.email), m.id] },
+          { include_blank: "No manager" },
+          id: "employee_manager_id",
+          class: input_classes(employee.errors[:manager].any?) %>
+  <% end %>
+
+  <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+    <%= link_to "Cancel", employees_path, class: "btn-link text-sm font-medium" %>
+    <%= render "components/btn", label: submit_label, type: :submit, variant: :primary %>
+  </div>
+<% end %>

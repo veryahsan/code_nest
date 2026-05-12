@@ -1,0 +1,49 @@
+<% page_title "Employees — #{current_organisation.name}" %>
+
+<% if policy(Employee).create? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Add employee", href: new_employee_path, variant: :primary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Employees",
+      description: "HR profiles for #{current_organisation.name}.",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Employees" },
+      ] %>
+
+<%= render "components/card" do %>
+  <% if @employees.any? %>
+    <div class="overflow-x-auto -mx-1">
+      <table class="w-full text-sm text-left">
+        <thead>
+          <tr class="text-xs text-muted-color border-b border-zinc-200 dark:border-zinc-800">
+            <th class="pb-2 pr-4 font-medium">Name</th>
+            <th class="pb-2 pr-4 font-medium">Title</th>
+            <th class="pb-2 pr-4 font-medium">Manager</th>
+            <th class="pb-2 font-medium">Email</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+          <% @employees.each do |emp| %>
+            <tr>
+              <td class="py-2.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
+                <%= link_to (emp.display_name.presence || emp.user.email), employee_path(emp), class: "hover:underline" %>
+              </td>
+              <td class="py-2.5 pr-4 text-muted-color"><%= emp.job_title.presence || "—" %></td>
+              <td class="py-2.5 pr-4 text-muted-color"><%= emp.manager&.display_name || emp.manager&.user&.email || "—" %></td>
+              <td class="py-2.5 text-muted-color"><%= emp.user.email %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "No employees yet",
+          description: "Add HR profiles for the people in your organisation." %>
+  <% end %>
+<% end %>

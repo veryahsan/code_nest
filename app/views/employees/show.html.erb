@@ -1,0 +1,68 @@
+<% page_title "#{@employee.display_name.presence || @employee.user.email} — Employees" %>
+
+<% if policy(@employee).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_employee_path(@employee), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: (@employee.display_name.presence || @employee.user.email),
+      description: @employee.job_title,
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Employees", href: employees_path },
+        { label: @employee.display_name.presence || @employee.user.email },
+      ] %>
+
+<div class="card-grid-2">
+  <%= render "components/card", title: "Profile" do %>
+    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Email</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.user.email %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Display name</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.display_name.presence || "—" %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Job title</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.job_title.presence || "—" %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Manager</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.manager&.display_name || @employee.manager&.user&.email || "—" %></dd>
+      </div>
+    </dl>
+  <% end %>
+
+  <%= render "components/card", title: "Direct reports" do %>
+    <% reports = @employee.direct_reports.includes(:user).order(:display_name) %>
+    <% if reports.any? %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <% reports.each do |r| %>
+          <li class="py-3 first:pt-0">
+            <%= link_to (r.display_name.presence || r.user.email), employee_path(r),
+                  class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>
+            <p class="text-xs text-muted-color"><%= r.job_title %></p>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-muted-color">No direct reports.</p>
+    <% end %>
+  <% end %>
+</div>
+
+<% if policy(@employee).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone" do %>
+      <%= button_to "Remove employee record",
+            employee_path(@employee),
+            method: :delete,
+            data: { turbo_confirm: "Remove the employee record for #{@employee.user.email}?" },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>
