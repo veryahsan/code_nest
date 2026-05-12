@@ -75,4 +75,88 @@ RSpec.describe "Organisations", type: :request do
       expect(user.reload.organisation).to eq(org)
     end
   end
+
+  describe "GET /organisations/:id" do
+    let(:org)   { create(:organisation, name: "Acme") }
+    let(:admin) { create(:user, :organisation_admin, organisation: org) }
+    let(:other) { create(:user, organisation: create(:organisation)) }
+
+    it "redirects guests" do
+      get organisation_path(org)
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it "renders for members of the same organisation" do
+      sign_in admin
+      get organisation_path(org)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Acme")
+    end
+
+    it "denies users from other organisations" do
+      sign_in other
+      get organisation_path(org)
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to be_present
+    end
+  end
+
+  describe "PATCH /organisations/:id" do
+    let(:org)   { create(:organisation, name: "Acme") }
+    let(:admin) { create(:user, :organisation_admin, organisation: org) }
+    let(:member) { create(:user, organisation: org) }
+
+    it "lets an org admin change the name" do
+      sign_in admin
+      patch organisation_path(org), params: { organisation: { name: "Acme Co" } }
+
+      expect(response).to redirect_to(organisation_path(org))
+      expect(org.reload.name).to eq("Acme Co")
+    end
+
+    it "lets an org admin change the slug" do
+      sign_in admin
+      patch organisation_path(org), params: { organisation: { slug: "acme-co" } }
+
+      expect(org.reload.slug).to eq("acme-co")
+    end
+
+    it "denies regular members" do
+      sign_in member
+      patch organisation_path(org), params: { organisation: { name: "Hacked" } }
+      expect(response).to redirect_to(root_path)
+      expect(org.reload.name).to eq("Acme")
+    end
+
+    it "re-renders edit on validation failure" do
+      sign_in admin
+      patch organisation_path(org), params: { organisation: { name: "" } }
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
+  describe "DELETE /organisations/:id" do
+    let(:org) { create(:organisation) }
+    let(:admin) { create(:user, :organisation_admin, organisation: org) }
+
+    it "destroys an org with only the lone admin" do
+      sign_in admin
+      expect {
+        delete organisation_path(org)
+      }.to change(Organisation, :count).by(-1)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "refuses when other users still belong to the org" do
+      sign_in admin
+      create(:user, organisation: org)
+
+      expect {
+        delete organisation_path(org)
+      }.not_to change(Organisation, :count)
+
+      expect(response).to redirect_to(root_path).or have_http_status(:see_other)
+    end
+  end
 end

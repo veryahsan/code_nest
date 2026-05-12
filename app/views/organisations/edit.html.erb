@@ -1,0 +1,54 @@
+<% page_title "Edit organisation — #{@organisation.name}" %>
+
+<%= render "components/page_header",
+      title: "Edit organisation",
+      description: "Update the display name or URL slug.",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: @organisation.name, href: organisation_path(@organisation) },
+        { label: "Edit" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card",
+        title: "Organisation details",
+        extra_class: "w-full max-w-lg" do %>
+
+    <% if @organisation.errors.any? %>
+      <%= render "components/alert",
+            variant: :danger,
+            title: "#{pluralize(@organisation.errors.count, 'issue')} prevented saving",
+            message: @organisation.errors.full_messages.to_sentence,
+            dismissible: false %>
+    <% end %>
+
+    <%= form_with model: @organisation, url: organisation_path(@organisation), method: :patch, class: "space-y-4" do |f| %>
+      <%= render "components/form_group",
+            label: "Name",
+            for_id: "organisation_name",
+            required: true,
+            error: @organisation.errors[:name].first do %>
+        <%= f.text_field :name,
+              id: "organisation_name",
+              autocomplete: "organization",
+              autofocus: true,
+              class: input_classes(@organisation.errors[:name].any?) %>
+      <% end %>
+
+      <%= render "components/form_group",
+            label: "Slug",
+            for_id: "organisation_slug",
+            hint: "Lowercase, hyphenated. Changing this rewrites every URL.",
+            error: @organisation.errors[:slug].first do %>
+        <%= f.text_field :slug,
+              id: "organisation_slug",
+              class: input_classes(@organisation.errors[:slug].any?) %>
+      <% end %>
+
+      <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+        <%= link_to "Cancel", organisation_path(@organisation), class: "btn-link text-sm font-medium" %>
+        <%= render "components/btn", label: "Save", type: :submit, variant: :primary %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

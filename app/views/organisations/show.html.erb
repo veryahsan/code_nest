@@ -1,0 +1,67 @@
+<% page_title "#{@organisation.name} — Organisation" %>
+
+<% if policy(@organisation).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_organisation_path(@organisation), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @organisation.name,
+      description: "Tenant-level settings, slug, and membership stats.",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: @organisation.name },
+      ] %>
+
+<div class="card-grid-2">
+  <%= render "components/card", title: "Details" do %>
+    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Name</dt>
+        <dd class="font-medium text-zinc-900 dark:text-zinc-100"><%= @organisation.name %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Slug</dt>
+        <dd class="font-mono text-xs text-muted-color"><%= @organisation.slug %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Created</dt>
+        <dd class="text-zinc-700 dark:text-zinc-200"><%= l(@organisation.created_at, format: :long) rescue @organisation.created_at.to_s %></dd>
+      </div>
+    </dl>
+  <% end %>
+
+  <%= render "components/card", title: "Footprint" do %>
+    <ul class="space-y-2 text-sm">
+      <li class="flex items-center justify-between">
+        <span class="text-muted-color">Users</span>
+        <%= badge_tag @organisation.users.count.to_s, variant: :neutral %>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-muted-color">Teams</span>
+        <%= badge_tag @organisation.teams.count.to_s, variant: :neutral %>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-muted-color">Projects</span>
+        <%= badge_tag @organisation.projects.count.to_s, variant: :neutral %>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-muted-color">Pending invitations</span>
+        <%= badge_tag @organisation.invitations.pending.count.to_s, variant: :neutral %>
+      </li>
+    </ul>
+  <% end %>
+</div>
+
+<% if policy(@organisation).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone", description: "Destroy the organisation. Only allowed when no other users belong to it." do %>
+      <%= button_to "Delete organisation",
+            organisation_path(@organisation),
+            method: :delete,
+            data: { turbo_confirm: "This permanently destroys #{@organisation.name}. Continue?" },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>

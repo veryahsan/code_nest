@@ -4,6 +4,7 @@
 <% invitations  = @facade.pending_invitations %>
 
 <% content_for :page_actions do %>
+  <%= render "components/btn", label: "Organisation", href: organisation_path(org), variant: :secondary, size: :sm %>
   <%= render "components/btn", label: "Account", href: edit_user_registration_path, variant: :secondary, size: :sm %>
 <% end %>
 
