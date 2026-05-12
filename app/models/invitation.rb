@@ -27,6 +27,14 @@ class Invitation < ApplicationRecord
     accepted_at.present?
   end
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[accepted_at created_at email expires_at id invited_by_id org_role organisation_id updated_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[invited_by organisation]
+  end
+
   private
 
   def pending_email_unique_within_organisation

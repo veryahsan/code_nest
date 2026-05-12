@@ -13,6 +13,14 @@ class Employee < ApplicationRecord
   validate :manager_must_be_in_same_organisation
   validate :manager_must_not_be_self
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[created_at display_name id job_title manager_id organisation_id updated_at user_id]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[direct_reports manager organisation user]
+  end
+
   private
 
   def user_must_not_be_super_admin

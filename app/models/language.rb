@@ -11,4 +11,12 @@ class Language < ApplicationRecord
 
   validates :name, presence: true
   validates :code, presence: true, uniqueness: true, format: { with: CODE_PATTERN }
+
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[code created_at id name updated_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[project_languages projects]
+  end
 end

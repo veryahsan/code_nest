@@ -18,6 +18,15 @@ class Project < ApplicationRecord
 
   validate :team_must_belong_to_same_organisation
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[created_at description id name organisation_id slug team_id updated_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[languages organisation project_documents project_languages
+       project_technologies remote_resources team technologies]
+  end
+
   private
 
   def team_must_belong_to_same_organisation

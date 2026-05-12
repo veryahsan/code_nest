@@ -55,6 +55,15 @@ class User < ApplicationRecord
     super
   end
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[confirmation_sent_at confirmed_at created_at email id org_role organisation_id
+       super_admin updated_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[employee identities organisation sent_invitations team_memberships teams]
+  end
+
   private
 
   def auto_confirm_super_admin

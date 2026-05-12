@@ -15,4 +15,12 @@ class Identity < ApplicationRecord
 
   validates :provider, presence: true, inclusion: { in: PROVIDERS }
   validates :uid, presence: true, uniqueness: { scope: :provider }
+
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[created_at email id provider uid updated_at user_id]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[user]
+  end
 end
