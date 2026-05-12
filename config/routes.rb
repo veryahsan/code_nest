@@ -16,10 +16,8 @@ Rails.application.routes.draw do
 
   ActiveAdmin.routes(self)
 
-  # Healthcheck for load balancers / Render.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Sidekiq dashboard. Locked behind HTTP basic auth in production via env vars.
   if Rails.env.production?
     Sidekiq::Web.use(Rack::Auth::Basic) do |username, password|
       ActiveSupport::SecurityUtils.secure_compare(username, ENV.fetch("SIDEKIQ_USERNAME", "")) &
@@ -28,20 +26,64 @@ Rails.application.routes.draw do
   end
   mount Sidekiq::Web => "/sidekiq"
 
-  # Hotwire web surface goes here as features land.
-  # API surface for future mobile / 3rd-party clients.
+  # ─── JSON API ─────────────────────────────────────────────────────────────
   namespace :api do
     namespace :v1 do
-      # endpoints will be added in later phases
+      post "auth/login", to: "auth#login"
+
+      get "users/me", to: "users#me"
+
+      resource :organisation, only: %i[show update destroy]
+
+      resources :teams, only: %i[index show create update destroy] do
+        resources :memberships, only: %i[index create destroy], controller: "teams/memberships"
+      end
+
+      resources :employees, only: %i[index show create update destroy]
+
+      resources :invitations, only: %i[index show create destroy] do
+        collection do
+          post :accept
+        end
+      end
+
+      resources :projects, only: %i[index show create update destroy] do
+        resources :documents, only: %i[index show create update destroy], controller: "projects/documents"
+        resources :remote_resources, only: %i[index show create update destroy], controller: "projects/remote_resources"
+        resources :languages, only: %i[index create destroy], controller: "projects/languages"
+        resources :technologies, only: %i[index create destroy], controller: "projects/technologies"
+      end
+
+      resources :languages, only: %i[index show]
+      resources :technologies, only: %i[index show]
     end
   end
 
+  # ─── Hotwire web surface ──────────────────────────────────────────────────
   root "home#show"
 
   get "design-system", to: "design_system#show", as: :design_system
   get "dashboard", to: "dashboard#show", as: :dashboard
 
-  # Tenant bootstrap: confirmed users who aren't auto-joined to an existing
-  # organisation create their own here and become its admin.
-  resources :organisations, only: %i[new create]
+  # Tenant bootstrap & ongoing organisation management.
+  resources :organisations, only: %i[new create show edit update destroy]
+
+  resources :teams do
+    resources :memberships, only: %i[create destroy], controller: "teams/memberships"
+  end
+
+  resources :employees
+
+  resources :invitations, only: %i[index new create destroy]
+
+  # Public, token-based invitation acceptance flow (no Devise login required).
+  get  "invitation_acceptances/:token", to: "invitation_acceptances#show",   as: :invitation_acceptance
+  post "invitation_acceptances/:token", to: "invitation_acceptances#create", as: :submit_invitation_acceptance
+
+  resources :projects do
+    resources :documents, only: %i[index show new create edit update destroy], controller: "projects/documents"
+    resources :remote_resources, only: %i[index show new create edit update destroy], controller: "projects/remote_resources"
+    resources :project_languages, only: %i[create destroy], controller: "projects/languages"
+    resources :project_technologies, only: %i[create destroy], controller: "projects/technologies"
+  end
 end

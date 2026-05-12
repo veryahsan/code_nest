@@ -53,6 +53,18 @@
               <% else %>
                 <%= link_to "Dashboard", dashboard_path,
                       class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+                <% if current_user.organisation.present? %>
+                  <%= link_to "Teams", teams_path,
+                        class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+                  <%= link_to "Projects", projects_path,
+                        class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+                  <%= link_to "Employees", employees_path,
+                        class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+                  <% if current_user.org_admin? %>
+                    <%= link_to "Invitations", invitations_path,
+                          class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+                  <% end %>
+                <% end %>
               <% end %>
               <%= link_to "Logout", destroy_user_session_path,
                     data: { turbo_method: :delete },
