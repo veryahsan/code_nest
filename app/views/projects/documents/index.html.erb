@@ -1,0 +1,42 @@
+<% page_title "Documents — #{@project.name}" %>
+
+<% if policy(ProjectDocument).create? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "New document", href: new_project_document_path(@project), variant: :primary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Documents",
+      description: "Linked documentation for #{@project.name}.",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Documents" },
+      ] %>
+
+<%= render "components/card" do %>
+  <% if @documents.any? %>
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <% @documents.each do |doc| %>
+        <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+          <div>
+            <%= link_to doc.title, project_document_path(@project, doc),
+                  class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>
+            <% if doc.url.present? %>
+              <p class="text-xs text-muted-color"><a href="<%= doc.url %>" target="_blank" rel="noopener" class="btn-link"><%= doc.url %></a></p>
+            <% end %>
+          </div>
+          <% if doc.external_id.present? %>
+            <%= badge_tag doc.external_id, variant: :neutral %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :document,
+          title: "No documents yet",
+          description: "Attach an external document URL or wiki link." %>
+  <% end %>
+<% end %>

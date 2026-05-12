@@ -1,0 +1,57 @@
+<% page_title "#{@document.title} — Documents" %>
+
+<% if policy(@document).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_project_document_path(@project, @document), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @document.title,
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Documents", href: project_documents_path(@project) },
+        { label: @document.title },
+      ] %>
+
+<%= render "components/card", title: "Details" do %>
+  <dl class="grid grid-cols-1 gap-y-3 text-sm">
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-muted-color">URL</dt>
+      <dd>
+        <% if @document.url.present? %>
+          <a href="<%= @document.url %>" target="_blank" rel="noopener" class="btn-link"><%= @document.url %></a>
+        <% else %>
+          <span class="italic text-muted-color">—</span>
+        <% end %>
+      </dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-muted-color">External ID</dt>
+      <dd class="font-mono text-xs"><%= @document.external_id.presence || "—" %></dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-muted-color">Metadata</dt>
+      <dd>
+        <% if @document.metadata.present? %>
+          <pre class="text-xs bg-zinc-100 dark:bg-zinc-900 rounded p-3 overflow-x-auto"><%= JSON.pretty_generate(@document.metadata) %></pre>
+        <% else %>
+          <span class="italic text-muted-color">—</span>
+        <% end %>
+      </dd>
+    </div>
+  </dl>
+<% end %>
+
+<% if policy(@document).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone" do %>
+      <%= button_to "Delete document",
+            project_document_path(@project, @document),
+            method: :delete,
+            data: { turbo_confirm: "Delete #{@document.title}?" },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>

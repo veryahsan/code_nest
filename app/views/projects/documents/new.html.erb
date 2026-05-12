@@ -1,0 +1,20 @@
+<% page_title "New document — #{@project.name}" %>
+
+<%= render "components/page_header",
+      title: "New document",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Documents", href: project_documents_path(@project) },
+        { label: "New" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
+    <%= render "projects/documents/form",
+          document: @document,
+          form_url: project_documents_path(@project),
+          form_method: :post,
+          submit_label: "Add document" %>
+  <% end %>
+</div>
