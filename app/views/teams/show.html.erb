@@ -1,0 +1,77 @@
+<% page_title "#{@team.name} — Teams" %>
+
+<% if policy(@team).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_team_path(@team), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @team.name,
+      description: "Slug: #{@team.slug}",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Teams", href: teams_path },
+        { label: @team.name },
+      ] %>
+
+<div class="card-grid-2">
+  <%= render "components/card", title: "Members" do %>
+    <% if @users.any? %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <% @users.each do |u| %>
+          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= u.email %></p>
+              <p class="text-xs text-muted-color"><%= u.org_role.humanize %></p>
+            </div>
+            <% if policy(@team).update? %>
+              <%= button_to "Remove",
+                    team_membership_path(@team, @team.team_memberships.find_by(user: u)),
+                    method: :delete,
+                    data: { turbo_confirm: "Remove #{u.email} from #{@team.name}?" },
+                    class: "btn-base btn-ghost btn-sm" %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= render "components/empty_state",
+            icon: :inbox,
+            title: "No members yet",
+            description: "Add teammates to this team using the form on the right." %>
+    <% end %>
+  <% end %>
+
+  <% if policy(@team).update? %>
+    <%= render "components/card", title: "Add a member", description: "Pick from your organisation's roster." do %>
+      <% available = current_organisation.users.where.not(id: @team.users.select(:id)).order(:email) %>
+      <% if available.any? %>
+        <%= form_with url: team_memberships_path(@team), method: :post, class: "space-y-3", local: true do |f| %>
+          <%= render "components/form_group", label: "User", for_id: "membership_user_id", required: true do %>
+            <%= f.select :user_id,
+                  available.map { |u| [u.email, u.id] },
+                  { include_blank: "Select a user" },
+                  id: "membership_user_id",
+                  class: input_classes %>
+          <% end %>
+          <%= render "components/btn", label: "Add member", type: :submit, variant: :primary, size: :sm %>
+        <% end %>
+      <% else %>
+        <p class="text-sm text-muted-color">All organisation members are already on this team.</p>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>
+
+<% if policy(@team).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone" do %>
+      <%= button_to "Delete team",
+            team_path(@team),
+            method: :delete,
+            data: { turbo_confirm: "Permanently delete #{@team.name}? Members will be detached, projects will be unassigned." },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>

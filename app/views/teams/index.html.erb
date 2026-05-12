@@ -1,0 +1,37 @@
+<% page_title "Teams — #{current_organisation.name}" %>
+
+<% if policy(Team).create? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "New team", href: new_team_path, variant: :primary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Teams",
+      description: "Membership groups inside #{current_organisation.name}.",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Teams" },
+      ] %>
+
+<%= render "components/card" do %>
+  <% if @teams.any? %>
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <% @teams.each do |team| %>
+        <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+          <div>
+            <%= link_to team.name, team_path(team),
+                  class: "block text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>
+            <p class="text-xs text-muted-color font-mono mt-0.5"><%= team.slug %></p>
+          </div>
+          <%= badge_tag "#{team.users.size} #{'member'.pluralize(team.users.size)}", variant: :neutral %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :folder,
+          title: "No teams yet",
+          description: "Create the first team to start grouping people and projects." %>
+  <% end %>
+<% end %>

@@ -1,0 +1,19 @@
+<% page_title "New team — #{current_organisation.name}" %>
+
+<%= render "components/page_header",
+      title: "New team",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Teams", href: teams_path },
+        { label: "New" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-lg" do %>
+    <%= render "teams/form",
+          team: @team,
+          form_url: teams_path,
+          form_method: :post,
+          submit_label: "Create team" %>
+  <% end %>
+</div>
