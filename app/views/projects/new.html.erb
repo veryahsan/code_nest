@@ -1,0 +1,22 @@
+<% page_title "New project" %>
+
+<%= render "components/page_header",
+      title: "New project",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Projects", href: projects_path },
+        { label: "New" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
+    <%= render "projects/form",
+          project: @project,
+          teams: @teams,
+          languages: @languages,
+          technologies: @technologies,
+          form_url: projects_path,
+          form_method: :post,
+          submit_label: "Create project" %>
+  <% end %>
+</div>

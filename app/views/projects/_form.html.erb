@@ -1,0 +1,79 @@
+<%= form_with model: project, url: form_url, method: form_method, class: "space-y-4" do |f| %>
+  <% if project.errors.any? %>
+    <%= render "components/alert",
+          variant: :danger,
+          title: "#{pluralize(project.errors.count, 'issue')} prevented saving",
+          message: project.errors.full_messages.to_sentence,
+          dismissible: false %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Name",
+        for_id: "project_name",
+        required: true,
+        error: project.errors[:name].first do %>
+    <%= f.text_field :name,
+          id: "project_name",
+          autofocus: true,
+          class: input_classes(project.errors[:name].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Slug",
+        for_id: "project_slug",
+        hint: "Optional. Defaults to a normalised version of the name.",
+        error: project.errors[:slug].first do %>
+    <%= f.text_field :slug,
+          id: "project_slug",
+          class: input_classes(project.errors[:slug].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Description",
+        for_id: "project_description",
+        error: project.errors[:description].first do %>
+    <%= f.text_area :description,
+          id: "project_description",
+          rows: 4,
+          class: input_classes(project.errors[:description].any?) %>
+  <% end %>
+
+  <%= render "components/form_group",
+        label: "Team",
+        for_id: "project_team_id",
+        hint: "Optional. Pick the team that owns this project.",
+        error: project.errors[:team_id].first || project.errors[:team].first do %>
+    <%= f.select :team_id,
+          teams.map { |t| [t.name, t.id] },
+          { include_blank: "Unassigned" },
+          id: "project_team_id",
+          class: input_classes %>
+  <% end %>
+
+  <% if local_assigns[:languages].present? %>
+    <%= render "components/form_group", label: "Languages", hint: "Multi-select. Update later from the project page." do %>
+      <%= f.collection_check_boxes :language_ids, languages, :id, :name do |b| %>
+        <label class="inline-flex items-center mr-3 text-sm">
+          <%= b.check_box(class: "mr-1") %>
+          <%= b.text %>
+        </label>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if local_assigns[:technologies].present? %>
+    <%= render "components/form_group", label: "Technologies", hint: "Multi-select. Update later from the project page." do %>
+      <%= f.collection_check_boxes :technology_ids, technologies, :id, :name do |b| %>
+        <label class="inline-flex items-center mr-3 text-sm">
+          <%= b.check_box(class: "mr-1") %>
+          <%= b.text %>
+        </label>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+    <%= link_to "Cancel", projects_path, class: "btn-link text-sm font-medium" %>
+    <%= render "components/btn", label: submit_label, type: :submit, variant: :primary %>
+  </div>
+<% end %>

@@ -1,0 +1,61 @@
+<% page_title "Projects — #{current_organisation.name}" %>
+
+<% if policy(Project).create? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "New project", href: new_project_path, variant: :primary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Projects",
+      description: "Codebases tracked for #{current_organisation.name}.",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Projects" },
+      ] %>
+
+<%= render "components/card" do %>
+  <% if @projects.any? %>
+    <div class="overflow-x-auto -mx-1">
+      <table class="w-full text-sm text-left">
+        <thead>
+          <tr class="text-xs text-muted-color border-b border-zinc-200 dark:border-zinc-800">
+            <th class="pb-2 pr-4 font-medium">Name</th>
+            <th class="pb-2 pr-4 font-medium">Team</th>
+            <th class="pb-2 pr-4 font-medium">Stack</th>
+            <th class="pb-2 font-medium">Slug</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+          <% @projects.each do |project| %>
+            <tr>
+              <td class="py-2.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
+                <%= link_to project.name, project_path(project), class: "hover:underline" %>
+              </td>
+              <td class="py-2.5 pr-4 text-muted-color">
+                <% if project.team %>
+                  <%= project.team.name %>
+                <% else %>
+                  <span class="italic">Unassigned</span>
+                <% end %>
+              </td>
+              <td class="py-2.5 pr-4">
+                <div class="flex flex-wrap gap-1">
+                  <% project.technologies.each do |t| %>
+                    <%= badge_tag t.name, variant: :brand %>
+                  <% end %>
+                </div>
+              </td>
+              <td class="py-2.5 font-mono text-xs text-muted-color"><%= project.slug %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :folder,
+          title: "No projects yet",
+          description: "Create your first project to start tracking languages, technologies, and docs." %>
+  <% end %>
+<% end %>

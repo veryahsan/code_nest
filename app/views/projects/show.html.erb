@@ -1,0 +1,133 @@
+<% page_title "#{@project.name} — Projects" %>
+
+<% if policy(@project).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_project_path(@project), variant: :secondary, size: :sm %>
+    <%= render "components/btn", label: "Documents", href: project_documents_path(@project), variant: :secondary, size: :sm %>
+    <%= render "components/btn", label: "Resources", href: project_remote_resources_path(@project), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @project.name,
+      description: @project.description,
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Projects", href: projects_path },
+        { label: @project.name },
+      ] %>
+
+<div class="card-grid-2">
+  <%= render "components/card", title: "Overview" do %>
+    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Slug</dt>
+        <dd class="font-mono text-xs text-muted-color"><%= @project.slug %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Team</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100"><%= @project.team&.name || "Unassigned" %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Languages</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100">
+          <% if @languages.any? %>
+            <div class="flex flex-wrap gap-1 mt-1">
+              <% @languages.each do |l| %>
+                <% if policy(@project).update? %>
+                  <%= button_to project_project_language_path(@project, @project.project_languages.find_by(language: l)),
+                        method: :delete,
+                        data: { turbo_confirm: "Detach #{l.name}?" },
+                        form: { class: "inline" },
+                        class: "btn-base btn-ghost btn-sm" do %>
+                    <%= l.name %>
+                  <% end %>
+                <% else %>
+                  <%= badge_tag l.name, variant: :neutral %>
+                <% end %>
+              <% end %>
+            </div>
+          <% else %>
+            <span class="italic text-muted-color">None</span>
+          <% end %>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Technologies</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100">
+          <% if @technologies.any? %>
+            <div class="flex flex-wrap gap-1 mt-1">
+              <% @technologies.each do |t| %>
+                <% if policy(@project).update? %>
+                  <%= button_to project_project_technology_path(@project, @project.project_technologies.find_by(technology: t)),
+                        method: :delete,
+                        data: { turbo_confirm: "Detach #{t.name}?" },
+                        form: { class: "inline" },
+                        class: "btn-base btn-ghost btn-sm" do %>
+                    <%= t.name %>
+                  <% end %>
+                <% else %>
+                  <%= badge_tag t.name, variant: :brand %>
+                <% end %>
+              <% end %>
+            </div>
+          <% else %>
+            <span class="italic text-muted-color">None</span>
+          <% end %>
+        </dd>
+      </div>
+    </dl>
+
+    <% if policy(@project).update? %>
+      <hr class="my-4 border-zinc-200 dark:border-zinc-800" />
+      <h4 class="text-xs uppercase tracking-wide text-muted-color mb-2">Attach a language</h4>
+      <%= form_with url: project_project_languages_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
+        <%= f.select :language_id,
+              Language.where.not(id: @languages.select(:id)).order(:name).map { |l| [l.name, l.id] },
+              { include_blank: "Select…" },
+              class: input_classes %>
+        <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
+      <% end %>
+
+      <h4 class="text-xs uppercase tracking-wide text-muted-color mt-4 mb-2">Attach a technology</h4>
+      <%= form_with url: project_project_technologies_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
+        <%= f.select :technology_id,
+              Technology.where.not(id: @technologies.select(:id)).order(:name).map { |t| [t.name, t.id] },
+              { include_blank: "Select…" },
+              class: input_classes %>
+        <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <%= render "components/card", title: "Sub-resources" do %>
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <li class="py-3 first:pt-0 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Documents</p>
+          <p class="text-xs text-muted-color"><%= pluralize(@project.project_documents.count, "doc") %> attached</p>
+        </div>
+        <%= link_to "Manage", project_documents_path(@project), class: "btn-link text-sm font-medium" %>
+      </li>
+      <li class="py-3 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Remote resources</p>
+          <p class="text-xs text-muted-color"><%= pluralize(@project.remote_resources.count, "resource") %> attached</p>
+        </div>
+        <%= link_to "Manage", project_remote_resources_path(@project), class: "btn-link text-sm font-medium" %>
+      </li>
+    </ul>
+  <% end %>
+</div>
+
+<% if policy(@project).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone" do %>
+      <%= button_to "Delete project",
+            project_path(@project),
+            method: :delete,
+            data: { turbo_confirm: "Delete #{@project.name}? Documents, resources, and tag assignments will all be removed." },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>

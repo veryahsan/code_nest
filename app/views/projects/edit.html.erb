@@ -1,0 +1,21 @@
+<% page_title "Edit project — #{@project.name}" %>
+
+<%= render "components/page_header",
+      title: "Edit project",
+      breadcrumbs: [
+        { label: "Dashboard", href: dashboard_path },
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Edit" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
+    <%= render "projects/form",
+          project: @project,
+          teams: @teams,
+          form_url: project_path(@project),
+          form_method: :patch,
+          submit_label: "Save changes" %>
+  <% end %>
+</div>
