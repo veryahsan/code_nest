@@ -8,7 +8,14 @@ module Api
         before_action :load_team
 
         def index
-          render json: TeamMembershipSerializer.new(@team.team_memberships).serializable_hash
+          # `order(:created_at)` gives pagy a deterministic ordering — without
+          # it, postgres may shuffle rows across pages.
+          @pagy, memberships = pagy(@team.team_memberships.order(:created_at))
+          render json: TeamMembershipSerializer.new(
+            memberships,
+            meta:  pagy_meta(@pagy),
+            links: pagy_links(@pagy),
+          ).serializable_hash
         end
 
         def create

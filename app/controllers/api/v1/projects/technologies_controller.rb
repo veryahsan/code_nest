@@ -8,7 +8,12 @@ module Api
         before_action :load_project
 
         def index
-          render json: TechnologySerializer.new(@project.technologies.order(:name)).serializable_hash
+          @pagy, technologies = pagy(@project.technologies.order(:name))
+          render json: TechnologySerializer.new(
+            technologies,
+            meta:  pagy_meta(@pagy),
+            links: pagy_links(@pagy),
+          ).serializable_hash
         end
 
         def create

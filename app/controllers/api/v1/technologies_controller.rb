@@ -4,7 +4,12 @@ module Api
   module V1
     class TechnologiesController < BaseController
       def index
-        render json: TechnologySerializer.new(Technology.order(:name)).serializable_hash
+        @pagy, technologies = pagy(Technology.order(:name))
+        render json: TechnologySerializer.new(
+          technologies,
+          meta:  pagy_meta(@pagy),
+          links: pagy_links(@pagy),
+        ).serializable_hash
       end
 
       def show

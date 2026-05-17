@@ -9,8 +9,14 @@ module Api
 
       def index
         authorize Invitation
-        invitations = policy_scope(current_api_organisation.invitations).order(created_at: :desc)
-        render json: InvitationSerializer.new(invitations).serializable_hash
+        @pagy, invitations = pagy(
+          policy_scope(current_api_organisation.invitations).order(created_at: :desc),
+        )
+        render json: InvitationSerializer.new(
+          invitations,
+          meta:  pagy_meta(@pagy),
+          links: pagy_links(@pagy),
+        ).serializable_hash
       end
 
       def show

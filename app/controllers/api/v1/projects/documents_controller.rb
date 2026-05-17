@@ -10,7 +10,12 @@ module Api
 
         def index
           authorize ProjectDocument
-          render json: ProjectDocumentSerializer.new(@project.project_documents.order(:title)).serializable_hash
+          @pagy, documents = pagy(@project.project_documents.order(:title))
+          render json: ProjectDocumentSerializer.new(
+            documents,
+            meta:  pagy_meta(@pagy),
+            links: pagy_links(@pagy),
+          ).serializable_hash
         end
 
         def show

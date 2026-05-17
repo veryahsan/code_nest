@@ -8,8 +8,16 @@ module Api
 
       def index
         authorize Project
-        projects = policy_scope(current_api_organisation.projects).includes(:team, :languages, :technologies).order(:name)
-        render json: ProjectSerializer.new(projects).serializable_hash
+        @pagy, projects = pagy(
+          policy_scope(current_api_organisation.projects)
+            .includes(:team, :languages, :technologies)
+            .order(:name),
+        )
+        render json: ProjectSerializer.new(
+          projects,
+          meta:  pagy_meta(@pagy),
+          links: pagy_links(@pagy),
+        ).serializable_hash
       end
 
       def show

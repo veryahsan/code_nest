@@ -8,8 +8,16 @@ module Api
 
       def index
         authorize Employee
-        employees = policy_scope(current_api_organisation.employees).includes(:user, :manager).order(:display_name)
-        render json: EmployeeSerializer.new(employees).serializable_hash
+        @pagy, employees = pagy(
+          policy_scope(current_api_organisation.employees)
+            .includes(:user, :manager)
+            .order(:display_name),
+        )
+        render json: EmployeeSerializer.new(
+          employees,
+          meta:  pagy_meta(@pagy),
+          links: pagy_links(@pagy),
+        ).serializable_hash
       end
 
       def show

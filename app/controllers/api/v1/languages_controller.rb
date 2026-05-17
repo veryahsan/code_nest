@@ -4,7 +4,12 @@ module Api
   module V1
     class LanguagesController < BaseController
       def index
-        render json: LanguageSerializer.new(Language.order(:name)).serializable_hash
+        @pagy, languages = pagy(Language.order(:name))
+        render json: LanguageSerializer.new(
+          languages,
+          meta:  pagy_meta(@pagy),
+          links: pagy_links(@pagy),
+        ).serializable_hash
       end
 
       def show

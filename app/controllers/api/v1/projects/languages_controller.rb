@@ -8,7 +8,12 @@ module Api
         before_action :load_project
 
         def index
-          render json: LanguageSerializer.new(@project.languages.order(:name)).serializable_hash
+          @pagy, languages = pagy(@project.languages.order(:name))
+          render json: LanguageSerializer.new(
+            languages,
+            meta:  pagy_meta(@pagy),
+            links: pagy_links(@pagy),
+          ).serializable_hash
         end
 
         def create

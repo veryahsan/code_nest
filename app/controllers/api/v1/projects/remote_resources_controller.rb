@@ -10,7 +10,12 @@ module Api
 
         def index
           authorize RemoteResource
-          render json: RemoteResourceSerializer.new(@project.remote_resources.order(:name)).serializable_hash
+          @pagy, resources = pagy(@project.remote_resources.order(:name))
+          render json: RemoteResourceSerializer.new(
+            resources,
+            meta:  pagy_meta(@pagy),
+            links: pagy_links(@pagy),
+          ).serializable_hash
         end
 
         def show

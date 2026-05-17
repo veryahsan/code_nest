@@ -8,8 +8,12 @@ module Api
 
       def index
         authorize Team
-        teams = policy_scope(current_api_organisation.teams).order(:name)
-        render json: TeamSerializer.new(teams).serializable_hash
+        @pagy, teams = pagy(policy_scope(current_api_organisation.teams).order(:name))
+        render json: TeamSerializer.new(
+          teams,
+          meta:  pagy_meta(@pagy),
+          links: pagy_links(@pagy),
+        ).serializable_hash
       end
 
       def show
