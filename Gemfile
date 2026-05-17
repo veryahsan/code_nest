@@ -16,7 +16,7 @@ gem "thruster", require: false
 # ---------------------------------------------------------------------------
 gem "pg", "~> 1.5"
 gem "redis", "~> 5.3"
-gem "connection_pool", "~> 2.5.5"
+gem "connection_pool", "~> 3.0.2"
 
 # ---------------------------------------------------------------------------
 # Frontend (Hotwire + Tailwind + Importmap)
