@@ -44,7 +44,7 @@ gem "omniauth-rails_csrf_protection", "~> 1.0"
 gem "jquery-rails"
 gem "jquery-ui-rails"
 gem "pundit", "~> 2.4"
-gem "jwt", "~> 2.9"
+gem "jwt", "~> 3.1"
 gem "bcrypt", "~> 3.1.7"
 
 # ---------------------------------------------------------------------------
