@@ -7,6 +7,13 @@ class User < ApplicationRecord
 
   belongs_to :organisation, optional: true, inverse_of: :users
 
+  has_one_attached :avatar do |attachable|
+    attachable.variant :thumb, resize_to_limit: [ 80, 80 ]
+    attachable.variant :profile, resize_to_limit: [ 200, 200 ]
+  end
+
+  validate :acceptable_avatar
+
   has_many :identities, dependent: :destroy
   has_many :team_memberships, dependent: :destroy
   has_many :teams, through: :team_memberships
@@ -15,6 +22,8 @@ class User < ApplicationRecord
                              inverse_of: :invited_by, dependent: :nullify
 
   enum :org_role, { member: 0, admin: 1 }, prefix: :org
+
+  attr_accessor :remove_avatar
 
   # Tenant rules:
   # * super admins are platform-wide and must NEVER be tied to an organisation
@@ -44,13 +53,19 @@ class User < ApplicationRecord
     org_admin?
   end
 
-  # SSO-only users have no usable password — Devise generates a random
-  # one in `Users::CreateFromOmniauthService` so :validatable still
-  # passes on creation, but we don't want to force them to type one when
-  # they edit their profile later. A user qualifies as "SSO-only" the
-  # moment any identity is linked to them.
+  # A user qualifies as "SSO-only" the moment any identity is linked to
+  # them. The flag drives two pieces of UX/policy:
+  #   * `password_required?` is relaxed so Devise stops insisting on a
+  #     password (the one stored is a random token from
+  #     `Users::CreateFromOmniauthService`).
+  def sso_only?
+    persisted? && identities.exists?
+  end
+
+  # See `#sso_only?` — SSO-only users never type a password, so :validatable
+  # should not force one on profile edits.
   def password_required?
-    return false if persisted? && identities.exists?
+    return false if sso_only?
 
     super
   end
@@ -68,5 +83,20 @@ class User < ApplicationRecord
 
   def auto_confirm_super_admin
     skip_confirmation! if super_admin?
+  end
+
+  AVATAR_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
+  AVATAR_MAX_SIZE      = 5.megabytes
+
+  def acceptable_avatar
+    return unless avatar.attached? && avatar.blob.new_record?
+
+    unless avatar.content_type.in?(AVATAR_CONTENT_TYPES)
+      errors.add(:avatar, "must be a JPEG, PNG, or WebP image")
+    end
+
+    if avatar.byte_size > AVATAR_MAX_SIZE
+      errors.add(:avatar, "must be smaller than 5 MB")
+    end
   end
 end

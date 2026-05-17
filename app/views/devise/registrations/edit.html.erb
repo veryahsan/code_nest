@@ -1,23 +1,18 @@
 <% page_title "Account — Code Nest" %>
 
+<% sso_only = resource.sso_only? %>
+
 <%= render "components/page_header",
       title: "Account settings",
-      description: "Update your email or password." %>
+      description: "Update your profile picture#{sso_only ? ' or email' : ', email, or password'}." %>
 
 <div class="max-w-lg">
   <%= render "components/card", title: "Profile & security" do %>
     <%= render "devise/shared/error_messages", resource: resource %>
 
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, class: "space-y-4" }) do |f| %>
-      <%= render "components/form_group",
-            label: "Email",
-            for_id: "user_email",
-            required: true,
-            error: resource.errors[:email].first do %>
-        <%= f.email_field :email, autofocus: true, autocomplete: "email",
-              class: input_classes(resource.errors[:email].any?) %>
-      <% end %>
-
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+                 multipart: true,
+                 html: { method: :put, class: "space-y-4" }) do |f| %>
       <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
         <%= render "components/alert",
               variant: :info,
@@ -25,29 +20,75 @@
               dismissible: false %>
       <% end %>
 
-      <%= render "components/form_group",
-            label: "New password",
-            for_id: "user_password",
-            hint: "Leave blank if you don’t want to change it." do %>
-        <%= f.password_field :password, autocomplete: "new-password",
-              class: input_classes(resource.errors[:password].any?) %>
-      <% end %>
+      <%# ── Avatar ─────────────────────────────────────────────────────────── %>
+      <div class="flex items-center gap-4">
+        <%= user_avatar_tag(resource, variant: :profile, css: "h-16 w-16") %>
+        <div class="min-w-0 flex-1 space-y-1">
+          <label class="block text-sm font-medium text-base-color" for="user_avatar">Profile picture</label>
+          <%= f.file_field :avatar, id: "user_avatar",
+                accept: "image/jpeg,image/png,image/webp",
+                class: "block w-full text-sm text-muted-color
+                        file:mr-3 file:rounded-md file:border-0
+                        file:bg-zinc-100 file:px-3 file:py-1.5
+                        file:text-sm file:font-medium file:text-zinc-700
+                        hover:file:bg-zinc-200
+                        dark:file:bg-zinc-800 dark:file:text-zinc-300
+                        dark:hover:file:bg-zinc-700" %>
+          <p class="text-xs text-muted-color">JPEG, PNG or WebP · max 5 MB</p>
+          <% if resource.errors[:avatar].any? %>
+            <p class="text-xs text-red-600"><%= resource.errors[:avatar].first %></p>
+          <% end %>
+        </div>
+        <% if resource.avatar.attached? %>
+          <label class="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-sm text-muted-color hover:text-base-color">
+            <%= f.check_box :remove_avatar, class: "rounded border-zinc-300 text-brand-600 focus:ring-brand-500" %>
+            Remove
+          </label>
+        <% end %>
+      </div>
 
-      <%= render "components/form_group",
-            label: "Confirm new password",
-            for_id: "user_password_confirmation" do %>
-        <%= f.password_field :password_confirmation, autocomplete: "new-password",
-              class: input_classes(resource.errors[:password_confirmation].any?) %>
-      <% end %>
+      <% if sso_only %>
+        <%# SSO-only accounts have no usable password — `User#password_required?`
+            returns false for them and `Users::RegistrationsController` updates
+            without a current-password check. Surface that to the user so the
+            missing fields aren't surprising. %>
+        <%= render "components/alert",
+              variant: :info,
+              message: "Your account signs in with single sign-on, so there is no password to manage here.",
+              dismissible: false %>
+      <% else %>
+        <%= render "components/form_group",
+              label: "Email",
+              for_id: "user_email",
+              required: true,
+              error: resource.errors[:email].first do %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email",
+                class: input_classes(resource.errors[:email].any?) %>
+        <% end %>
+        <%= render "components/form_group",
+              label: "New password",
+              for_id: "user_password",
+              hint: "Leave blank if you don't want to change it." do %>
+          <%= f.password_field :password, autocomplete: "new-password",
+                class: input_classes(resource.errors[:password].any?) %>
+        <% end %>
 
-      <%= render "components/form_group",
-            label: "Current password",
-            for_id: "user_current_password",
-            hint: "Required to confirm changes.",
-            required: true,
-            error: resource.errors[:current_password].first do %>
-        <%= f.password_field :current_password, autocomplete: "current-password",
-              class: input_classes(resource.errors[:current_password].any?) %>
+        <%= render "components/form_group",
+              label: "Confirm new password",
+              for_id: "user_password_confirmation" do %>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password",
+                class: input_classes(resource.errors[:password_confirmation].any?) %>
+        <% end %>
+
+        <%= render "components/form_group",
+              label: "Current password",
+              for_id: "user_current_password",
+              hint: "Required to confirm changes.",
+              required: true,
+              error: resource.errors[:current_password].first do %>
+          <%= f.password_field :current_password, autocomplete: "current-password",
+                class: input_classes(resource.errors[:current_password].any?) %>
+        <% end %>
       <% end %>
 
       <div class="flex flex-wrap gap-2 pt-2">
