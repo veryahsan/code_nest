@@ -8,6 +8,10 @@ module Api
     class BaseController < ActionController::API
       include Pundit::Authorization
       include Api::V1::ErrorRendering
+      # ActionController::API does NOT inherit Pagy::Method from
+      # ApplicationController, so it must be included separately for `pagy(...)`
+      # to be available in API actions.
+      include Pagy::Method
 
       before_action :authenticate_api_user!
 
@@ -49,6 +53,28 @@ module Api
 
       def pundit_user
         current_api_user
+      end
+
+      # JSON:API-style metadata block for paginated index endpoints.
+      def pagy_meta(pagy)
+        {
+          current_page: pagy.page,
+          per_page:     pagy.limit,
+          total_pages:  pagy.last,
+          total_count:  pagy.count
+        }
+      end
+
+      # JSON:API-style links block for paginated index endpoints. Keys with a
+      # nil URL (e.g. no `next` on the last page) are omitted via `.compact`.
+      def pagy_links(pagy)
+        {
+          self:  pagy.page_url(:current),
+          first: pagy.page_url(:first),
+          prev:  pagy.page_url(:previous),
+          next:  pagy.page_url(:next),
+          last:  pagy.page_url(:last)
+        }.compact
       end
     end
   end

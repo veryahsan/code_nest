@@ -54,6 +54,11 @@ gem "jsonapi-serializer", "~> 2.2"
 gem "rack-cors", require: "rack/cors"
 
 # ---------------------------------------------------------------------------
+# Pagination
+# ---------------------------------------------------------------------------
+gem "pagy", "~> 43.5"
+
+# ---------------------------------------------------------------------------
 # Encryption helpers
 # ---------------------------------------------------------------------------
 gem "lockbox", "~> 1.3" # for encrypting RemoteResource credentials beyond Rails' built-in attr_encrypted
@@ -83,7 +88,11 @@ gem "tzinfo-data", platforms: %i[windows jruby]
 # Development & test
 # ---------------------------------------------------------------------------
 group :development, :test do
-  gem "debug", platforms: %i[mri windows], require: "debug/prelude"
+  # Pry as the REPL + step-debugger. `pry-rails` makes `bin/rails console`
+  # drop into Pry instead of IRB; `pry-byebug` adds `next` / `step` /
+  # `continue` / `finish` commands at any `binding.pry` breakpoint.
+  gem "pry-rails", "~> 0.3"
+  gem "pry-byebug", "~> 3.10"
   gem "rspec-rails", "~> 7.1"
   gem "factory_bot_rails", "~> 6.4"
   gem "faker", "~> 3.5"

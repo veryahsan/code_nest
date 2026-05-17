@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   include Pundit::Authorization
+  include Pagy::Method
 
   allow_browser versions: :modern
 

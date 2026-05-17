@@ -83,6 +83,77 @@ module ApplicationHelper
     cn("input", has_error && "input-error")
   end
 
+  # ── Avatar helpers ────────────────────────────────────────────────────────────
+
+  # Renders the user's avatar image if one is attached, otherwise a coloured
+  # circle showing the first letter of their email address.
+  #
+  # Usage:
+  #   <%= user_avatar_tag(current_user) %>
+  #   <%= user_avatar_tag(current_user, variant: :profile, css: "h-20 w-20") %>
+  def user_avatar_tag(user, variant: :thumb, css: "h-8 w-8")
+    base_classes = "#{css} rounded-full object-cover"
+    if user.avatar.attached?
+      image_tag user.avatar.variant(variant),
+                class: base_classes,
+                alt: "#{user.email} avatar"
+    else
+      initial = user.email[0].upcase
+      content_tag :span, initial,
+                  class: "#{css} inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white select-none",
+                  aria: { label: "#{user.email} avatar" }
+    end
+  end
+
+  # ── Pagination helpers ────────────────────────────────────────────────────────
+
+  # Render the shared pagination partial for a Pagy::Offset instance.
+  # Returns nil if there's only one page, so views can call this unconditionally.
+  #
+  # Usage:  <%= pagination_tag(@pagy) %>
+  def pagination_tag(pagy)
+    return if pagy.nil? || pagy.last <= 1
+
+    render "shared/pagination", pagy: pagy
+  end
+
+  # Compact, numbered series for the pagination bar (page numbers + gap markers).
+  # Mirrors Pagy's internal `series` algorithm but lives here so the view doesn't
+  # need to reach into Pagy's protected methods.
+  #
+  # Returns an Array of:
+  #   Integer  – render as a link to that page
+  #   String   – current page (render as static highlighted label)
+  #   :gap     – render as an ellipsis separator
+  #
+  # Examples (with default 7 slots):
+  #   page 1 of 3   -> [1, "1", 2, 3] — wait, page 1 -> ["1", 2, 3]
+  #   page 5 of 36  -> [1, :gap, 4, "5", 6, :gap, 36]
+  def pagination_series(pagy, slots: 7)
+    last    = pagy.last
+    current = pagy.page
+    return (1..last).to_a.map { |p| p == current ? p.to_s : p } if last <= slots
+
+    half = (slots - 1) / 2
+    start =
+      if current <= half
+        1
+      elsif current > last - slots + half
+        last - slots + 1
+      else
+        current - half
+      end
+
+    series = (start...(start + slots)).to_a
+    series[0]  = 1
+    series[1]  = :gap unless series[1] == 2
+    series[-2] = :gap unless series[-2] == last - 1
+    series[-1] = last
+    idx        = series.index(current)
+    series[idx] = current.to_s if idx
+    series
+  end
+
   # ── Turbo helpers ─────────────────────────────────────────────────────────────
 
   # Wrap content in a Turbo Frame for easy partial replacement.

@@ -1,0 +1,71 @@
+<%#
+  Tailwind-styled pagination nav.
+
+  Local:
+    pagy   – a Pagy::Offset instance (from `pagy(scope)` in the controller).
+
+  Render via the `pagination_tag(@pagy)` helper, which guards against
+  single-page scopes so the partial assumes pagy.last >= 2.
+%>
+<nav class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm"
+     aria-label="Pagination">
+
+  <p class="text-muted-color">
+    Showing <span class="font-medium text-base-color"><%= pagy.from %></span>
+    – <span class="font-medium text-base-color"><%= pagy.to %></span>
+    of <span class="font-medium text-base-color"><%= pagy.count %></span>
+  </p>
+
+  <ul class="inline-flex items-center gap-1">
+    <%# ── Previous ─────────────────────────────────────────────────────────── %>
+    <li>
+      <% if pagy.previous %>
+        <%= link_to pagy.page_url(:previous),
+              class: "btn-base btn-ghost btn-sm",
+              rel: "prev",
+              aria: { label: "Previous page" } do %>
+          &laquo; Prev
+        <% end %>
+      <% else %>
+        <span class="btn-base btn-ghost btn-sm opacity-50 cursor-not-allowed" aria-disabled="true">
+          &laquo; Prev
+        </span>
+      <% end %>
+    </li>
+
+    <%# ── Numbered series with gap markers ─────────────────────────────────── %>
+    <% pagination_series(pagy).each do |item| %>
+      <li>
+        <% case item %>
+        <% when Integer %>
+          <%= link_to item,
+                pagy.page_url(item),
+                class: "btn-base btn-ghost btn-sm",
+                aria: { label: "Go to page #{item}" } %>
+        <% when String %>
+          <span class="btn-base btn-primary btn-sm cursor-default"
+                aria-current="page"
+                aria-label="Current page, <%= item %>"><%= item %></span>
+        <% when :gap %>
+          <span class="px-1.5 text-muted-color" aria-hidden="true">&hellip;</span>
+        <% end %>
+      </li>
+    <% end %>
+
+    <%# ── Next ─────────────────────────────────────────────────────────────── %>
+    <li>
+      <% if pagy.next %>
+        <%= link_to pagy.page_url(:next),
+              class: "btn-base btn-ghost btn-sm",
+              rel: "next",
+              aria: { label: "Next page" } do %>
+          Next &raquo;
+        <% end %>
+      <% else %>
+        <span class="btn-base btn-ghost btn-sm opacity-50 cursor-not-allowed" aria-disabled="true">
+          Next &raquo;
+        </span>
+      <% end %>
+    </li>
+  </ul>
+</nav>
