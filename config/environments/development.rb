@@ -51,6 +51,13 @@ Rails.application.configure do
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
+  # Log to STDOUT so logs are visible regardless of how the server is started
+  # (bin/rails server, bundle exec puma, or foreman start). Without this,
+  # invoking Puma directly bypasses Rails::Server's auto-STDOUT setup and logs
+  # go only to log/development.log.
+  config.logger = ActiveSupport::TaggedLogging.logger($stdout)
+  config.log_level = :debug
+
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
 
