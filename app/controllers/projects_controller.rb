@@ -8,9 +8,11 @@ class ProjectsController < ApplicationController
 
   def index
     authorize Project
-    @projects = policy_scope(current_organisation.projects)
-                  .includes(:team, :languages, :technologies)
-                  .order(:name)
+    @pagy, @projects = pagy(
+      policy_scope(current_organisation.projects)
+        .includes(:team, :languages, :technologies)
+        .order(:name),
+    )
   end
 
   def show

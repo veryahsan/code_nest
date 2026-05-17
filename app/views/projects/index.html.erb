@@ -52,6 +52,7 @@
         </tbody>
       </table>
     </div>
+    <%= pagination_tag(@pagy) %>
   <% else %>
     <%= render "components/empty_state",
           icon: :folder,

@@ -9,7 +9,7 @@ module Projects
 
     def index
       authorize RemoteResource
-      @resources = @project.remote_resources.order(:name)
+      @pagy, @resources = pagy(@project.remote_resources.order(:name))
     end
 
     def show

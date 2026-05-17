@@ -33,6 +33,7 @@
         </li>
       <% end %>
     </ul>
+    <%= pagination_tag(@pagy) %>
   <% else %>
     <%= render "components/empty_state",
           icon: :document,

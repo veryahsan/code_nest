@@ -8,9 +8,11 @@ class EmployeesController < ApplicationController
 
   def index
     authorize Employee
-    @employees = policy_scope(current_organisation.employees)
-                   .includes(:user, :manager)
-                   .order(:display_name)
+    @pagy, @employees = pagy(
+      policy_scope(current_organisation.employees)
+        .includes(:user, :manager)
+        .order(:display_name),
+    )
   end
 
   def show; end

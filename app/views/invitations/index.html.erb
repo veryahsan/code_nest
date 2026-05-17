@@ -40,6 +40,7 @@
           </li>
         <% end %>
       </ul>
+      <%= pagination_tag(@pagy_pending) %>
     <% else %>
       <%= render "components/empty_state",
             icon: :inbox,
@@ -58,6 +59,7 @@
           </li>
         <% end %>
       </ul>
+      <%= pagination_tag(@pagy_accepted) %>
     <% else %>
       <p class="text-sm text-muted-color">No invitations have been accepted yet.</p>
     <% end %>

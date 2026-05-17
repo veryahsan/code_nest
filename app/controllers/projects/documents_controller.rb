@@ -9,7 +9,7 @@ module Projects
 
     def index
       authorize ProjectDocument
-      @documents = @project.project_documents.order(:title)
+      @pagy, @documents = pagy(@project.project_documents.order(:title))
     end
 
     def show; end

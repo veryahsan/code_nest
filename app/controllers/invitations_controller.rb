@@ -11,8 +11,16 @@ class InvitationsController < ApplicationController
 
   def index
     authorize Invitation
-    @pending = current_organisation.invitations.pending.order(created_at: :desc)
-    @accepted = current_organisation.invitations.accepted.order(created_at: :desc).limit(20)
+    # Two independent paginators on one page — each gets its own page param so
+    # navigating one side doesn't reset the other.
+    @pagy_pending, @pending = pagy(
+      current_organisation.invitations.pending.order(created_at: :desc),
+      page_key: "pending_page",
+    )
+    @pagy_accepted, @accepted = pagy(
+      current_organisation.invitations.accepted.order(created_at: :desc),
+      page_key: "accepted_page",
+    )
   end
 
   def new

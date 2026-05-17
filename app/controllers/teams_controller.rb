@@ -11,7 +11,9 @@ class TeamsController < ApplicationController
 
   def index
     authorize Team
-    @teams = policy_scope(current_organisation.teams).order(:name).includes(:users)
+    @pagy, @teams = pagy(
+      policy_scope(current_organisation.teams).order(:name).includes(:users),
+    )
   end
 
   def show
