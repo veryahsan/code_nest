@@ -98,7 +98,7 @@ group :development, :test do
   gem "faker", "~> 3.5"
   gem "shoulda-matchers", "~> 6.4"
   gem "rails-controller-testing"
-  gem "pundit-matchers", "~> 3.1"
+  gem "pundit-matchers", "~> 4.0"
   gem "brakeman", require: false
   gem "bundler-audit", require: false
   gem "rubocop-rails-omakase", require: false
