@@ -61,7 +61,7 @@ gem "pagy", "~> 43.5"
 # ---------------------------------------------------------------------------
 # Encryption helpers
 # ---------------------------------------------------------------------------
-gem "lockbox", "~> 1.3" # for encrypting RemoteResource credentials beyond Rails' built-in attr_encrypted
+gem "lockbox", "~> 2.2" # for encrypting RemoteResource credentials beyond Rails' built-in attr_encrypted
 
 # ---------------------------------------------------------------------------
 # Observability, audit & analytics
