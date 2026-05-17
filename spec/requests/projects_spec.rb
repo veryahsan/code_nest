@@ -80,4 +80,21 @@ RSpec.describe "Projects", type: :request do
       expect { delete project_path(project) }.not_to change(Project, :count)
     end
   end
+
+  describe "GET /projects (pagination)" do
+    before do
+      sign_in member
+      11.times { |i| create(:project, organisation: org, name: "Project #{format('%02d', i)}") }
+    end
+
+    it "returns 200 on page 2" do
+      get projects_path, params: { page: 2 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders the pagination nav when there is more than one page" do
+      get projects_path
+      expect(response.body).to include("aria-label=\"Pagination\"")
+    end
+  end
 end

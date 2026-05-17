@@ -104,4 +104,21 @@ RSpec.describe "Teams", type: :request do
       expect { delete team_path(team) }.not_to change(Team, :count)
     end
   end
+
+  describe "GET /teams (pagination)" do
+    before do
+      sign_in member
+      11.times { |i| create(:team, organisation: org, name: "Team #{format('%02d', i)}") }
+    end
+
+    it "returns 200 on page 2" do
+      get teams_path, params: { page: 2 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders the pagination nav when there is more than one page" do
+      get teams_path
+      expect(response.body).to include("aria-label=\"Pagination\"")
+    end
+  end
 end

@@ -49,4 +49,21 @@ RSpec.describe "Projects::Documents", type: :request do
       expect { delete project_document_path(project, document) }.to change(ProjectDocument, :count).by(-1)
     end
   end
+
+  describe "GET /projects/:project_id/documents (pagination)" do
+    before do
+      sign_in member
+      11.times { |i| create(:project_document, project: project, title: "Doc #{format('%02d', i)}") }
+    end
+
+    it "returns 200 on page 2" do
+      get project_documents_path(project), params: { page: 2 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders the pagination nav when there is more than one page" do
+      get project_documents_path(project)
+      expect(response.body).to include("aria-label=\"Pagination\"")
+    end
+  end
 end

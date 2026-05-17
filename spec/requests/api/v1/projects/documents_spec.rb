@@ -22,4 +22,13 @@ RSpec.describe "Api::V1::Projects::Documents", type: :request do
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body)["data"].size).to eq(1)
   end
+
+  describe "GET /api/v1/projects/:project_id/documents (pagination)" do
+    before { create(:project_document, project: project) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/projects/#{project.id}/documents" }
+      let(:headers) { auth_headers_for(admin) }
+    end
+  end
 end

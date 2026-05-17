@@ -55,4 +55,13 @@ RSpec.describe "Api::V1::Invitations", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
     end
   end
+
+  describe "GET /api/v1/invitations (pagination)" do
+    before { create(:invitation, organisation: org, invited_by: admin) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/invitations" }
+      let(:headers) { auth_headers_for(admin) }
+    end
+  end
 end

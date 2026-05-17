@@ -24,4 +24,13 @@ RSpec.describe "Api::V1::Teams::Memberships", type: :request do
          headers: auth_headers_for(admin)
     expect(response).to have_http_status(:unprocessable_entity)
   end
+
+  describe "GET /api/v1/teams/:team_id/memberships (pagination)" do
+    before { team.team_memberships.create!(user: newcomer) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/teams/#{team.id}/memberships" }
+      let(:headers) { auth_headers_for(admin) }
+    end
+  end
 end

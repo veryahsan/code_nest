@@ -64,4 +64,27 @@ RSpec.describe "Employees", type: :request do
       expect { delete employee_path(emp) }.to change(Employee, :count).by(-1)
     end
   end
+
+  describe "GET /employees (pagination)" do
+    before do
+      sign_in member
+      11.times { |i| create(:employee, organisation: org, display_name: "Person #{format('%02d', i)}") }
+    end
+
+    it "returns 200 on page 2" do
+      get employees_path, params: { page: 2 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders the pagination nav when there is more than one page" do
+      get employees_path
+      expect(response.body).to include("aria-label=\"Pagination\"")
+    end
+
+    it "honours ?per_page= override" do
+      get employees_path, params: { per_page: 5 }
+      # 11 employees / 5 per page = 3 pages, so a 'page 3' link should exist
+      expect(response.body).to match(/aria-label="Go to page 3"/)
+    end
+  end
 end

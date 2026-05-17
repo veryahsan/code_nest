@@ -46,4 +46,13 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
   end
+
+  describe "GET /api/v1/projects (pagination)" do
+    before { create(:project, organisation: org) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/projects" }
+      let(:headers) { auth_headers_for(member) }
+    end
+  end
 end

@@ -19,4 +19,13 @@ RSpec.describe "Api::V1::Projects::RemoteResources", type: :request do
     expect(body["data"]["attributes"].keys).not_to include("credentials")
     expect(response.body).not_to include("\"abc\"")
   end
+
+  describe "GET /api/v1/projects/:project_id/remote_resources (pagination)" do
+    before { create(:remote_resource, project: project) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/projects/#{project.id}/remote_resources" }
+      let(:headers) { auth_headers_for(admin) }
+    end
+  end
 end

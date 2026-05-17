@@ -24,4 +24,13 @@ RSpec.describe "Api::V1::Employees", type: :request do
     }.to change(Employee, :count).by(1)
     expect(response).to have_http_status(:created)
   end
+
+  describe "GET /api/v1/employees (pagination)" do
+    before { create(:employee, organisation: org) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/employees" }
+      let(:headers) { auth_headers_for(member) }
+    end
+  end
 end

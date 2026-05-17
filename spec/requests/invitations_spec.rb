@@ -65,4 +65,24 @@ RSpec.describe "Invitations", type: :request do
       expect { delete invitation_path(invitation) }.not_to change(Invitation, :count)
     end
   end
+
+  describe "GET /invitations (pagination)" do
+    before do
+      sign_in admin
+      11.times { |i| create(:invitation, organisation: org, invited_by: admin, email: "pending#{i}@example.com") }
+      11.times { |i| create(:invitation, organisation: org, invited_by: admin, email: "accepted#{i}@example.com", accepted_at: 1.day.ago) }
+    end
+
+    it "returns 200 with both page params" do
+      get invitations_path, params: { pending_page: 2, accepted_page: 2 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "uses independent page params for pending and accepted lists" do
+      get invitations_path
+      # Both nav blocks should be present, each linking via their own page key.
+      expect(response.body).to include("pending_page=2")
+      expect(response.body).to include("accepted_page=2")
+    end
+  end
 end

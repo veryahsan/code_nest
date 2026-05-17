@@ -37,4 +37,22 @@ RSpec.describe "Api::V1::Projects::Languages & Technologies", type: :request do
       }.to change(project.project_technologies, :count).by(1)
     end
   end
+
+  describe "GET /api/v1/projects/:project_id/languages (pagination)" do
+    before { project.project_languages.create!(language: create(:language)) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/projects/#{project.id}/languages" }
+      let(:headers) { auth_headers_for(admin) }
+    end
+  end
+
+  describe "GET /api/v1/projects/:project_id/technologies (pagination)" do
+    before { project.project_technologies.create!(technology: create(:technology)) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/projects/#{project.id}/technologies" }
+      let(:headers) { auth_headers_for(admin) }
+    end
+  end
 end

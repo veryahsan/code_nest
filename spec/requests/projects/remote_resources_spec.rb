@@ -56,4 +56,21 @@ RSpec.describe "Projects::RemoteResources", type: :request do
       expect(response.body).to include("Hidden")
     end
   end
+
+  describe "GET /projects/:project_id/remote_resources (pagination)" do
+    before do
+      sign_in member
+      11.times { |i| create(:remote_resource, project: project, name: "Res #{format('%02d', i)}") }
+    end
+
+    it "returns 200 on page 2" do
+      get project_remote_resources_path(project), params: { page: 2 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders the pagination nav when there is more than one page" do
+      get project_remote_resources_path(project)
+      expect(response.body).to include("aria-label=\"Pagination\"")
+    end
+  end
 end

@@ -74,4 +74,13 @@ RSpec.describe "Api::V1::Teams", type: :request do
       expect(response).to have_http_status(:no_content)
     end
   end
+
+  describe "GET /api/v1/teams (pagination)" do
+    before { create(:team, organisation: org) }
+
+    it_behaves_like "a paginated JSON:API endpoint" do
+      let(:path)    { "/api/v1/teams" }
+      let(:headers) { auth_headers_for(member) }
+    end
+  end
 end
