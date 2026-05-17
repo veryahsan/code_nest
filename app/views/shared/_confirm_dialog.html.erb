@@ -1,0 +1,63 @@
+<%#
+  Single global confirmation dialog mounted once in the layout.
+
+  Driven by `confirm_controller.js`, which registers itself as Turbo's
+  `setConfirmMethod`, so every element with `data-turbo-confirm="..."` opens
+  this dialog instead of the native `window.confirm()`.
+
+  Per-trigger overrides (read from the submitting element's dataset by the
+  controller):
+    data-confirm-title    custom heading (default: "Confirm action")
+    data-confirm-button   custom confirm-button label (default: "Confirm")
+    data-confirm-variant  "danger" (default) | "primary"
+%>
+<div id="cn-confirm-dialog"
+     data-controller="modal confirm"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="cn-confirm-title"
+     aria-describedby="cn-confirm-message">
+
+  <%# Backdrop %>
+  <div data-action="click->modal#closeOnBackdrop"
+       class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+       aria-hidden="true"></div>
+
+  <%# Panel %>
+  <div data-modal-target="panel"
+       class="relative z-10 w-full max-w-sm rounded-xl bg-white shadow-overlay
+              dark:bg-zinc-900 transform transition-all">
+
+    <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+      <h2 id="cn-confirm-title"
+          data-confirm-target="title"
+          class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        Confirm action
+      </h2>
+    </div>
+
+    <div class="px-6 py-4">
+      <p id="cn-confirm-message"
+         data-confirm-target="message"
+         class="text-sm text-muted-color">
+        Are you sure?
+      </p>
+    </div>
+
+    <div class="flex justify-end gap-2 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800">
+      <button type="button"
+              data-confirm-target="cancelBtn"
+              data-action="click->confirm#cancel"
+              class="btn-base btn-ghost btn-md">
+        Cancel
+      </button>
+      <button type="button"
+              data-confirm-target="confirmBtn"
+              data-action="click->confirm#accept"
+              class="btn-base btn-danger btn-md">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>

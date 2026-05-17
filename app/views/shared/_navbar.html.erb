@@ -13,16 +13,20 @@
       <%# inline-flex shrink-wraps to the button so the panel anchors under the icon. %>
       <div class="relative shrink-0 md:inline-flex" data-controller="navbar">
         <button type="button"
-                class="btn-base btn-ghost btn-icon-md shrink-0 text-zinc-700 dark:text-zinc-200"
+                class="btn-base btn-ghost shrink-0 text-zinc-700 dark:text-zinc-200 <%= user_signed_in? ? 'rounded-full p-0.5' : 'btn-icon-md' %>"
                 data-navbar-target="toggle"
                 data-action="click->navbar#toggle"
                 aria-controls="navbar-drawer"
                 aria-expanded="false"
                 aria-haspopup="true"
                 aria-label="Open navigation menu">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
+          <% if user_signed_in? %>
+            <%= user_avatar_tag(current_user, variant: :thumb, css: "h-8 w-8") %>
+          <% else %>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          <% end %>
         </button>
 
         <%# Same surface pattern as dropdown_controller + cards: border-surface, bg-surface-raised, shadow-card %>
@@ -66,8 +70,16 @@
                   <% end %>
                 <% end %>
               <% end %>
+              <%= link_to "Account settings", edit_user_registration_path,
+                    class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
               <%= link_to "Logout", destroy_user_session_path,
-                    data: { turbo_method: :delete },
+                    data: {
+                      turbo_method: :delete,
+                      turbo_confirm: "Sign out of Code Nest?",
+                      confirm_title: "Sign out",
+                      confirm_button: "Sign out",
+                      confirm_variant: "primary"
+                    },
                     class: "block rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
             <% else %>
               <div class="flex flex-col gap-2 px-1 pb-1 pt-1">
