@@ -9,8 +9,13 @@
  *
  * Reads / writes "cn-theme" in localStorage so the preference persists across
  * page loads. On first visit defaults to the OS colour-scheme preference.
+ *
+ * Also keeps the <meta name="theme-color"> tag in sync so mobile browser
+ * chrome matches the active surface (Aqua dark vs. light slate).
  */
 import { Controller } from "@hotwired/stimulus"
+
+const THEME_COLOR = { dark: "#1C2333", light: "#F8FAFC" }
 
 export default class extends Controller {
   static values = { default: { type: String, default: "system" } }
@@ -49,7 +54,9 @@ export default class extends Controller {
     document.documentElement.classList.toggle("dark", dark)
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light")
 
-    // Let any theme-toggle buttons update their icons
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute("content", dark ? THEME_COLOR.dark : THEME_COLOR.light)
+
     this.dispatch("changed", { detail: { theme: dark ? "dark" : "light" } })
   }
 

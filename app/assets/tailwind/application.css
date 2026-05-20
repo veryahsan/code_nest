@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Dark mode: toggled by the `.dark` class on <html> via theme_controller.js.
+   Aqua Control — design system (dual-mode).
+   The Aqua dark palette is the canonical look. A light counterpart shares the
+   same cyan brand accent but swaps surfaces to a slate-on-white scheme so the
+   <html data-controller="theme"> toggle remains useful.
 ────────────────────────────────────────────────────────────────────────────── */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ─────────────────────────────────────────────────────────────────────────────
    LAYER 1 ─ DESIGN TOKENS
-   Only the brand (violet) scale lives in @theme. All semantic states (success,
-   warning, danger, info) use Tailwind's built-in emerald/amber/rose/sky scales
-   so every shade is always available.
+   The `brand-*` scale is cyan, anchored on #06B6D4. Aqua surface/text tokens
+   are exposed as `aqua-*` so Tailwind generates utilities like
+   `bg-aqua-card`, `text-aqua-high`, `border-aqua-border`, etc.
 ────────────────────────────────────────────────────────────────────────────── */
 @theme {
   /* ── Typography ──────────────────────────────────────────── */
@@ -17,61 +20,102 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono",
     Menlo, Courier, monospace;
+  /* Display face for the brand mark / hero typography. Loaded via Google
+     Fonts in the layout <head> with system-font fallbacks. */
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  /* ── Brand / primary (violet) ────────────────────────────── */
-  --color-brand-50:  #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-400: #a78bfa;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7c3aed;
-  --color-brand-700: #6d28d9;
-  --color-brand-800: #5b21b6;
-  --color-brand-900: #4c1d95;
-  --color-brand-950: #2e1065;
+  /* ── Brand / primary (cyan, anchored on #06B6D4) ─────────── */
+  --color-brand-50:  #ECFEFF;
+  --color-brand-100: #CFFAFE;
+  --color-brand-200: #A5F3FC;
+  --color-brand-300: #67E8F9;
+  --color-brand-400: #22D3EE;
+  --color-brand-500: #06B6D4;
+  --color-brand-600: #0891B2;
+  --color-brand-700: #0E7490;
+  --color-brand-800: #155E75;
+  --color-brand-900: #164E63;
+  --color-brand-950: #083344;
+
+  /* ── Aqua dark surface + text palette ────────────────────── */
+  --color-aqua-surface: #1C2333;
+  --color-aqua-card:    #232D42;
+  --color-aqua-hover:   #2A3550;
+  --color-aqua-border:  #2D3A52;
+  --color-aqua-high:    #F0F6FC;
+  --color-aqua-mid:     #94A3B8;
+  --color-aqua-low:     #64748B;
 
   /* ── Shadows ─────────────────────────────────────────────── */
-  --shadow-card:    0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
-  --shadow-overlay: 0 20px 60px -12px rgb(0 0 0 / 0.25);
+  --shadow-card:    0 1px 3px rgb(0 0 0 / 0.30), 0 1px 2px rgb(0 0 0 / 0.20);
+  --shadow-overlay: 0 20px 60px -12px rgb(0 0 0 / 0.55);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LAYER 0 ─ BASE
+   Page chrome: body background, selection, scrollbars. Light-mode defaults
+   with `.dark` overrides so both themes feel native.
+────────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  html, body {
+    @apply bg-zinc-50 text-zinc-900 dark:bg-aqua-surface dark:text-aqua-high;
+  }
+
+  ::selection {
+    background-color: rgb(6 182 212 / 0.20);
+    color: inherit;
+  }
+  .dark ::selection {
+    background-color: rgb(6 182 212 / 0.30);
+    color: var(--color-aqua-high);
+  }
+
+  ::-webkit-scrollbar              { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track        { background: transparent; }
+  ::-webkit-scrollbar-thumb        { background: #cbd5e1; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover  { background: #06B6D4; }
+
+  .dark ::-webkit-scrollbar-track  { background: var(--color-aqua-surface); }
+  .dark ::-webkit-scrollbar-thumb  { background: var(--color-aqua-border); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: #06B6D4; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
    LAYER 2 ─ SEMANTIC UTILITY CLASSES
-   These encode light + dark in one name. The semantic state classes delegate to
-   Tailwind built-ins: emerald (success), amber (warning), rose (danger),
-   sky (info) — all fully available with every shade.
+   Each utility carries a light look as its base and a dark Aqua look behind
+   the `dark:` variant. Status classes (success/warning/danger/info) keep the
+   emerald/amber/rose/sky scales with mode-appropriate shades.
 ────────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
   /* ── Surfaces ────────────────────────────────────────────── */
-  .bg-surface        { @apply bg-zinc-50 dark:bg-zinc-950; }
-  .bg-surface-raised { @apply bg-white dark:bg-zinc-900; }
-  .border-surface    { @apply border-zinc-200 dark:border-zinc-800; }
-  .text-base-color   { @apply text-zinc-900 dark:text-zinc-50; }
-  .text-muted-color  { @apply text-zinc-500 dark:text-zinc-400; }
+  .bg-surface        { @apply bg-zinc-50  dark:bg-aqua-surface; }
+  .bg-surface-raised { @apply bg-white    dark:bg-aqua-card; }
+  .border-surface    { @apply border-zinc-200 dark:border-aqua-border; }
+  .text-base-color   { @apply text-zinc-900 dark:text-aqua-high; }
+  .text-muted-color  { @apply text-zinc-500 dark:text-aqua-mid; }
 
   /* ── Input ───────────────────────────────────────────────── */
   .input {
-    @apply block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2
-           text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400
-           transition-colors
-           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20
+    @apply block w-full rounded-md border px-3 py-2 text-sm shadow-sm transition-colors
+           bg-white text-zinc-900 border-zinc-300 placeholder:text-zinc-400
+           focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30
            disabled:cursor-not-allowed disabled:opacity-50
-           dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100
-           dark:placeholder:text-zinc-500 dark:focus:border-brand-400
-           dark:focus:ring-brand-400/20;
+           dark:bg-aqua-surface dark:text-aqua-high dark:border-aqua-border
+           dark:placeholder:text-aqua-low dark:focus:border-brand-400
+           dark:focus:ring-brand-400/40;
   }
   .input-error {
-    @apply border-rose-500 focus:border-rose-500 focus:ring-rose-500/20
-           dark:border-rose-400 dark:focus:border-rose-400 dark:focus:ring-rose-400/20;
+    @apply border-rose-500 focus:border-rose-500 focus:ring-rose-500/30
+           dark:border-rose-400 dark:focus:border-rose-400 dark:focus:ring-rose-400/30;
   }
 
   /* ── Button base & sizes ─────────────────────────────────── */
   .btn-base {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium
+    @apply inline-flex items-center justify-center gap-2 rounded-md font-medium
            transition-all duration-150 focus-visible:outline-none
            focus-visible:ring-2 focus-visible:ring-offset-2
-           focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-950
+           focus-visible:ring-offset-white dark:focus-visible:ring-offset-aqua-surface
            disabled:pointer-events-none disabled:opacity-50 select-none;
   }
   .btn-sm      { @apply h-8  px-3 text-xs;  }
@@ -83,33 +127,36 @@
 
   /* Button variants */
   .btn-primary {
-    @apply bg-brand-600 text-white shadow-sm
-           hover:bg-brand-700 active:bg-brand-800
-           focus-visible:ring-brand-500
-           dark:bg-brand-500 dark:hover:bg-brand-600;
+    @apply bg-brand-500 text-white shadow-sm
+           hover:bg-brand-600 active:bg-brand-700
+           focus-visible:ring-brand-400;
   }
   .btn-secondary {
     @apply bg-white text-zinc-700 border border-zinc-300 shadow-sm
            hover:bg-zinc-50 active:bg-zinc-100
            focus-visible:ring-brand-500
-           dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700
-           dark:hover:bg-zinc-700;
+           dark:bg-aqua-card dark:text-aqua-high dark:border-aqua-border
+           dark:hover:bg-aqua-hover dark:hover:border-brand-500/40
+           dark:focus-visible:ring-brand-400;
   }
   .btn-danger {
-    @apply bg-rose-600 text-white shadow-sm
-           hover:bg-rose-700 active:bg-rose-800
-           focus-visible:ring-rose-500
-           dark:bg-rose-500 dark:hover:bg-rose-600;
+    @apply bg-rose-500 text-white shadow-sm
+           hover:bg-rose-600 active:bg-rose-700
+           focus-visible:ring-rose-400
+           dark:bg-rose-500/15 dark:text-rose-300 dark:border dark:border-rose-500/30
+           dark:hover:bg-rose-500/25;
   }
   .btn-ghost {
     @apply text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200
            focus-visible:ring-brand-500
-           dark:text-zinc-300 dark:hover:bg-zinc-800 dark:active:bg-zinc-700;
+           dark:text-aqua-mid dark:hover:text-aqua-high
+           dark:hover:bg-aqua-hover dark:active:bg-aqua-border
+           dark:focus-visible:ring-brand-400;
   }
   .btn-link {
     @apply text-brand-600 underline-offset-4 hover:underline
            focus-visible:ring-brand-500
-           dark:text-brand-400;
+           dark:text-brand-400 dark:focus-visible:ring-brand-400;
   }
 
   /* ── Badges ──────────────────────────────────────────────── */
@@ -117,29 +164,72 @@
     @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5
            text-xs font-medium ring-1 ring-inset;
   }
-  .badge-neutral { @apply bg-zinc-100   text-zinc-700   ring-zinc-200     dark:bg-zinc-800   dark:text-zinc-300   dark:ring-zinc-700; }
-  .badge-brand   { @apply bg-brand-50   text-brand-700  ring-brand-600/20  dark:bg-brand-950  dark:text-brand-300  dark:ring-brand-700/30; }
-  .badge-success { @apply bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-700/30; }
-  .badge-warning { @apply bg-amber-50   text-amber-700  ring-amber-600/20  dark:bg-amber-950  dark:text-amber-300  dark:ring-amber-700/30; }
-  .badge-danger  { @apply bg-rose-50    text-rose-700   ring-rose-600/20   dark:bg-rose-950   dark:text-rose-300   dark:ring-rose-700/30; }
-  .badge-info    { @apply bg-sky-50     text-sky-700    ring-sky-600/20    dark:bg-sky-950    dark:text-sky-300    dark:ring-sky-700/30; }
+  .badge-neutral {
+    @apply bg-zinc-100 text-zinc-700 ring-zinc-200
+           dark:bg-aqua-hover dark:text-aqua-mid dark:ring-aqua-border;
+  }
+  .badge-brand {
+    @apply bg-brand-50 text-brand-700 ring-brand-500/20
+           dark:bg-brand-500/15 dark:text-brand-300 dark:ring-brand-500/30;
+  }
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-700 ring-emerald-500/20
+           dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/30;
+  }
+  .badge-warning {
+    @apply bg-amber-50 text-amber-700 ring-amber-500/20
+           dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/30;
+  }
+  .badge-danger {
+    @apply bg-rose-50 text-rose-700 ring-rose-500/20
+           dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30;
+  }
+  .badge-info {
+    @apply bg-sky-50 text-sky-700 ring-sky-500/20
+           dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/30;
+  }
 
   /* ── Alerts ──────────────────────────────────────────────── */
   .alert-base {
     @apply flex gap-3 rounded-lg border p-4 text-sm;
   }
-  .alert-success { @apply bg-emerald-50  border-emerald-200  text-emerald-900  dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200; }
-  .alert-warning { @apply bg-amber-50   border-amber-200   text-amber-900   dark:bg-amber-950/40  dark:border-amber-800  dark:text-amber-200; }
-  .alert-danger  { @apply bg-rose-50    border-rose-200    text-rose-900    dark:bg-rose-950/40   dark:border-rose-800   dark:text-rose-200; }
-  .alert-info    { @apply bg-sky-50     border-sky-200     text-sky-900     dark:bg-sky-950/40    dark:border-sky-800    dark:text-sky-200; }
-  .alert-neutral { @apply bg-zinc-50    border-zinc-200    text-zinc-900    dark:bg-zinc-900      dark:border-zinc-700   dark:text-zinc-200; }
+  .alert-success {
+    @apply bg-emerald-50 border-emerald-200 text-emerald-900
+           dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-200;
+  }
+  .alert-warning {
+    @apply bg-amber-50 border-amber-200 text-amber-900
+           dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-200;
+  }
+  .alert-danger {
+    @apply bg-rose-50 border-rose-200 text-rose-900
+           dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-200;
+  }
+  .alert-info {
+    @apply bg-sky-50 border-sky-200 text-sky-900
+           dark:bg-sky-500/10 dark:border-sky-500/20 dark:text-sky-200;
+  }
+  .alert-neutral {
+    @apply bg-zinc-50 border-zinc-200 text-zinc-900
+           dark:bg-aqua-card dark:border-aqua-border dark:text-aqua-high;
+  }
 
   /* ── Cards ───────────────────────────────────────────────── */
-  .card        { @apply rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900; }
-  .card-padded { @apply rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-6; }
-  .card-header { @apply px-6 py-4 border-b border-zinc-100 dark:border-zinc-800; }
+  .card {
+    @apply rounded-lg border bg-white border-zinc-200
+           dark:bg-aqua-card dark:border-aqua-border;
+  }
+  .card-padded {
+    @apply rounded-lg border bg-white border-zinc-200 p-6
+           dark:bg-aqua-card dark:border-aqua-border;
+  }
+  .card-header {
+    @apply px-6 py-4 border-b border-zinc-100 dark:border-aqua-border;
+  }
   .card-body   { @apply p-6; }
-  .card-footer { @apply px-6 py-4 border-t border-zinc-100 dark:border-zinc-800; }
+  .card-footer {
+    @apply px-6 py-4 border-t border-zinc-100 dark:border-aqua-border;
+  }
 
   /* ── Layout rhythm ─────────────────────────────────────────
      Every direct child of .section-stack (card, grid, list, heading,
@@ -154,6 +244,8 @@
   /* ── Focus ring ──────────────────────────────────────────── */
   .ring-focus {
     @apply focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+           focus-visible:ring-brand-500 focus-visible:ring-offset-2
+           focus-visible:ring-offset-white
+           dark:focus-visible:ring-brand-400 dark:focus-visible:ring-offset-aqua-surface;
   }
 }

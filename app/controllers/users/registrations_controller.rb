@@ -28,9 +28,17 @@ module Users
     private
 
     def purge_avatar_if_requested(resource, params)
-      return unless params.delete(:remove_avatar) == "1"
+      return false unless params.delete(:remove_avatar) == "1"
 
       resource.avatar.purge
+      true
+    end
+
+    def avatar_only_update?(resource, params, avatar_removed:)
+      (params[:avatar].present? || avatar_removed) &&
+        params[:password].blank? &&
+        params[:password_confirmation].blank? &&
+        (params[:email].blank? || params[:email] == resource.email)
     end
   end
 end
