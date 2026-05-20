@@ -12,16 +12,51 @@ RSpec.describe Issue, type: :model do
 
     it { is_expected.to validate_presence_of(:summary) }
     it { is_expected.to validate_length_of(:summary).is_at_most(255) }
-    it { is_expected.to validate_presence_of(:number) }
-    it { is_expected.to validate_numericality_of(:number).only_integer.is_greater_than(0) }
-    it { is_expected.to validate_uniqueness_of(:number).scoped_to(:project_id) }
-    it { is_expected.to validate_presence_of(:issue_key) }
-    it { is_expected.to validate_uniqueness_of(:issue_key) }
 
     it "rejects blank summary after normalization" do
       issue = build(:issue, summary: "   ")
       expect(issue).not_to be_valid
       expect(issue.errors[:summary]).to be_present
+    end
+
+    it "requires number and issue_key when sequence assignment is skipped" do
+      issue = build(:issue)
+      allow(issue).to receive(:assign_sequence_and_key)
+
+      expect(issue).not_to be_valid
+      expect(issue.errors[:number]).to be_present
+      expect(issue.errors[:issue_key]).to be_present
+    end
+
+    it "requires number to be a positive integer" do
+      issue = create(:issue)
+      issue.number = 0
+
+      expect(issue).not_to be_valid
+      expect(issue.errors[:number]).to be_present
+    end
+
+    it "enforces unique number per project" do
+      project = create(:project)
+      create(:issue, project: project, summary: "One")
+      duplicate = build(:issue, project: project, summary: "Two")
+      allow(duplicate).to receive(:assign_sequence_and_key)
+      duplicate.number = 1
+      duplicate.issue_key = "DUP-2"
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:number]).to be_present
+    end
+
+    it "enforces unique issue_key globally" do
+      existing = create(:issue)
+      duplicate = build(:issue, project: create(:project), summary: "Duplicate key")
+      allow(duplicate).to receive(:assign_sequence_and_key)
+      duplicate.number = 99
+      duplicate.issue_key = existing.issue_key
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:issue_key]).to be_present
     end
   end
 
