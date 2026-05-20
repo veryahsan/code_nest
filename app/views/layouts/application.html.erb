@@ -7,15 +7,17 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#1C2333">
 
-    <%# Avoid FOUC: apply stored theme before first paint %>
+    <%# Avoid FOUC: apply stored theme (Aqua dark / light) before first paint. %>
     <script>
       (function() {
         const t = localStorage.getItem("cn-theme") || "system";
         const dark = t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        if (dark) document.documentElement.classList.add("dark");
+        document.documentElement.classList.toggle("dark", dark);
         document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", dark ? "#1C2333" : "#F8FAFC");
       })();
     </script>
 
@@ -28,21 +30,48 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%# Brand display face — Space Grotesk for the logo wordmark. %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-full flex flex-col bg-surface text-base-color">
-    <%= render "shared/navbar" %>
+  <body class="min-h-full bg-surface text-base-color">
+    <% if user_signed_in? %>
+      <div data-controller="sidebar">
+        <%= render "shared/sidebar" %>
 
-    <main class="flex-1 relative z-0 isolate">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <%= render "shared/flash" %>
-        <%= yield %>
+        <div class="flex min-h-full flex-col md:pl-64">
+          <%= render "shared/mobile_topbar" %>
+
+          <main class="flex-1 relative z-0 isolate">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+              <%= render "shared/flash" %>
+              <%= yield %>
+            </div>
+          </main>
+
+          <%= render "shared/footer" %>
+        </div>
       </div>
-    </main>
+    <% else %>
+      <div class="flex min-h-full flex-col">
+        <%= render "shared/navbar" %>
 
-    <%= render "shared/footer" %>
+        <main class="flex-1 relative z-0 isolate">
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+            <%= render "shared/flash" %>
+            <%= yield %>
+          </div>
+        </main>
+
+        <%= render "shared/footer" %>
+      </div>
+    <% end %>
+
     <%= render "shared/confirm_dialog" %>
   </body>
 </html>

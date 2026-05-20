@@ -1,0 +1,23 @@
+<%# Shown only on <md screens. The burger triggers the sidebar drawer via
+    the shared `sidebar` Stimulus controller declared on the layout wrapper.
+    All data comes from @sidebar (SidebarFacade). %>
+<% return if @sidebar.nil? %>
+
+<div class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-surface bg-surface-raised px-4 md:hidden">
+  <button type="button"
+          data-action="click->sidebar#open"
+          class="btn-base btn-ghost btn-icon-sm text-zinc-700 dark:text-zinc-200"
+          aria-label="Open navigation menu"
+          aria-controls="sidebar-panel"
+          aria-expanded="false">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+         stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
+  </button>
+
+  <%= link_to @sidebar.brand_href,
+        class: "flex min-w-0 items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand-500" do %>
+    <%= render "shared/brand_mark" %>
+  <% end %>
+</div>
