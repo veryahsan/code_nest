@@ -12,6 +12,7 @@ class Project < ApplicationRecord
   has_many :technologies, through: :project_technologies
   has_many :remote_resources, dependent: :destroy
   has_many :project_documents, dependent: :destroy
+  has_many :issues, dependent: :destroy
 
   validates :name, presence: true
   validates :slug, uniqueness: { scope: :organisation_id }
@@ -23,7 +24,7 @@ class Project < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[languages organisation project_documents project_languages
+    %w[issues languages organisation project_documents project_languages
        project_technologies remote_resources team technologies]
   end
 

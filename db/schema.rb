@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_17_035658) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_20_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -95,6 +95,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_17_035658) do
     t.index ["organisation_id", "email"], name: "index_invitations_pending_email_per_organisation", unique: true, where: "(accepted_at IS NULL)"
     t.index ["organisation_id"], name: "index_invitations_on_organisation_id"
     t.index ["token"], name: "index_invitations_on_token", unique: true
+  end
+
+  create_table "issues", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.integer "number", null: false
+    t.string "issue_key", null: false
+    t.string "summary", null: false
+    t.text "description"
+    t.integer "issue_type", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.integer "priority", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["issue_key"], name: "index_issues_on_issue_key", unique: true
+    t.index ["project_id", "number"], name: "index_issues_on_project_id_and_number", unique: true
+    t.index ["project_id"], name: "index_issues_on_project_id"
   end
 
   create_table "languages", force: :cascade do |t|
@@ -226,6 +242,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_17_035658) do
   add_foreign_key "identities", "users"
   add_foreign_key "invitations", "organisations"
   add_foreign_key "invitations", "users", column: "invited_by_id"
+  add_foreign_key "issues", "projects"
   add_foreign_key "project_documents", "projects"
   add_foreign_key "project_languages", "languages"
   add_foreign_key "project_languages", "projects"

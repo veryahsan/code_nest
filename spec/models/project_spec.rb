@@ -8,6 +8,7 @@ RSpec.describe Project, type: :model do
     it { is_expected.to belong_to(:team).optional }
     it { is_expected.to have_many(:remote_resources).dependent(:destroy) }
     it { is_expected.to have_many(:project_documents).dependent(:destroy) }
+    it { is_expected.to have_many(:issues).dependent(:destroy) }
   end
 
   describe "validations" do
