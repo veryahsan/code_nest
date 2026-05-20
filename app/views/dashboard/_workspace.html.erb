@@ -1,48 +1,46 @@
-<% org          = @facade.organisation %>
-<% teams        = @facade.teams %>
-<% projects     = @facade.projects %>
-<% invitations  = @facade.pending_invitations %>
-
-<% content_for :page_actions do %>
-  <%= render "components/btn", label: "Organisation", href: organisation_path(org), variant: :secondary, size: :sm %>
-  <%= render "components/btn", label: "Account", href: edit_user_registration_path, variant: :secondary, size: :sm %>
-<% end %>
-
 <%= render "components/page_header",
-      title: org.name,
-      description: "Your organisation workspace — teams, projects, and open invitations." %>
+      title: "Welcome, #{@facade.greeting_name}",
+      description: "Your personal workspace at #{@facade.organisation.name}." %>
 
 <div class="section-stack">
   <div class="flex flex-wrap items-center gap-2">
-    <% if current_user.organisation_admin? %>
-      <%= badge_tag "Organisation admin", variant: :brand, dot: true %>
-    <% else %>
-      <%= badge_tag "Member", variant: :neutral, dot: true %>
+    <%= badge_tag @facade.role_label, variant: :neutral, dot: true %>
+    <% if @facade.job_title.present? %>
+      <%= badge_tag @facade.job_title, variant: :brand %>
     <% end %>
-    <span class="text-xs text-muted-color font-mono"><%= org.slug %></span>
+    <span class="text-xs text-muted-color font-mono"><%= @facade.organisation.slug %></span>
   </div>
 
   <div class="card-grid-3">
-    <%= render "components/card", title: "Teams", description: "Membership groups inside your org" do %>
-      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= teams.size %></p>
+    <%= render "components/card", title: "Your teams", description: "Teams you belong to" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.teams.size %></p>
     <% end %>
-    <%= render "components/card", title: "Projects", description: "Tracked workspaces & stacks" do %>
-      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= projects.size %></p>
+    <%= render "components/card", title: "Your projects", description: "Projects owned by your teams" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.projects.size %></p>
     <% end %>
-    <%= render "components/card", title: "Pending invites", description: "Awaiting acceptance" do %>
-      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= invitations.size %></p>
+    <%= render "components/card", title: "Your manager", description: "Who you report to" do %>
+      <% if @facade.manager %>
+        <p class="text-xl font-semibold text-zinc-900 dark:text-zinc-100"><%= @facade.manager.display_name %></p>
+        <% if @facade.manager.job_title.present? %>
+          <p class="mt-1 text-xs text-muted-color"><%= @facade.manager.job_title %></p>
+        <% end %>
+      <% else %>
+        <p class="text-xl font-semibold text-muted-color">—</p>
+        <p class="mt-1 text-xs text-muted-color">No manager on record.</p>
+      <% end %>
     <% end %>
   </div>
 
   <div class="card-grid-2">
-    <%= render "components/card", title: "Teams" do %>
-      <% if teams.any? %>
+    <%= render "components/card", title: "Your teams" do %>
+      <% if @facade.teams.any? %>
         <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
-          <% teams.each do |team| %>
+          <% @facade.teams.each do |team| %>
             <li class="py-3 first:pt-0">
               <div class="flex items-start justify-between gap-2">
                 <div>
-                  <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= team.name %></p>
+                  <%= link_to team.name, team_path(team),
+                        class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:text-brand-600 dark:hover:text-brand-400" %>
                   <p class="text-xs text-muted-color font-mono mt-0.5"><%= team.slug %></p>
                 </div>
                 <%= badge_tag "#{team.users.size} #{'member'.pluralize(team.users.size)}", variant: :neutral %>
@@ -53,13 +51,13 @@
       <% else %>
         <%= render "components/empty_state",
               icon: :folder,
-              title: "No teams yet",
-              description: "Teams help you group people and projects. Add them from the admin tools or future team UI." %>
+              title: "You're not on any team yet",
+              description: "Ask an organisation admin to add you to a team to see it here." %>
       <% end %>
     <% end %>
 
-    <%= render "components/card", title: "Projects" do %>
-      <% if projects.any? %>
+    <%= render "components/card", title: "Your projects" do %>
+      <% if @facade.projects.any? %>
         <div class="overflow-x-auto -mx-1">
           <table class="w-full text-sm text-left">
             <thead>
@@ -70,9 +68,12 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-              <% projects.each do |project| %>
+              <% @facade.projects.each do |project| %>
                 <tr>
-                  <td class="py-2.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100"><%= project.name %></td>
+                  <td class="py-2.5 pr-4 font-medium">
+                    <%= link_to project.name, project_path(project),
+                          class: "text-zinc-900 dark:text-zinc-100 hover:text-brand-600 dark:hover:text-brand-400" %>
+                  </td>
                   <td class="py-2.5 pr-4 text-muted-color">
                     <% if project.team %>
                       <%= project.team.name %>
@@ -90,28 +91,27 @@
         <%= render "components/empty_state",
               icon: :inbox,
               title: "No projects yet",
-              description: "Projects capture languages, technologies, docs, and integrations for each codebase." %>
+              description: "Once your teams own projects, they'll show up here." %>
       <% end %>
     <% end %>
   </div>
 
-  <% if invitations.any? %>
-    <%= render "components/card", title: "Recent invitations" do %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-        <% invitations.each do |invitation| %>
-          <li class="py-3 first:pt-0 flex flex-wrap items-center justify-between gap-2">
+  <% if @facade.direct_reports? %>
+    <%= render "components/card", title: "Direct reports", description: "People who report to you" do %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <% @facade.direct_reports.each do |report| %>
+          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
             <div>
-              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= invitation.email %></p>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= report.display_name %></p>
               <p class="text-xs text-muted-color mt-0.5">
-                <%= invitation.invited_by&.email || "System / platform" %>
-                <% if invitation.expires_at %>
-                  · <%= invitation.expires_at.strftime("%d %b %Y") %>
-                <% else %>
-                  · No expiry
+                <%= report.user&.email %>
+                <% if report.job_title.present? %>
+                  · <%= report.job_title %>
                 <% end %>
               </p>
             </div>
-            <%= badge_tag invitation.invite_admin? ? "Admin" : "Member", variant: invitation.invite_admin? ? :brand : :neutral %>
+            <%= link_to "View", employee_path(report),
+                  class: "text-xs font-medium text-brand-600 hover:underline" %>
           </li>
         <% end %>
       </ul>

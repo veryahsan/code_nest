@@ -9,7 +9,7 @@ RSpec.describe "Teams", type: :request do
   let(:other)  { create(:user, organisation: create(:organisation)) }
 
   describe "GET /teams" do
-    before { create(:team, organisation: org, name: "Engineering") }
+    let!(:team) { create(:team, organisation: org, name: "Engineering") }
 
     it "redirects guests" do
       get teams_path
@@ -22,10 +22,28 @@ RSpec.describe "Teams", type: :request do
       expect(response).to redirect_to(dashboard_path)
     end
 
-    it "lists teams for members" do
+    it "lists teams the member belongs to" do
+      create(:team_membership, team: team, user: member)
       sign_in member
       get teams_path
       expect(response.body).to include("Engineering")
+    end
+
+    it "hides teams the member does not belong to" do
+      create(:team, organisation: org, name: "OtherSquad")
+      create(:team_membership, team: team, user: member)
+      sign_in member
+      get teams_path
+      expect(response.body).to include("Engineering")
+      expect(response.body).not_to include("OtherSquad")
+    end
+
+    it "lists every team in the org for admins" do
+      create(:team, organisation: org, name: "OtherSquad")
+      sign_in admin
+      get teams_path
+      expect(response.body).to include("Engineering")
+      expect(response.body).to include("OtherSquad")
     end
   end
 
@@ -58,11 +76,25 @@ RSpec.describe "Teams", type: :request do
   describe "GET /teams/:id" do
     let(:team) { create(:team, organisation: org, name: "Eng") }
 
-    it "shows for members of the same org" do
+    it "shows for members of the team" do
+      create(:team_membership, team: team, user: member)
       sign_in member
       get team_path(team)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Eng")
+    end
+
+    it "shows for org admins even if they aren't on the team" do
+      sign_in admin
+      get team_path(team)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Eng")
+    end
+
+    it "denies members who don't belong to the team" do
+      sign_in member
+      get team_path(team)
+      expect(response).to redirect_to(root_path)
     end
 
     it "404s for users in another org" do
@@ -107,7 +139,7 @@ RSpec.describe "Teams", type: :request do
 
   describe "GET /teams (pagination)" do
     before do
-      sign_in member
+      sign_in admin
       11.times { |i| create(:team, organisation: org, name: "Team #{format('%02d', i)}") }
     end
 

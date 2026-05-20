@@ -20,11 +20,20 @@ RSpec.describe TeamPolicy, type: :policy do
     it { is_expected.to permit_actions(%i[index show create update destroy]) }
   end
 
-  context "as a member in the same org" do
+  context "as a member of the team in the same org" do
     let(:user) { create(:user, organisation: org) }
+
+    before { create(:team_membership, team: team, user: user) }
 
     it { is_expected.to permit_actions(%i[index show]) }
     it { is_expected.to forbid_actions(%i[create update destroy]) }
+  end
+
+  context "as a member in the same org who is NOT on the team" do
+    let(:user) { create(:user, organisation: org) }
+
+    it { is_expected.to permit_actions(%i[index]) }
+    it { is_expected.to forbid_actions(%i[show create update destroy]) }
   end
 
   context "as a user from another org" do

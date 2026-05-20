@@ -11,11 +11,43 @@ RSpec.describe "Dashboard", type: :request do
     expect(response).to redirect_to(new_user_session_path)
   end
 
-  it "renders the workspace for organisation members" do
+  it "renders the personal workspace for organisation members" do
     sign_in user
     get dashboard_path
     expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Welcome")
     expect(response.body).to include(organisation.name)
+  end
+
+  it "scopes the member dashboard to the user's own teams" do
+    sign_in user
+
+    my_team    = create(:team, organisation: organisation, name: "Alpha Squad")
+    other_team = create(:team, organisation: organisation, name: "Zeta Squad")
+    create(:team_membership, team: my_team, user: user)
+
+    get dashboard_path
+    expect(response.body).to include("Alpha Squad")
+    expect(response.body).not_to include("Zeta Squad")
+  end
+
+  it "does not show admin-only analytics or pending-invite signals to a regular member" do
+    sign_in user
+    get dashboard_path
+    expect(response.body).not_to include("Organisation analytics")
+    expect(response.body).not_to include("New this week")
+    expect(response.body).not_to include("Pending invites")
+  end
+
+  it "renders the admin analytics view for organisation admins" do
+    admin = create(:user, :organisation_admin, organisation: organisation)
+    sign_in admin
+
+    get dashboard_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Organisation analytics")
+    expect(response.body).to include("New this week")
   end
 
   it "renders the onboarding CTA for confirmed users without an organisation" do

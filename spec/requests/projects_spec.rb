@@ -8,17 +8,40 @@ RSpec.describe "Projects", type: :request do
   let(:member) { create(:user, organisation: org) }
 
   describe "GET /projects" do
-    before { create(:project, organisation: org, name: "Phoenix") }
+    let!(:team) { create(:team, organisation: org) }
+    let!(:project) { create(:project, organisation: org, name: "Phoenix", team: team) }
 
     it "redirects guests" do
       get projects_path
       expect(response).to redirect_to(new_user_session_path)
     end
 
-    it "lists projects for members" do
+    it "lists projects owned by teams the member belongs to" do
+      create(:team_membership, team: team, user: member)
       sign_in member
       get projects_path
       expect(response.body).to include("Phoenix")
+    end
+
+    it "hides projects whose team the member doesn't belong to" do
+      other_team = create(:team, organisation: org)
+      create(:project, organisation: org, name: "Hidden", team: other_team)
+      create(:team_membership, team: team, user: member)
+
+      sign_in member
+      get projects_path
+      expect(response.body).to include("Phoenix")
+      expect(response.body).not_to include("Hidden")
+    end
+
+    it "lists every project in the org for admins" do
+      other_team = create(:team, organisation: org)
+      create(:project, organisation: org, name: "Hidden", team: other_team)
+
+      sign_in admin
+      get projects_path
+      expect(response.body).to include("Phoenix")
+      expect(response.body).to include("Hidden")
     end
   end
 
@@ -83,7 +106,7 @@ RSpec.describe "Projects", type: :request do
 
   describe "GET /projects (pagination)" do
     before do
-      sign_in member
+      sign_in admin
       11.times { |i| create(:project, organisation: org, name: "Project #{format('%02d', i)}") }
     end
 

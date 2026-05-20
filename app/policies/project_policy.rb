@@ -8,7 +8,11 @@ class ProjectPolicy < ApplicationPolicy
   end
 
   def show?
-    member_of_same_org?
+    return true if admin_of_same_org?
+    return false unless member_of_same_org?
+    return false if record.team_id.blank?
+
+    user.team_memberships.exists?(team_id: record.team_id)
   end
 
   def create?
@@ -26,9 +30,12 @@ class ProjectPolicy < ApplicationPolicy
   class Scope < ApplicationPolicy::Scope
     def resolve
       return scope.all if user&.super_admin?
-      return scope.where(organisation_id: user.organisation_id) if user&.organisation_id
+      return scope.none unless user&.organisation_id
 
-      scope.none
+      org_scope = scope.where(organisation_id: user.organisation_id)
+      return org_scope if user.org_admin?
+
+      org_scope.where(team_id: user.team_memberships.select(:team_id))
     end
   end
 end

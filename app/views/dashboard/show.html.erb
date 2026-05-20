@@ -1,7 +1,10 @@
 <% page_title @facade.onboarding? ? "Welcome — Code Nest" : "Dashboard — #{@facade.organisation.name}" %>
 
-<% if @facade.onboarding? %>
+<% case @facade.mode
+   when :onboarding %>
   <%= render "dashboard/onboarding" %>
+<% when :admin_analytics %>
+  <%= render "dashboard/admin_analytics" %>
 <% else %>
   <%= render "dashboard/workspace" %>
 <% end %>

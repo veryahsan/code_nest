@@ -1,0 +1,191 @@
+<% org             = @facade.organisation %>
+<% invitations    = @facade.pending_invitations %>
+<% top_by_members = @facade.top_teams_by_members %>
+<% top_by_projects = @facade.top_teams_by_projects %>
+
+<% needs_attention =
+     @facade.users_without_team_count +
+     @facade.unassigned_projects_count +
+     @facade.employees_without_manager_count %>
+
+<% content_for :page_actions do %>
+  <%= render "components/btn", label: "Organisation", href: organisation_path(org), variant: :secondary, size: :sm %>
+  <%= render "components/btn", label: "Account", href: edit_user_registration_path, variant: :secondary, size: :sm %>
+<% end %>
+
+<%= render "components/page_header",
+      title: org.name,
+      description: "Organisation analytics — health, growth, and structure at a glance." %>
+
+<div class="section-stack">
+  <div class="flex flex-wrap items-center gap-2">
+    <%= badge_tag "Organisation admin", variant: :brand, dot: true %>
+    <span class="text-xs text-muted-color font-mono"><%= org.slug %></span>
+  </div>
+
+  <div class="card-grid-3">
+    <%= render "components/card", title: "Members", description: "People in your organisation" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.members_total %></p>
+      <p class="mt-1 text-xs text-muted-color">
+        <%= @facade.admins_count %> <%= "admin".pluralize(@facade.admins_count) %>
+        ·
+        <%= @facade.members_count %> <%= "member".pluralize(@facade.members_count) %>
+      </p>
+    <% end %>
+    <%= render "components/card", title: "Teams", description: "Membership groups inside your org" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.teams_total %></p>
+    <% end %>
+    <%= render "components/card", title: "Projects", description: "Tracked workspaces & stacks" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.projects_total %></p>
+      <p class="mt-1 text-xs text-muted-color">
+        <%= @facade.unassigned_projects_count %> unassigned
+      </p>
+    <% end %>
+  </div>
+
+  <div class="card-grid-3">
+    <%= render "components/card", title: "Pending invites", description: "Awaiting acceptance" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.pending_invitations_count %></p>
+    <% end %>
+    <%= render "components/card", title: "Accepted invites", description: "Joined through invitations" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.accepted_invitations_count %></p>
+    <% end %>
+    <%= render "components/card", title: "Employees", description: "HR records in your directory" do %>
+      <p class="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.employees_total %></p>
+      <p class="mt-1 text-xs text-muted-color">
+        <%= @facade.employees_without_manager_count %> without manager
+      </p>
+    <% end %>
+  </div>
+
+  <%= render "components/card", title: "New this week", description: "Created in the last 7 days" do %>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div>
+        <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.new_users_last_7d %></p>
+        <p class="mt-0.5 text-xs text-muted-color">Users</p>
+      </div>
+      <div>
+        <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.new_teams_last_7d %></p>
+        <p class="mt-0.5 text-xs text-muted-color">Teams</p>
+      </div>
+      <div>
+        <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums"><%= @facade.new_projects_last_7d %></p>
+        <p class="mt-0.5 text-xs text-muted-color">Projects</p>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="card-grid-2">
+    <%= render "components/card", title: "Top teams by members" do %>
+      <% if top_by_members.any? %>
+        <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+          <% top_by_members.each do |team| %>
+            <li class="py-3 first:pt-0">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= team.name %></p>
+                  <p class="text-xs text-muted-color font-mono mt-0.5"><%= team.slug %></p>
+                </div>
+                <%= badge_tag "#{team.team_members_count} #{'member'.pluralize(team.team_members_count)}", variant: :neutral %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <%= render "components/empty_state",
+              icon: :folder,
+              title: "No teams yet",
+              description: "Once teams have members, the largest ones will show up here." %>
+      <% end %>
+    <% end %>
+
+    <%= render "components/card", title: "Top teams by projects" do %>
+      <% if top_by_projects.any? %>
+        <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+          <% top_by_projects.each do |team| %>
+            <li class="py-3 first:pt-0">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= team.name %></p>
+                  <p class="text-xs text-muted-color font-mono mt-0.5"><%= team.slug %></p>
+                </div>
+                <%= badge_tag "#{team.team_projects_count} #{'project'.pluralize(team.team_projects_count)}", variant: :neutral %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <%= render "components/empty_state",
+              icon: :inbox,
+              title: "No teams yet",
+              description: "Once teams own projects, the busiest ones will surface here." %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if needs_attention.positive? %>
+    <%= render "components/card", title: "Needs attention", description: "Quick fixes to keep your org tidy" do %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <% if @facade.users_without_team_count.positive? %>
+          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Users without a team</p>
+              <p class="text-xs text-muted-color mt-0.5">People who haven't been added to any team yet.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <%= badge_tag @facade.users_without_team_count.to_s, variant: :warning %>
+              <%= link_to "View teams", teams_path, class: "text-xs font-medium text-brand-600 hover:underline" %>
+            </div>
+          </li>
+        <% end %>
+        <% if @facade.unassigned_projects_count.positive? %>
+          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Unassigned projects</p>
+              <p class="text-xs text-muted-color mt-0.5">Projects not linked to any team.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <%= badge_tag @facade.unassigned_projects_count.to_s, variant: :warning %>
+              <%= link_to "View projects", projects_path, class: "text-xs font-medium text-brand-600 hover:underline" %>
+            </div>
+          </li>
+        <% end %>
+        <% if @facade.employees_without_manager_count.positive? %>
+          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Employees without a manager</p>
+              <p class="text-xs text-muted-color mt-0.5">Reporting lines that haven't been filled in.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <%= badge_tag @facade.employees_without_manager_count.to_s, variant: :warning %>
+              <%= link_to "View employees", employees_path, class: "text-xs font-medium text-brand-600 hover:underline" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+
+  <% if invitations.any? %>
+    <%= render "components/card", title: "Recent invitations" do %>
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <% invitations.each do |invitation| %>
+          <li class="py-3 first:pt-0 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= invitation.email %></p>
+              <p class="text-xs text-muted-color mt-0.5">
+                <%= invitation.invited_by&.email || "System / platform" %>
+                <% if invitation.expires_at %>
+                  · <%= invitation.expires_at.strftime("%d %b %Y") %>
+                <% else %>
+                  · No expiry
+                <% end %>
+              </p>
+            </div>
+            <%= badge_tag invitation.invite_admin? ? "Admin" : "Member", variant: invitation.invite_admin? ? :brand : :neutral %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+</div>
