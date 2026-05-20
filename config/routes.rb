@@ -65,6 +65,7 @@ Rails.application.routes.draw do
 
   get "design-system", to: "design_system#show", as: :design_system
   get "dashboard", to: "dashboard#show", as: :dashboard
+  get "messages",  to: "messages#index", as: :messages
 
   # Tenant bootstrap & ongoing organisation management.
   resources :organisations, only: %i[new create show edit update destroy]

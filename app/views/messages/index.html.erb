@@ -1,0 +1,14 @@
+<% page_title "Messages — Code Nest" %>
+
+<%= render "components/page_header",
+      title: "Messages",
+      description: "Direct messages and team conversations." %>
+
+<div class="section-stack">
+  <%= render "components/card", padded: false do %>
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "Messages are coming soon",
+          description: "Threaded conversations with your teammates will live here. We're building it next — check back shortly." %>
+  <% end %>
+</div>
