@@ -1,27 +1,334 @@
-<% page_title "Code Nest" %>
+<% page_title "Code Nest — your engineering org, organised" %>
 
-<%= render "components/page_header",
-      title: "Organise projects, teams, and knowledge",
-      description: "A workspace for your organisation’s engineering footprint — projects, languages, technologies, and documents in one place." %>
-
-<div class="section-stack">
-  <div class="card-grid-3">
-    <%= render "components/card", title: "Multi-tenant by design", shadow: true do %>
-      <p class="text-sm text-muted-color">
-        Each customer organisation is isolated. Invite teammates, structure teams, and ship without stepping on other tenants’ data.
-      </p>
-    <% end %>
-
-    <%= render "components/card", title: "Projects that reflect reality", shadow: true do %>
-      <p class="text-sm text-muted-color">
-        Track languages, stacks, remote resources, and links to docs — so onboarding and audits stay grounded in what you actually run.
-      </p>
-    <% end %>
-
-    <%= render "components/card", title: "Built for operators", shadow: true do %>
-      <p class="text-sm text-muted-color">
-        Platform staff use Active Admin; everyone else signs in here. Same visual language end to end via shared Tailwind components.
-      </p>
-    <% end %>
+<%# ─── Hero ─────────────────────────────────────────────────────────────── %>
+<section class="relative overflow-hidden bg-surface">
+  <%# Decorative background gradient %>
+  <div class="pointer-events-none absolute inset-x-0 -top-32 -z-10 transform-gpu blur-3xl" aria-hidden="true">
+    <div class="mx-auto aspect-[1155/678] w-[72rem] bg-gradient-to-tr from-brand-400 to-brand-700 opacity-20 dark:opacity-10"
+         style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%);"></div>
   </div>
-</div>
+
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+      <div class="lg:col-span-7">
+        <div class="mb-5">
+          <%= badge_tag "New · Phase 0 preview", variant: :brand, dot: true %>
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Your engineering org,<br class="hidden sm:inline"> organised.
+        </h1>
+
+        <p class="mt-5 text-lg text-muted-color max-w-2xl">
+          Code Nest is the home for your teams, projects, technologies, and documentation —
+          one multi-tenant workspace with the conventions baked in.
+        </p>
+
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <%= render "components/btn",
+                label: "Get started free",
+                href: new_user_registration_path,
+                variant: :primary,
+                size: :lg %>
+          <%= render "components/btn",
+                label: "Sign in",
+                href: new_user_session_path,
+                variant: :ghost,
+                size: :lg %>
+        </div>
+
+        <ul class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-color">
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+            Google &amp; GitHub SSO
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+            Multi-tenant
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+            Open standards
+          </li>
+        </ul>
+      </div>
+
+      <%# Decorative dashboard preview — pure markup, no real data %>
+      <div class="lg:col-span-5">
+        <div class="relative">
+          <div class="absolute -inset-4 bg-gradient-to-tr from-brand-500/10 to-brand-700/10 rounded-2xl blur-2xl" aria-hidden="true"></div>
+          <%= render "components/card", shadow: true, extra_class: "relative" do %>
+            <div class="space-y-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs text-muted-color font-mono">acme-engineering</p>
+                  <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Organisation dashboard</p>
+                </div>
+                <%= badge_tag "Admin", variant: :brand, dot: true %>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div class="rounded-lg border border-surface bg-surface p-3">
+                  <p class="text-xs text-muted-color">Teams</p>
+                  <p class="mt-1 text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">12</p>
+                </div>
+                <div class="rounded-lg border border-surface bg-surface p-3">
+                  <p class="text-xs text-muted-color">Projects</p>
+                  <p class="mt-1 text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">47</p>
+                </div>
+                <div class="rounded-lg border border-surface bg-surface p-3">
+                  <p class="text-xs text-muted-color">Invites</p>
+                  <p class="mt-1 text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">8</p>
+                </div>
+              </div>
+
+              <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                <% [
+                  ["Platform Infra",   "9 members"],
+                  ["Billing",          "6 members"],
+                  ["Mobile",           "5 members"],
+                  ["Data & ML",        "4 members"],
+                ].each do |name, count| %>
+                  <li class="py-2.5 flex items-center justify-between">
+                    <span class="text-sm text-zinc-900 dark:text-zinc-100"><%= name %></span>
+                    <%= badge_tag count, variant: :neutral %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ─── Features ────────────────────────────────────────────────────────── %>
+<section class="bg-surface-raised border-y border-surface">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 class="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Built for the way engineering orgs actually work
+      </h2>
+      <p class="mt-3 text-sm sm:text-base text-muted-color">
+        Every feature maps to a real artefact your team already maintains — teams, projects, stacks, docs, invites, and analytics.
+      </p>
+    </div>
+
+    <div class="card-grid-3">
+      <%
+        features = [
+          {
+            title: "Multi-tenant by design",
+            description: "Each organisation isolates its teams, projects, and people. Invite teammates without bleeding data across tenants.",
+            svg: '<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15l-.75 4.5h-13.5L4.5 3Zm.75 4.5v13.5m13.5-13.5v13.5M9 11.25h6M9 15.75h6" />'
+          },
+          {
+            title: "Teams &amp; memberships",
+            description: "Group people into teams, assign projects to them, and keep reporting lines clean across the org.",
+            svg: '<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />'
+          },
+          {
+            title: "Projects with stacks",
+            description: "Track each project's languages, technologies, and external resources — onboarding and audits stay grounded in reality.",
+            svg: '<path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />'
+          },
+          {
+            title: "Living documentation",
+            description: "Attach Google Docs and remote resources to projects so the docs always travel with the code they describe.",
+            svg: '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />'
+          },
+          {
+            title: "Invitations &amp; SSO",
+            description: "Invite teammates by email or let them join via Google &amp; GitHub single sign-on from your work domain.",
+            svg: '<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />'
+          },
+          {
+            title: "Admin analytics",
+            description: "See organisation health, growth, and a 'needs attention' list of unassigned projects and orphaned users at a glance.",
+            svg: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />'
+          }
+        ]
+      %>
+      <% features.each do |feature| %>
+        <%= render "components/card", shadow: true do %>
+          <div class="flex h-10 w-10 items-center justify-center rounded-md bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+              <%= feature[:svg].html_safe %>
+            </svg>
+          </div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= feature[:title].html_safe %></h3>
+          <p class="mt-1.5 text-sm text-muted-color"><%= feature[:description].html_safe %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ─── How it works ─────────────────────────────────────────────────────── %>
+<section class="bg-surface">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 class="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        From sign-up to source of truth in minutes
+      </h2>
+      <p class="mt-3 text-sm sm:text-base text-muted-color">
+        No setup wizards, no consultants. Four steps and your engineering footprint is searchable.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <%
+        steps = [
+          { title: "Create your organisation", body: "Sign up with your work email and you become the org admin instantly. Anyone signing up from your domain joins automatically." },
+          { title: "Invite your team",          body: "Send email invitations or let teammates sign in with Google or GitHub. Domain matching does the rest." },
+          { title: "Add projects &amp; stacks", body: "Capture each project's languages, technologies, and external resources. Tag projects by team so ownership is obvious." },
+          { title: "Document everything",       body: "Attach Google Docs and remote resources to projects so the source of truth never drifts from the code." }
+        ]
+      %>
+      <% steps.each_with_index do |step, idx| %>
+        <%= render "components/card", shadow: true do %>
+          <div class="h-10 w-10 rounded-full bg-brand-600 text-white text-sm font-semibold inline-flex items-center justify-center mb-4">
+            <%= idx + 1 %>
+          </div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= step[:title].html_safe %></h3>
+          <p class="mt-1.5 text-sm text-muted-color"><%= step[:body].html_safe %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ─── Tech & integrations ─────────────────────────────────────────────── %>
+<section class="bg-surface-raised border-y border-surface">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 class="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Built on tools you already trust
+      </h2>
+      <p class="mt-3 text-sm sm:text-base text-muted-color">
+        Boring, well-understood building blocks. No proprietary lock-in, no surprises in your stack review.
+      </p>
+    </div>
+
+    <%= render "components/card", shadow: true do %>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+        <%
+          tools = [
+            { label: "Rails 8",
+              svg: '<path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z" stroke-linejoin="round" stroke-linecap="round" />' },
+            { label: "Hotwire",
+              svg: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke-linejoin="round" stroke-linecap="round" />' },
+            { label: "Tailwind v4",
+              svg: '<path d="M6.5 9c1.5-3 4.5-3 6 0 1 2 2 2 3 1 1.5-1.5 0-4.5-3-4.5C9 5.5 7 7 6.5 9Zm-2 6c1.5-3 4.5-3 6 0 1 2 2 2 3 1 1.5-1.5 0-4.5-3-4.5-3.5 0-5.5 1.5-6 3.5Z" stroke-linejoin="round" stroke-linecap="round" />' },
+            { label: "PostgreSQL",
+              svg: '<ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />' },
+            { label: "Google OAuth",
+              svg: '<circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 2" stroke-linecap="round" stroke-linejoin="round" />' },
+            { label: "GitHub OAuth",
+              svg: '<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" stroke-linejoin="round" stroke-linecap="round" />' }
+          ]
+        %>
+        <% tools.each do |tool| %>
+          <div class="flex flex-col items-center text-center gap-2 py-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                   stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+                <%= tool[:svg].html_safe %>
+              </svg>
+            </div>
+            <p class="text-xs font-medium text-base-color"><%= tool[:label] %></p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p class="mt-6 text-center text-sm text-muted-color">
+      Plus Devise, Pundit, Active Admin, and Active Storage under the hood.
+    </p>
+  </div>
+</section>
+
+<%# ─── FAQ ──────────────────────────────────────────────────────────────── %>
+<section class="bg-surface">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 class="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Frequently asked questions
+      </h2>
+      <p class="mt-3 text-sm sm:text-base text-muted-color">
+        Short, honest answers about what Code Nest does today.
+      </p>
+    </div>
+
+    <div class="max-w-3xl mx-auto space-y-3">
+      <%
+        faqs = [
+          {
+            q: "How does multi-tenancy actually work?",
+            a: "Every team, project, employee, and invitation belongs to an organisation. Authorisation policies scope every query so one tenant cannot read or write another's data, even if they share a database."
+          },
+          {
+            q: "Which sign-on methods do you support?",
+            a: "Email + password via Devise (with email confirmation), plus Google and GitHub single sign-on through OmniAuth. Users from the same email domain join the same organisation automatically."
+          },
+          {
+            q: "Who can invite new members?",
+            a: "Organisation admins can send invitations and manage roles. Regular members can view teams and projects but cannot invite people or change organisation-wide settings."
+          },
+          {
+            q: "Do I own my data?",
+            a: "Yes. Your organisation's records belong to you. We do not sell data, and exports are on the roadmap so you can take everything with you whenever you want."
+          },
+          {
+            q: "Is Code Nest production-ready?",
+            a: "Code Nest is in Phase 0 preview. The core models, authentication, multi-tenant isolation, and dashboards are stable; expect features and UI to keep improving each release."
+          },
+          {
+            q: "How do I get help?",
+            a: "Sign up and use the in-app account page to reach the team. We respond to every message during the preview while we shape the product around real workflows."
+          }
+        ]
+      %>
+      <% faqs.each do |faq| %>
+        <details class="group rounded-lg border border-surface bg-surface-raised p-5 open:shadow-card">
+          <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
+            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= faq[:q] %></span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                 class="h-4 w-4 shrink-0 text-muted-color transition group-open:rotate-180">
+              <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </summary>
+          <div class="mt-3 text-sm text-muted-color"><%= faq[:a] %></div>
+        </details>
+      <% end %>
+    </div>
+
+    <%# Closing CTA — modest card, not a full-width band %>
+    <div class="max-w-3xl mx-auto mt-12">
+      <%= render "components/card", shadow: true do %>
+        <div class="text-center py-2">
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Ready to organise your engineering knowledge?
+          </h3>
+          <p class="mt-2 text-sm text-muted-color">
+            Create your organisation in under a minute. Invite the rest of the team whenever you're ready.
+          </p>
+          <div class="mt-5 flex flex-wrap justify-center gap-3">
+            <%= render "components/btn",
+                  label: "Get started free",
+                  href: new_user_registration_path,
+                  variant: :primary,
+                  size: :md %>
+            <%= render "components/btn",
+                  label: "Sign in",
+                  href: new_user_session_path,
+                  variant: :ghost,
+                  size: :md %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
