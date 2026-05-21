@@ -20,18 +20,32 @@
     <% if @users.any? %>
       <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
         <% @users.each do |u| %>
+          <% membership = @team.team_memberships.find_by(user: u) %>
           <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
             <div>
-              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= u.email %></p>
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= u.email %></p>
+                <% if membership&.lead? %>
+                  <%= badge_tag "Team lead", variant: :brand, dot: true %>
+                <% end %>
+              </div>
               <p class="text-xs text-muted-color"><%= u.org_role.humanize %></p>
             </div>
-            <% if policy(@team).update? %>
-              <%= button_to "Remove",
-                    team_membership_path(@team, @team.team_memberships.find_by(user: u)),
-                    method: :delete,
-                    data: { turbo_confirm: "Remove #{u.email} from #{@team.name}?" },
-                    class: "btn-base btn-ghost btn-sm" %>
-            <% end %>
+            <div class="flex shrink-0 items-center gap-2">
+              <% if policy(membership).promote_lead? && !membership.lead? %>
+                <%= button_to "Make lead",
+                      promote_lead_team_membership_path(@team, membership),
+                      method: :patch,
+                      class: "btn-base btn-ghost btn-sm text-brand-600 dark:text-brand-400" %>
+              <% end %>
+              <% if policy(@team).update? %>
+                <%= button_to "Remove",
+                      team_membership_path(@team, membership),
+                      method: :delete,
+                      data: { turbo_confirm: "Remove #{u.email} from #{@team.name}?" },
+                      class: "btn-base btn-ghost btn-sm" %>
+              <% end %>
+            </div>
           </li>
         <% end %>
       </ul>

@@ -13,6 +13,15 @@ RSpec.describe TeamMembership, type: :model do
 
     it { is_expected.to validate_uniqueness_of(:user_id).scoped_to(:team_id) }
 
+    it "allows only one lead per team" do
+      team = create(:team, organisation: create(:organisation))
+      create(:team_membership, team: team, lead: true)
+      second_lead = build(:team_membership, team: team, lead: true)
+
+      expect(second_lead).not_to be_valid
+      expect(second_lead.errors[:lead]).to be_present
+    end
+
     it "rejects users outside the team's organisation" do
       org_a = create(:organisation)
       org_b = create(:organisation)

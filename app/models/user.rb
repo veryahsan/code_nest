@@ -53,6 +53,20 @@ class User < ApplicationRecord
     org_admin?
   end
 
+  # True when the user is the designated lead for the given team.
+  def team_lead_for?(team)
+    return false if team.blank?
+
+    team_memberships.exists?(team_id: team.id, lead: true)
+  end
+
+  # True when the user leads the team that owns the project.
+  def team_lead_for_project?(project)
+    return false if project.blank? || project.team_id.blank?
+
+    team_lead_for?(project.team)
+  end
+
   # A user qualifies as "SSO-only" the moment any identity is linked to
   # them. The flag drives two pieces of UX/policy:
   #   * `password_required?` is relaxed so Devise stops insisting on a

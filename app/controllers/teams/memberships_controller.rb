@@ -31,6 +31,18 @@ module Teams
       redirect_to team_path(@team), notice: "#{email} removed from #{@team.name}.", status: :see_other
     end
 
+    def promote_lead
+      membership = @team.team_memberships.find(params[:id])
+      authorize membership, :promote_lead?
+
+      TeamMembership.transaction do
+        @team.team_memberships.leads.update_all(lead: false)
+        membership.update!(lead: true)
+      end
+
+      redirect_to team_path(@team), notice: "#{membership.user.email} is now team lead."
+    end
+
     private
 
     def load_team

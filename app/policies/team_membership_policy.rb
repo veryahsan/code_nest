@@ -11,6 +11,10 @@ class TeamMembershipPolicy < ApplicationPolicy
     admin_of_same_org?(record.team)
   end
 
+  def promote_lead?
+    admin_of_same_org?(record.team)
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       return scope.all if user&.super_admin?

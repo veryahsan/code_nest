@@ -71,7 +71,11 @@ Rails.application.routes.draw do
   resources :organisations, only: %i[new create show edit update destroy]
 
   resources :teams do
-    resources :memberships, only: %i[create destroy], controller: "teams/memberships"
+    resources :memberships, only: %i[create destroy], controller: "teams/memberships" do
+      member do
+        patch :promote_lead
+      end
+    end
   end
 
   resources :employees

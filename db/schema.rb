@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_20_140000) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -190,6 +190,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_140000) do
     t.bigint "team_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "lead", default: false, null: false
+    t.index ["team_id", "lead"], name: "index_team_memberships_on_team_id_unique_lead", unique: true, where: "(lead = true)"
     t.index ["team_id"], name: "index_team_memberships_on_team_id"
     t.index ["user_id", "team_id"], name: "index_team_memberships_on_user_id_and_team_id", unique: true
     t.index ["user_id"], name: "index_team_memberships_on_user_id"
