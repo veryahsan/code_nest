@@ -17,6 +17,7 @@
   </button>
 
   <%= link_to @sidebar.brand_href,
+        data: main_frame_data,
         class: "flex min-w-0 items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand-500" do %>
     <%= render "shared/brand_mark" %>
   <% end %>

@@ -4,6 +4,8 @@ class ApplicationController < ActionController::Base
 
   allow_browser versions: :modern
 
+  layout :resolved_layout
+
   before_action :prepare_sidebar
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
@@ -25,10 +27,17 @@ class ApplicationController < ActionController::Base
     root_path
   end
 
+  def resolved_layout
+    return "turbo_frame" if user_signed_in? && turbo_frame_request?
+
+    "application"
+  end
+
   # Prepares the structured data the signed-in chrome (sidebar + mobile
   # topbar) needs to render itself.
   def prepare_sidebar
     return unless user_signed_in?
+    return if turbo_frame_request?
 
     @sidebar = SidebarFacade.call(user: current_user, url_helpers: self).value
   end

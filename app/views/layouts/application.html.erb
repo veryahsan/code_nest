@@ -41,7 +41,8 @@
 
   <body class="min-h-full bg-surface text-base-color">
     <% if user_signed_in? %>
-      <div data-controller="sidebar">
+      <div data-controller="sidebar"
+           data-sidebar-main-frame-value="<%= main_content_frame_id %>">
         <%= render "shared/sidebar" %>
 
         <div class="flex min-h-full flex-col md:pl-64">
@@ -49,12 +50,11 @@
 
           <main class="flex-1 relative z-0 isolate">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-              <%= render "shared/flash" %>
-              <%= yield %>
+              <%= main_content_frame do %>
+                <%= yield %>
+              <% end %>
             </div>
           </main>
-
-          <%= render "shared/footer" %>
         </div>
       </div>
     <% else %>

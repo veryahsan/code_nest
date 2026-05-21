@@ -17,17 +17,23 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["panel", "overlay"]
+  static values = { mainFrame: { type: String, default: "main" } }
 
   connect() {
-    this.#boundKey   = (e) => { if (e.key === "Escape" && this.#isOpen) this.close() }
-    this.#boundVisit = () => this.close()
+    this.#boundKey       = (e) => { if (e.key === "Escape" && this.#isOpen) this.close() }
+    this.#boundVisit     = () => this.close()
+    this.#boundFrameLoad = (e) => {
+      if (e.target.id === this.mainFrameValue) this.close()
+    }
     document.addEventListener("keydown", this.#boundKey)
     document.addEventListener("turbo:visit", this.#boundVisit)
+    document.addEventListener("turbo:frame-load", this.#boundFrameLoad)
   }
 
   disconnect() {
     document.removeEventListener("keydown", this.#boundKey)
     document.removeEventListener("turbo:visit", this.#boundVisit)
+    document.removeEventListener("turbo:frame-load", this.#boundFrameLoad)
   }
 
   open() {
@@ -69,6 +75,7 @@ export default class extends Controller {
     })
   }
 
-  #boundKey   = null
-  #boundVisit = null
+  #boundKey       = null
+  #boundVisit     = null
+  #boundFrameLoad = null
 }

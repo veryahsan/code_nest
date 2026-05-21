@@ -20,6 +20,7 @@
     <%# ── Brand + close (mobile only) ──────────────────────────────── %>
     <div class="flex h-14 shrink-0 items-center justify-between border-b border-surface px-4">
       <%= link_to @sidebar.brand_href,
+            data: main_frame_data,
             class: "flex min-w-0 items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand-500" do %>
         <%= render "shared/brand_mark" %>
       <% end %>
@@ -40,6 +41,7 @@
         <% @sidebar.primary_nav.each do |item| %>
           <li>
             <%= link_to item.href,
+                  data: main_frame_data,
                   class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
               <%= render "shared/nav_icon", icon: item.icon %>
               <%= item.label %>
@@ -72,11 +74,13 @@
                   <% @sidebar.teams.each do |team| %>
                     <li>
                       <%= link_to team.name, team.href,
+                            data: main_frame_data,
                             class: "block truncate rounded-md px-2 py-1.5 text-sm text-muted-color transition-colors hover:bg-zinc-100 hover:text-base-color dark:hover:bg-zinc-800" %>
                     </li>
                   <% end %>
                   <li class="pt-1">
                     <%= link_to "View all teams", @sidebar.teams_index_href,
+                          data: main_frame_data,
                           class: "block rounded-md px-2 py-1.5 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400" %>
                   </li>
                 </ul>
@@ -85,6 +89,7 @@
                   You're not on any team yet.
                 </p>
                 <%= link_to "Browse teams", @sidebar.teams_index_href,
+                      data: main_frame_data,
                       class: "block px-2 py-1 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400" %>
               <% end %>
             </div>
@@ -110,6 +115,7 @@
       </div>
 
       <%= link_to @sidebar.account_href,
+            data: main_frame_data,
             class: "flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
         <%= user_avatar_tag(@sidebar.avatar_user, variant: :thumb, css: "h-9 w-9") %>
         <span class="min-w-0 flex-1">
@@ -123,6 +129,7 @@
 
       <%= link_to @sidebar.logout_href,
             data: {
+              turbo_frame: "_top",
               turbo_method: :delete,
               turbo_confirm: "Sign out of Code Nest?",
               confirm_title: "Sign out",

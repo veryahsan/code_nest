@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 module ApplicationHelper
+  # Turbo Frame that holds page content inside the signed-in chrome.
+  # Sidebar / topbar links target this frame; see +main_frame_data+.
+  MAIN_CONTENT_FRAME = "main"
+
   # ── Utility ──────────────────────────────────────────────────────────────────
 
   # Merge class strings, filtering out nil/false values.
@@ -155,6 +159,42 @@ module ApplicationHelper
   end
 
   # ── Turbo helpers ─────────────────────────────────────────────────────────────
+
+  def main_content_frame_id
+    MAIN_CONTENT_FRAME
+  end
+
+  # +data-turbo-frame+ for links outside the main frame (sidebar, mobile brand).
+  def main_frame_data(extra = {})
+    { turbo_frame: main_content_frame_id }.merge(extra)
+  end
+
+  def nav_link(name, path, active_class: "active", **options)
+    active = current_page?(path)
+    options[:class] = cn(options.delete(:class), active && active_class)
+    options[:onclick] = "return false;" if active
+    options[:aria] = (options[:aria] || {}).merge(current: "page") if active
+
+    link_to name, path, **options
+  end
+
+  # Wraps flash + page content in the persistent main Turbo Frame.
+  # data-turbo-action="advance" makes every frame navigation push a real
+  # history entry so the browser URL stays in sync with the displayed page.
+  def main_content_frame(&block)
+    page_title_text = content_for(:title).presence || "Code Nest"
+    turbo_frame_tag(
+      main_content_frame_id,
+      class: "contents",
+      data: {
+        turbo_action: "advance",
+        controller: "frame-title",
+        frame_title_title_value: page_title_text
+      }
+    ) do
+      safe_join([ render("shared/flash"), capture(&block) ])
+    end
+  end
 
   # Wrap content in a Turbo Frame for easy partial replacement.
   # Usage: <%= turbo_frame_wrap("project-list") { render @projects } %>
