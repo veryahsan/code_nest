@@ -169,15 +169,6 @@ module ApplicationHelper
     { turbo_frame: main_content_frame_id }.merge(extra)
   end
 
-  def nav_link(name, path, active_class: "active", **options)
-    active = current_page?(path)
-    options[:class] = cn(options.delete(:class), active && active_class)
-    options[:onclick] = "return false;" if active
-    options[:aria] = (options[:aria] || {}).merge(current: "page") if active
-
-    link_to name, path, **options
-  end
-
   # Wraps flash + page content in the persistent main Turbo Frame.
   # data-turbo-action="advance" makes every frame navigation push a real
   # history entry so the browser URL stays in sync with the displayed page.
