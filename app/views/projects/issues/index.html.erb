@@ -1,0 +1,47 @@
+<% page_title "Issues — #{@project.name}" %>
+
+<% sample_issue = @project.issues.new %>
+<% if policy(sample_issue).create? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "New issue", href: new_project_issue_path(@project), variant: :primary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Issues",
+      description: "Tracked work items for #{@project.name}.",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "Issues" },
+      ] %>
+
+<%= render "components/card" do %>
+  <% if @issues.any? %>
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <% @issues.each do |issue| %>
+        <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+          <div>
+            <%= link_to issue.issue_key, project_issue_path(@project, issue),
+                  class: "text-sm font-mono font-medium text-brand-600 hover:underline dark:text-brand-400" %>
+            <p class="text-sm text-zinc-900 dark:text-zinc-100 mt-0.5"><%= issue.summary %></p>
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <%= badge_tag issue.issue_type.humanize, variant: :neutral %>
+              <%= badge_tag issue.status.humanize, variant: :brand %>
+              <%= badge_tag issue.priority.humanize, variant: :warning %>
+            </div>
+          </div>
+          <% if policy(issue).update? %>
+            <%= link_to "Edit", edit_project_issue_path(@project, issue), class: "btn-link text-xs font-medium" %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+    <%= pagination_tag(@pagy) %>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "No issues yet",
+          description: policy(Issue.new(project: @project)).create? ? "Create the first issue for this project." : "Issues will appear here once the team lead adds them." %>
+  <% end %>
+<% end %>

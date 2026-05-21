@@ -1,0 +1,20 @@
+<% page_title "Edit #{@issue.issue_key} — #{@project.name}" %>
+
+<%= render "components/page_header",
+      title: "Edit #{@issue.issue_key}",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: @issue.issue_key, href: project_issue_path(@project, @issue) },
+        { label: "Edit" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
+    <%= render "projects/issues/form",
+          issue: @issue,
+          form_url: project_issue_path(@project, @issue),
+          form_method: :patch,
+          submit_label: "Save changes" %>
+  <% end %>
+</div>

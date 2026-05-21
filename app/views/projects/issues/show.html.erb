@@ -1,0 +1,61 @@
+<% page_title "#{@issue.issue_key} — #{@project.name}" %>
+
+<% if policy(@issue).update? %>
+  <% content_for :page_actions do %>
+    <%= render "components/btn", label: "Edit", href: edit_project_issue_path(@project, @issue), variant: :secondary, size: :sm %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: @issue.issue_key,
+      description: @issue.summary,
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: @issue.issue_key },
+      ] %>
+
+<div class="card-grid-2">
+  <%= render "components/card", title: "Details" do %>
+    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Type</dt>
+        <dd class="mt-1"><%= badge_tag @issue.issue_type.humanize, variant: :neutral %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Status</dt>
+        <dd class="mt-1"><%= badge_tag @issue.status.humanize, variant: :brand %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Priority</dt>
+        <dd class="mt-1"><%= badge_tag @issue.priority.humanize, variant: :warning %></dd>
+      </div>
+      <% if @issue.description.present? %>
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-muted-color">Description</dt>
+          <dd class="mt-1 text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap"><%= @issue.description %></dd>
+        </div>
+      <% end %>
+    </dl>
+  <% end %>
+
+  <%= render "components/card", title: "Project" do %>
+    <p class="text-sm text-zinc-900 dark:text-zinc-100"><%= @project.name %></p>
+    <p class="text-xs text-muted-color mt-1">Team: <%= @project.team&.name || "Unassigned" %></p>
+    <div class="mt-4">
+      <%= link_to "Back to project", project_path(@project), class: "btn-link text-sm font-medium" %>
+    </div>
+  <% end %>
+</div>
+
+<% if policy(@issue).destroy? %>
+  <div class="mt-8">
+    <%= render "components/card", title: "Danger zone" do %>
+      <%= button_to "Delete issue",
+            project_issue_path(@project, @issue),
+            method: :delete,
+            data: { turbo_confirm: "Delete #{@issue.issue_key}?" },
+            class: "btn-base btn-danger btn-md" %>
+    <% end %>
+  </div>
+<% end %>

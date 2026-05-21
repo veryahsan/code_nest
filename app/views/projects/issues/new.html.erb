@@ -1,0 +1,20 @@
+<% page_title "New issue — #{@project.name}" %>
+
+<%= render "components/page_header",
+      title: "New issue",
+      description: "Create a tracked issue for #{@project.name}.",
+      breadcrumbs: [
+        { label: "Projects", href: projects_path },
+        { label: @project.name, href: project_path(@project) },
+        { label: "New issue" },
+      ] %>
+
+<div class="flex justify-center">
+  <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
+    <%= render "projects/issues/form",
+          issue: @issue,
+          form_url: project_issues_path(@project),
+          form_method: :post,
+          submit_label: "Create issue" %>
+  <% end %>
+</div>

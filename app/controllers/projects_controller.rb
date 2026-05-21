@@ -20,6 +20,8 @@ class ProjectsController < ApplicationController
     @technologies = @project.technologies.order(:name)
     @documents = @project.project_documents.order(:title).limit(5)
     @remote_resources = @project.remote_resources.order(:name).limit(5)
+    @issues = policy_scope(@project.issues).order(number: :desc).limit(10)
+    @can_manage_issues = IssuePolicy.new(current_user, @project.issues.new(project: @project)).create?
   end
 
   def new

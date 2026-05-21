@@ -87,6 +87,7 @@ Rails.application.routes.draw do
   post "invitation_acceptances/:token", to: "invitation_acceptances#create", as: :submit_invitation_acceptance
 
   resources :projects do
+    resources :issues, only: %i[index show new create edit update destroy], controller: "projects/issues"
     resources :documents, only: %i[index show new create edit update destroy], controller: "projects/documents"
     resources :remote_resources, only: %i[index show new create edit update destroy], controller: "projects/remote_resources"
     resources :project_languages, only: %i[create destroy], controller: "projects/languages"
