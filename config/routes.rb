@@ -36,10 +36,6 @@ Rails.application.routes.draw do
 
       resource :organisation, only: %i[show update destroy]
 
-      resources :teams, only: %i[index show create update destroy] do
-        resources :memberships, only: %i[index create destroy], controller: "teams/memberships"
-      end
-
       resources :employees, only: %i[index show create update destroy]
 
       resources :invitations, only: %i[index show create destroy] do
@@ -49,6 +45,7 @@ Rails.application.routes.draw do
       end
 
       resources :projects, only: %i[index show create update destroy] do
+        resources :memberships, only: %i[index create destroy], controller: "projects/memberships"
         resources :documents, only: %i[index show create update destroy], controller: "projects/documents"
         resources :remote_resources, only: %i[index show create update destroy], controller: "projects/remote_resources"
         resources :languages, only: %i[index create destroy], controller: "projects/languages"
@@ -65,18 +62,18 @@ Rails.application.routes.draw do
 
   get "design-system", to: "design_system#show", as: :design_system
   get "dashboard", to: "dashboard#show", as: :dashboard
-  get "messages",  to: "messages#index", as: :messages
+  get "messages",  to: "conversations#index", as: :messages
+
+  # Real-time messaging: direct messages and group conversations.
+  resources :conversations, only: %i[index show new create] do
+    resources :messages, only: %i[index create], controller: "conversations/messages"
+    member do
+      patch :read
+    end
+  end
 
   # Tenant bootstrap & ongoing organisation management.
   resources :organisations, only: %i[new create show edit update destroy]
-
-  resources :teams do
-    resources :memberships, only: %i[create destroy], controller: "teams/memberships" do
-      member do
-        patch :promote_lead
-      end
-    end
-  end
 
   resources :employees
 
@@ -87,6 +84,11 @@ Rails.application.routes.draw do
   post "invitation_acceptances/:token", to: "invitation_acceptances#create", as: :submit_invitation_acceptance
 
   resources :projects do
+    resources :memberships, only: %i[create destroy], controller: "projects/memberships" do
+      member do
+        patch :promote_lead
+      end
+    end
     resources :issues, only: %i[index show new create edit update destroy], controller: "projects/issues"
     resources :documents, only: %i[index show new create edit update destroy], controller: "projects/documents"
     resources :remote_resources, only: %i[index show new create edit update destroy], controller: "projects/remote_resources"

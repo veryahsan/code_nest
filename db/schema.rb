@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_01_120003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,6 +54,30 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "conversation_participants", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "last_read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "user_id"], name: "index_conversation_participants_on_conversation_id_and_user_id", unique: true
+    t.index ["conversation_id"], name: "index_conversation_participants_on_conversation_id"
+    t.index ["user_id"], name: "index_conversation_participants_on_user_id"
+  end
+
+  create_table "conversations", force: :cascade do |t|
+    t.bigint "organisation_id", null: false
+    t.bigint "project_id"
+    t.bigint "created_by_id"
+    t.integer "kind", default: 1, null: false
+    t.string "title"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_conversations_on_created_by_id"
+    t.index ["organisation_id"], name: "index_conversations_on_organisation_id"
+    t.index ["project_id"], name: "index_conversations_on_project_id_unique", unique: true, where: "(project_id IS NOT NULL)"
   end
 
   create_table "employees", force: :cascade do |t|
@@ -121,6 +145,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
     t.index ["code"], name: "index_languages_on_code", unique: true
   end
 
+  create_table "messages", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.bigint "user_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
   create_table "organisations", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -151,6 +186,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
     t.index ["project_id"], name: "index_project_languages_on_project_id"
   end
 
+  create_table "project_memberships", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "project_id", null: false
+    t.boolean "lead", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "lead"], name: "index_project_memberships_on_project_id_unique_lead", unique: true, where: "(lead = true)"
+    t.index ["project_id"], name: "index_project_memberships_on_project_id"
+    t.index ["user_id", "project_id"], name: "index_project_memberships_on_user_id_and_project_id", unique: true
+    t.index ["user_id"], name: "index_project_memberships_on_user_id"
+  end
+
   create_table "project_technologies", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.bigint "technology_id", null: false
@@ -163,7 +210,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
 
   create_table "projects", force: :cascade do |t|
     t.bigint "organisation_id", null: false
-    t.bigint "team_id"
     t.string "name", null: false
     t.string "slug", null: false
     t.text "description"
@@ -171,7 +217,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
     t.datetime "updated_at", null: false
     t.index ["organisation_id", "slug"], name: "index_projects_on_organisation_id_and_slug", unique: true
     t.index ["organisation_id"], name: "index_projects_on_organisation_id"
-    t.index ["team_id"], name: "index_projects_on_team_id"
   end
 
   create_table "remote_resources", force: :cascade do |t|
@@ -183,28 +228,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["project_id"], name: "index_remote_resources_on_project_id"
-  end
-
-  create_table "team_memberships", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "team_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.boolean "lead", default: false, null: false
-    t.index ["team_id", "lead"], name: "index_team_memberships_on_team_id_unique_lead", unique: true, where: "(lead = true)"
-    t.index ["team_id"], name: "index_team_memberships_on_team_id"
-    t.index ["user_id", "team_id"], name: "index_team_memberships_on_user_id_and_team_id", unique: true
-    t.index ["user_id"], name: "index_team_memberships_on_user_id"
-  end
-
-  create_table "teams", force: :cascade do |t|
-    t.bigint "organisation_id", null: false
-    t.string "name", null: false
-    t.string "slug", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["organisation_id", "slug"], name: "index_teams_on_organisation_id_and_slug", unique: true
-    t.index ["organisation_id"], name: "index_teams_on_organisation_id"
   end
 
   create_table "technologies", force: :cascade do |t|
@@ -238,6 +261,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "conversation_participants", "conversations"
+  add_foreign_key "conversation_participants", "users"
+  add_foreign_key "conversations", "organisations"
+  add_foreign_key "conversations", "projects"
+  add_foreign_key "conversations", "users", column: "created_by_id"
   add_foreign_key "employees", "employees", column: "manager_id"
   add_foreign_key "employees", "organisations"
   add_foreign_key "employees", "users"
@@ -245,16 +273,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_20_150000) do
   add_foreign_key "invitations", "organisations"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "issues", "projects"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users"
   add_foreign_key "project_documents", "projects"
   add_foreign_key "project_languages", "languages"
   add_foreign_key "project_languages", "projects"
+  add_foreign_key "project_memberships", "projects"
+  add_foreign_key "project_memberships", "users"
   add_foreign_key "project_technologies", "projects"
   add_foreign_key "project_technologies", "technologies"
   add_foreign_key "projects", "organisations"
-  add_foreign_key "projects", "teams"
   add_foreign_key "remote_resources", "projects"
-  add_foreign_key "team_memberships", "teams"
-  add_foreign_key "team_memberships", "users"
-  add_foreign_key "teams", "organisations"
   add_foreign_key "users", "organisations"
 end

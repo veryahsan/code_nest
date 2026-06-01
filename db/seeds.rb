@@ -56,16 +56,9 @@ if Rails.env.development?
       user
     end
 
-    def ensure_team(organisation:, name:, slug:)
-      Team.find_or_create_by!(organisation_id: organisation.id, slug: slug) do |t|
-        t.name = name
-      end
-    end
-
-    def ensure_project(organisation:, name:, slug:, team: nil, description: nil)
+    def ensure_project(organisation:, name:, slug:, description: nil)
       project = Project.find_or_initialize_by(organisation_id: organisation.id, slug: slug)
       project.name        = name
-      project.team        = team
       project.description = description
       project.save!
       project
@@ -79,8 +72,10 @@ if Rails.env.development?
       Technology.find_or_create_by!(slug: slug) { |t| t.name = name }
     end
 
-    def ensure_membership(user:, team:)
-      TeamMembership.find_or_create_by!(user_id: user.id, team_id: team.id)
+    def ensure_membership(user:, project:, lead: false)
+      ProjectMembership.find_or_create_by!(user_id: user.id, project_id: project.id) do |m|
+        m.lead = lead
+      end
     end
 
     def ensure_employee(user:, organisation:, display_name:, job_title: nil, manager: nil)
@@ -199,21 +194,12 @@ if Rails.env.development?
   #
   # Each org gets:
   #   • 50 numbered dev users   (dev001@<domain> … dev050@<domain>)
-  #   • 6 teams
-  #   • 2 projects per team (12 projects total), each with relevant languages + techs
-  #   • 50 employee records (first 6 become team leads; rest report to their lead)
-  #   • Team memberships distributed evenly + every 3rd user joins a second team
+  #   • 11 projects (each acting as a team), with relevant languages + techs
+  #   • 50 employee records (first few become project leads; rest report in)
+  #   • Project memberships distributed evenly + every 3rd user joins a second
+  #     project. Each project auto-owns a group conversation.
 
-  ORG_TEAM_DEFS = [
-    { name: "Engineering",              slug: "engineering"       },
-    { name: "Product",                  slug: "product"           },
-    { name: "Data & Analytics",         slug: "data-analytics"    },
-    { name: "DevOps & Infrastructure",  slug: "devops"            },
-    { name: "Quality Assurance",        slug: "quality-assurance" },
-    { name: "Mobile",                   slug: "mobile"            },
-  ].freeze
-
-  # project definitions keyed by team slug; slug is interpolated with org prefix
+  # project definitions; slug is interpolated with org prefix
   ORG_PROJECT_DEFS = [
     {
       team_slug:   "engineering",
@@ -322,7 +308,7 @@ if Rails.env.development?
     domain = cfg[:domain]
     prefix = cfg[:prefix]
 
-    puts "  [#{org.name}] users, teams, employees, projects…"
+    puts "  [#{org.name}] users, projects, employees, memberships…"
 
     # ── 50 bulk users ──────────────────────────────────────────────────────
     org_users = (1..50).map do |n|
@@ -333,54 +319,12 @@ if Rails.env.development?
       )
     end
 
-    # ── 6 teams ────────────────────────────────────────────────────────────
-    teams = ORG_TEAM_DEFS.map do |t|
-      ensure_team(organisation: org, name: t[:name], slug: t[:slug])
-    end
-
-    # ── Distribute memberships (primary + occasional secondary team) ────────
-    org_users.each_with_index do |user, i|
-      primary = teams[i % teams.length]
-      ensure_membership(user: user, team: primary)
-
-      # Every 3rd user gets a second membership for cross-team realism
-      if (i % 3).zero?
-        secondary = teams[(i / 3 + 2) % teams.length]
-        ensure_membership(user: user, team: secondary) unless secondary == primary
-      end
-    end
-
-    # ── Employee records ───────────────────────────────────────────────────
-    # First 6 users become team leads (one per team, no manager).
-    # The rest report to the lead of their primary team.
-    team_leads = {}
-
-    org_users.each_with_index do |user, i|
-      fn    = SEED_FIRST_NAMES[i % SEED_FIRST_NAMES.length]
-      ln    = SEED_LAST_NAMES[(i * 7) % SEED_LAST_NAMES.length]
-      tidx  = i % teams.length
-      title = i < teams.length ? "#{teams[i].name} Lead" : SEED_JOB_TITLES[i % SEED_JOB_TITLES.length]
-
-      emp = ensure_employee(
-        user:         user,
-        organisation: org,
-        display_name: "#{fn} #{ln}",
-        job_title:    title,
-        manager:      i < teams.length ? nil : team_leads[tidx],
-      )
-      team_leads[i] = emp if i < teams.length
-    end
-
-    # ── Projects (2 per team = 12 per org) ────────────────────────────────
-    ORG_PROJECT_DEFS.each do |pdef|
-      team = teams.find { |t| t.slug == pdef[:team_slug] }
-      next unless team
-
+    # ── Projects (11 per org), each acting as a team ───────────────────────
+    projects = ORG_PROJECT_DEFS.map do |pdef|
       proj = ensure_project(
         organisation: org,
         name:         pdef[:name],
         slug:         "#{prefix}-#{pdef[:slug_suffix]}",
-        team:         team,
         description:  pdef[:desc],
       )
 
@@ -393,6 +337,46 @@ if Rails.env.development?
         tech = techs[slug]
         ProjectTechnology.find_or_create_by!(project_id: proj.id, technology_id: tech.id) if tech
       end
+
+      proj
+    end
+
+    # ── Distribute memberships (primary + occasional secondary project) ─────
+    # The first user assigned to each project becomes its lead.
+    project_leads = {}
+
+    org_users.each_with_index do |user, i|
+      primary = projects[i % projects.length]
+      is_lead = project_leads[primary.id].nil?
+      ensure_membership(user: user, project: primary, lead: is_lead)
+      project_leads[primary.id] ||= user
+
+      # Every 3rd user gets a second membership for cross-project realism
+      if (i % 3).zero?
+        secondary = projects[(i / 3 + 2) % projects.length]
+        ensure_membership(user: user, project: secondary) unless secondary == primary
+      end
+    end
+
+    # ── Employee records ───────────────────────────────────────────────────
+    # Project leads have no manager; the rest report to the lead of their
+    # primary project.
+    org_users.each_with_index do |user, i|
+      fn      = SEED_FIRST_NAMES[i % SEED_FIRST_NAMES.length]
+      ln      = SEED_LAST_NAMES[(i * 7) % SEED_LAST_NAMES.length]
+      primary = projects[i % projects.length]
+      lead    = project_leads[primary.id]
+      is_lead = lead == user
+      title   = is_lead ? "#{primary.name} Lead" : SEED_JOB_TITLES[i % SEED_JOB_TITLES.length]
+      manager = is_lead ? nil : Employee.find_by(user_id: lead&.id)
+
+      ensure_employee(
+        user:         user,
+        organisation: org,
+        display_name: "#{fn} #{ln}",
+        job_title:    title,
+        manager:      manager,
+      )
     end
   end
 
@@ -405,33 +389,29 @@ if Rails.env.development?
   henry  = ensure_user(email: "henry@globex.dev",        organisation: org_globex,  org_role: :member)
   ensure_user(email: "solo@startup-labs.dev",            organisation: org_startup, org_role: :admin)
 
-  # Named teams & memberships
-  team_acme_eng     = Team.find_by!(organisation_id: org_acme.id,   slug: "engineering")
-  team_acme_product = Team.find_by!(organisation_id: org_acme.id,   slug: "product")
-  team_globex_core  = ensure_team(organisation: org_globex, name: "Core", slug: "core")
+  # ── Named projects (each acts as a team) ───────────────────────────────────
+  proj_phoenix  = ensure_project(organisation: org_acme, name: "Phoenix", slug: "phoenix",
+                                  description: "Main customer app — stack-heavy.")
+  proj_internal = ensure_project(organisation: org_acme, name: "Internal Tools", slug: "internal-tools",
+                                  description: "Org-wide utilities.")
+  proj_legacy   = ensure_project(organisation: org_globex, name: "Legacy Monolith", slug: "legacy-monolith",
+                                  description: "Older stack maintained by Core.")
+  ensure_project(organisation: org_startup, name: "MVP", slug: "mvp",
+                 description: "Solo-founder project.")
 
-  ensure_membership(user: alice,  team: team_acme_eng)
-  ensure_membership(user: bob,    team: team_acme_eng)
-  ensure_membership(user: bob,    team: team_acme_product)
-  ensure_membership(user: carol,  team: team_acme_product)
-  ensure_membership(user: _dave,  team: team_acme_eng)
-  ensure_membership(user: grace,  team: team_globex_core)
-  ensure_membership(user: henry,  team: team_globex_core)
+  # Named memberships (Phoenix is Alice's project; Bob & Dave join too)
+  ensure_membership(user: alice,  project: proj_phoenix,  lead: true)
+  ensure_membership(user: bob,    project: proj_phoenix)
+  ensure_membership(user: _dave,  project: proj_phoenix)
+  ensure_membership(user: bob,    project: proj_internal, lead: true)
+  ensure_membership(user: carol,  project: proj_internal)
+  ensure_membership(user: grace,  project: proj_legacy,   lead: true)
+  ensure_membership(user: henry,  project: proj_legacy)
 
   # Named employee records (Carol and Henry intentionally have none)
   lead = ensure_employee(user: alice, organisation: org_acme,   display_name: "Alice Acme",   job_title: "Head of Engineering")
   ensure_employee(user: bob,   organisation: org_acme,   display_name: "Bob Builder",  job_title: "Senior Developer", manager: lead)
   ensure_employee(user: grace, organisation: org_globex, display_name: "Grace Globex", job_title: "CTO")
-
-  # ── Named projects (kept for remote-resource / document fixtures below) ─────
-  proj_phoenix  = ensure_project(organisation: org_acme, name: "Phoenix", slug: "phoenix",
-                                  team: team_acme_eng, description: "Main customer app — team-scoped, stack-heavy.")
-  proj_internal = ensure_project(organisation: org_acme, name: "Internal Tools", slug: "internal-tools",
-                                  team: nil, description: "Org-wide utilities without an owning team.")
-  proj_legacy   = ensure_project(organisation: org_globex, name: "Legacy Monolith", slug: "legacy-monolith",
-                                  team: team_globex_core, description: "Older stack maintained by Core.")
-  ensure_project(organisation: org_startup, name: "MVP", slug: "mvp",
-                 team: nil, description: "Solo-founder project; org has no teams.")
 
   ProjectLanguage.find_or_create_by!(project_id: proj_phoenix.id,  language_id: langs["en"].id)
   ProjectLanguage.find_or_create_by!(project_id: proj_phoenix.id,  language_id: langs["typescript"].id)
