@@ -24,6 +24,9 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# Same prefetch opt-out as the signed-in layout — see application.html.erb. %>
+    <meta name="turbo-prefetch" content="false">
+
     <%= yield :head %>
 
     <link rel="icon" href="/icon.png" type="image/png">
