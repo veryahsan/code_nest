@@ -1,19 +1,21 @@
 # frozen_string_literal: true
 
-ActiveAdmin.register TeamMembership do
+ActiveAdmin.register ProjectMembership do
   menu priority: 7
 
-  permit_params :user_id, :team_id
+  permit_params :user_id, :project_id, :lead
 
-  filter :team
+  filter :project
   filter :user
+  filter :lead
   filter :created_at
 
   index do
     selectable_column
     id_column
-    column :team
+    column :project
     column :user
+    column :lead
     column :created_at
     actions
   end
@@ -21,8 +23,9 @@ ActiveAdmin.register TeamMembership do
   show do
     attributes_table do
       row :id
-      row :team
+      row :project
       row :user
+      row :lead
       row :created_at
     end
   end
@@ -30,8 +33,9 @@ ActiveAdmin.register TeamMembership do
   form do |f|
     f.semantic_errors
     f.inputs do
-      f.input :team
+      f.input :project
       f.input :user
+      f.input :lead
     end
     f.actions
   end

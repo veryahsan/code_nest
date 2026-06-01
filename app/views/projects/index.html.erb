@@ -21,7 +21,7 @@
         <thead>
           <tr class="text-xs text-muted-color border-b border-zinc-200 dark:border-zinc-800">
             <th class="pb-2 pr-4 font-medium">Name</th>
-            <th class="pb-2 pr-4 font-medium">Team</th>
+            <th class="pb-2 pr-4 font-medium">Members</th>
             <th class="pb-2 pr-4 font-medium">Stack</th>
             <th class="pb-2 font-medium">Slug</th>
           </tr>
@@ -33,11 +33,7 @@
                 <%= link_to project.name, project_path(project), class: "hover:underline" %>
               </td>
               <td class="py-2.5 pr-4 text-muted-color">
-                <% if project.team %>
-                  <%= project.team.name %>
-                <% else %>
-                  <span class="italic">Unassigned</span>
-                <% end %>
+                <%= pluralize(project.users.size, "member") %>
               </td>
               <td class="py-2.5 pr-4">
                 <div class="flex flex-wrap gap-1">

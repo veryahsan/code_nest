@@ -5,10 +5,10 @@ require "rails_helper"
 RSpec.describe Organisation, type: :model do
   describe "associations" do
     it { is_expected.to have_many(:users).dependent(:restrict_with_error) }
-    it { is_expected.to have_many(:teams).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:employees).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:invitations).dependent(:destroy) }
     it { is_expected.to have_many(:projects).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:conversations).dependent(:destroy) }
   end
 
   describe "validations" do

@@ -4,14 +4,13 @@ require "rails_helper"
 
 RSpec.describe "Projects::Issues", type: :request do
   let(:org)     { create(:organisation) }
-  let(:team)    { create(:team, organisation: org) }
-  let(:project) { create(:project, organisation: org, team: team) }
+  let(:project) { create(:project, organisation: org) }
   let(:lead)    { create(:user, organisation: org) }
   let(:member)  { create(:user, organisation: org) }
 
   before do
-    create(:team_membership, team: team, user: lead, lead: true)
-    create(:team_membership, team: team, user: member)
+    create(:project_membership, project: project, user: lead, lead: true)
+    create(:project_membership, project: project, user: member)
   end
 
   describe "GET /projects/:project_id/issues" do

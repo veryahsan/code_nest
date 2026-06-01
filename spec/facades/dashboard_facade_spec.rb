@@ -8,15 +8,11 @@ RSpec.describe DashboardFacade, type: :facade do
       let(:org)  { create(:organisation) }
       let(:user) { create(:user, organisation: org) }
 
-      let!(:my_team)    { create(:team, organisation: org, name: "Alpha") }
-      let!(:other_team) { create(:team, organisation: org, name: "Zeta") }
-
-      let!(:my_project)    { create(:project, organisation: org, name: "Widget", team: my_team) }
-      let!(:other_project) { create(:project, organisation: org, name: "Gizmo",  team: other_team) }
-      let!(:unassigned)    { create(:project, organisation: org, name: "Orphan", team: nil) }
+      let!(:my_project)    { create(:project, organisation: org, name: "Widget") }
+      let!(:other_project) { create(:project, organisation: org, name: "Gizmo") }
 
       before do
-        create(:team_membership, team: my_team, user: user)
+        create(:project_membership, project: my_project, user: user)
         create(:invitation, organisation: org)
       end
 
@@ -31,13 +27,7 @@ RSpec.describe DashboardFacade, type: :facade do
         expect(facade.organisation).to eq(org)
       end
 
-      it "exposes only the user's own teams, ordered by name with users eager-loaded" do
-        facade = described_class.call(user: user).value
-        expect(facade.teams.map(&:name)).to eq(%w[Alpha])
-        expect(facade.teams).to be_loaded
-      end
-
-      it "exposes only projects belonging to the user's teams" do
+      it "exposes only the projects the user belongs to" do
         facade = described_class.call(user: user).value
         expect(facade.projects.map(&:name)).to eq(%w[Widget])
         expect(facade.projects).to be_loaded
@@ -73,7 +63,7 @@ RSpec.describe DashboardFacade, type: :facade do
       it "does not populate admin-only analytics readers" do
         facade = described_class.call(user: user).value
         expect(facade.members_total).to be_nil
-        expect(facade.top_teams_by_members).to be_nil
+        expect(facade.top_projects_by_members).to be_nil
       end
     end
 
@@ -92,9 +82,8 @@ RSpec.describe DashboardFacade, type: :facade do
         expect(described_class.call(user: user).value.mode).to eq(:onboarding)
       end
 
-      it "leaves teams, projects, and pending_invitations nil" do
+      it "leaves projects and pending_invitations nil" do
         facade = described_class.call(user: user).value
-        expect(facade.teams).to be_nil
         expect(facade.projects).to be_nil
         expect(facade.pending_invitations).to be_nil
       end
@@ -104,18 +93,17 @@ RSpec.describe DashboardFacade, type: :facade do
       let(:org)   { create(:organisation) }
       let(:admin) { create(:user, :organisation_admin, organisation: org) }
 
-      let!(:team_alpha) { create(:team, organisation: org, name: "Alpha") }
-      let!(:team_beta)  { create(:team, organisation: org, name: "Beta") }
+      let!(:project_widget) { create(:project, organisation: org, name: "Widget") }
+      let!(:project_gizmo)  { create(:project, organisation: org, name: "Gizmo") }
 
       before do
         teamed_member = create(:user, organisation: org)
-        create(:user, organisation: org) # orphan_member — intentionally on no team
+        create(:user, organisation: org) # orphan_member — intentionally on no project
 
-        create(:team_membership, team: team_alpha, user: admin)
-        create(:team_membership, team: team_alpha, user: teamed_member)
+        create(:project_membership, project: project_widget, user: admin)
+        create(:project_membership, project: project_widget, user: teamed_member)
 
-        create(:project, organisation: org, name: "Widget", team: team_alpha)
-        create(:project, organisation: org, name: "Gizmo", team: nil)
+        # project_gizmo intentionally has no members
 
         # Reuse the admin as the inviter so we don't accidentally spawn extra
         # users in the organisation and skew the analytics counters.
@@ -132,7 +120,6 @@ RSpec.describe DashboardFacade, type: :facade do
 
       it "exposes workspace readers alongside analytics" do
         facade = described_class.call(user: admin).value
-        expect(facade.teams.map(&:name)).to eq(%w[Alpha Beta])
         expect(facade.projects.map(&:name)).to eq(%w[Gizmo Widget])
         expect(facade.pending_invitations).to be_present
       end
@@ -144,17 +131,16 @@ RSpec.describe DashboardFacade, type: :facade do
         expect(facade.members_count).to eq(2)
       end
 
-      it "counts teams, projects, and employees in the organisation" do
+      it "counts projects and employees in the organisation" do
         facade = described_class.call(user: admin).value
-        expect(facade.teams_total).to eq(2)
         expect(facade.projects_total).to eq(2)
         expect(facade.employees_total).to eq(1)
       end
 
       it "counts org-health gaps" do
         facade = described_class.call(user: admin).value
-        expect(facade.unassigned_projects_count).to eq(1)
-        expect(facade.users_without_team_count).to eq(1)
+        expect(facade.projects_without_members_count).to eq(1)
+        expect(facade.users_without_project_count).to eq(1)
         expect(facade.employees_without_manager_count).to eq(1)
       end
 
@@ -167,24 +153,15 @@ RSpec.describe DashboardFacade, type: :facade do
       it "counts items created in the last 7 days" do
         facade = described_class.call(user: admin).value
         expect(facade.new_users_last_7d).to be >= 3
-        expect(facade.new_teams_last_7d).to eq(2)
         expect(facade.new_projects_last_7d).to eq(2)
       end
 
-      it "returns the top 5 teams by members ordered desc" do
+      it "returns the top 5 projects by members ordered desc" do
         facade = described_class.call(user: admin).value
-        top = facade.top_teams_by_members.to_a
+        top = facade.top_projects_by_members.to_a
         expect(top.length).to be <= 5
-        expect(top.first).to eq(team_alpha)
-        expect(top.first.team_members_count).to eq(2)
-      end
-
-      it "returns the top 5 teams by projects ordered desc" do
-        facade = described_class.call(user: admin).value
-        top = facade.top_teams_by_projects.to_a
-        expect(top.length).to be <= 5
-        expect(top.first).to eq(team_alpha)
-        expect(top.first.team_projects_count).to eq(1)
+        expect(top.first).to eq(project_widget)
+        expect(top.first.project_members_count).to eq(2)
       end
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Per-organisation slug generator for Project. Mirrors the Team variant
+# Per-organisation slug generator for Project. Uses the same approach
 # but scopes uniqueness to organisations.projects.
 module Projects
   class GenerateUniqueSlugService < ApplicationService

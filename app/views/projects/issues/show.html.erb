@@ -41,7 +41,7 @@
 
   <%= render "components/card", title: "Project" do %>
     <p class="text-sm text-zinc-900 dark:text-zinc-100"><%= @project.name %></p>
-    <p class="text-xs text-muted-color mt-1">Team: <%= @project.team&.name || "Unassigned" %></p>
+    <p class="text-xs text-muted-color mt-1">Lead: <%= @project.lead&.email || "Unassigned" %></p>
     <div class="mt-4">
       <%= link_to "Back to project", project_path(@project), class: "btn-link text-sm font-medium" %>
     </div>

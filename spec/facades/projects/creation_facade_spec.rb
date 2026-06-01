@@ -4,7 +4,6 @@ require "rails_helper"
 
 RSpec.describe Projects::CreationFacade, type: :facade do
   let(:org) { create(:organisation) }
-  let(:team) { create(:team, organisation: org) }
   let(:lang) { create(:language) }
   let(:tech) { create(:technology) }
 
@@ -20,15 +19,10 @@ RSpec.describe Projects::CreationFacade, type: :facade do
     expect(result.value.slug).to eq("phoenix-1")
   end
 
-  it "attaches an organisation team when provided" do
-    result = described_class.call(organisation: org, attributes: { name: "Phoenix", team_id: team.id })
-    expect(result.value.team).to eq(team)
-  end
-
-  it "ignores teams from another organisation" do
-    foreign = create(:team, organisation: create(:organisation))
-    result = described_class.call(organisation: org, attributes: { name: "Phoenix", team_id: foreign.id })
-    expect(result.value.team).to be_nil
+  it "auto-creates the project's group conversation" do
+    result = described_class.call(organisation: org, attributes: { name: "Phoenix" })
+    expect(result.value.group_conversation).to be_present
+    expect(result.value.group_conversation.title).to eq("Phoenix")
   end
 
   it "attaches languages and technologies in bulk" do

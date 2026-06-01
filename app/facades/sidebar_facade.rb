@@ -7,14 +7,14 @@
 # Set on the request via the `prepare_sidebar` before_action in
 # `ApplicationController`. Views read structured fields from `@sidebar`.
 class SidebarFacade < ApplicationFacade
-  MAX_TEAMS_IN_SIDEBAR = 8
+  MAX_PROJECTS_IN_SIDEBAR = 8
 
-  TeamEntry = Struct.new(:name, :href, keyword_init: true)
-  NavItem   = Struct.new(:label, :href, :icon, keyword_init: true)
+  ProjectEntry = Struct.new(:name, :href, keyword_init: true)
+  NavItem      = Struct.new(:label, :href, :icon, keyword_init: true)
 
   attr_reader :user, :avatar_user, :display_name,
-              :teams, :primary_nav,
-              :brand_href, :teams_index_href,
+              :projects, :primary_nav,
+              :brand_href, :projects_index_href,
               :account_href, :logout_href
 
   def initialize(user:, url_helpers:)
@@ -23,18 +23,18 @@ class SidebarFacade < ApplicationFacade
   end
 
   def call
-    @has_organisation   = @user.organisation.present?
-    @organisation_admin = !!@user.org_admin?
-    @super_admin        = !!@user.super_admin?
-    @avatar_user        = @user
-    @display_name       = @user.email.to_s.split("@").first
+    @has_organisation    = @user.organisation.present?
+    @organisation_admin  = !!@user.org_admin?
+    @super_admin         = !!@user.super_admin?
+    @avatar_user         = @user
+    @display_name        = @user.email.to_s.split("@").first
 
-    @brand_href        = @has_organisation ? @h.dashboard_path : @h.root_path
-    @teams_index_href  = @h.teams_path
-    @account_href      = @h.edit_user_registration_path
-    @logout_href       = @h.destroy_user_session_path
+    @brand_href           = @has_organisation ? @h.dashboard_path : @h.root_path
+    @projects_index_href  = @h.projects_path
+    @account_href         = @h.edit_user_registration_path
+    @logout_href          = @h.destroy_user_session_path
 
-    @teams       = build_team_entries
+    @projects    = build_project_entries
     @primary_nav = build_primary_nav
 
     success(self)
@@ -52,21 +52,21 @@ class SidebarFacade < ApplicationFacade
     @super_admin
   end
 
-  def teams?
-    @teams.any?
+  def projects?
+    @projects.any?
   end
 
-  def show_teams_section?
+  def show_projects_section?
     @has_organisation && !@super_admin
   end
 
   private
 
-  def build_team_entries
-    return [] unless show_teams_section?
+  def build_project_entries
+    return [] unless show_projects_section?
 
-    @user.teams.order(:name).limit(MAX_TEAMS_IN_SIDEBAR).map do |team|
-      TeamEntry.new(name: team.name, href: @h.team_path(team))
+    @user.projects.order(:name).limit(MAX_PROJECTS_IN_SIDEBAR).map do |project|
+      ProjectEntry.new(name: project.name, href: @h.project_path(project))
     end
   end
 

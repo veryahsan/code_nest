@@ -15,11 +15,14 @@ class User < ApplicationRecord
   validate :acceptable_avatar
 
   has_many :identities, dependent: :destroy
-  has_many :team_memberships, dependent: :destroy
-  has_many :teams, through: :team_memberships
+  has_many :project_memberships, dependent: :destroy
+  has_many :projects, through: :project_memberships
   has_one :employee, dependent: :destroy
   has_many :sent_invitations, class_name: "Invitation", foreign_key: :invited_by_id,
                              inverse_of: :invited_by, dependent: :nullify
+  has_many :conversation_participants, dependent: :destroy
+  has_many :conversations, through: :conversation_participants
+  has_many :messages, dependent: :destroy
 
   enum :org_role, { member: 0, admin: 1 }, prefix: :org
 
@@ -53,18 +56,18 @@ class User < ApplicationRecord
     org_admin?
   end
 
-  # True when the user is the designated lead for the given team.
-  def team_lead_for?(team)
-    return false if team.blank?
+  # True when the user is the designated lead for the given project.
+  def lead_for_project?(project)
+    return false if project.blank?
 
-    team_memberships.exists?(team_id: team.id, lead: true)
+    project_memberships.exists?(project_id: project.id, lead: true)
   end
 
-  # True when the user leads the team that owns the project.
-  def team_lead_for_project?(project)
-    return false if project.blank? || project.team_id.blank?
+  # True when the user is a member of the given project.
+  def member_of_project?(project)
+    return false if project.blank?
 
-    team_lead_for?(project.team)
+    project_memberships.exists?(project_id: project.id)
   end
 
   # A user qualifies as "SSO-only" the moment any identity is linked to
@@ -90,7 +93,7 @@ class User < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[employee identities organisation sent_invitations team_memberships teams]
+    %w[employee identities organisation projects project_memberships sent_invitations]
   end
 
   private

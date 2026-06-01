@@ -10,7 +10,7 @@ module Api
         authorize Project
         @pagy, projects = pagy(
           policy_scope(current_api_organisation.projects)
-            .includes(:team, :languages, :technologies)
+            .includes(:languages, :technologies)
             .order(:name),
         )
         render json: ProjectSerializer.new(
@@ -63,7 +63,7 @@ module Api
 
       def project_params
         params.require(:project).permit(
-          :name, :slug, :description, :team_id,
+          :name, :slug, :description,
           language_ids: [], technology_ids: [],
         )
       end

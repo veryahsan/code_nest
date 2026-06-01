@@ -2,16 +2,14 @@
 
 module Api
   module V1
-    module Teams
+    module Projects
       class MembershipsController < BaseController
         before_action :require_api_organisation!
-        before_action :load_team
+        before_action :load_project
 
         def index
-          # `order(:created_at)` gives pagy a deterministic ordering — without
-          # it, postgres may shuffle rows across pages.
-          @pagy, memberships = pagy(@team.team_memberships.order(:created_at))
-          render json: TeamMembershipSerializer.new(
+          @pagy, memberships = pagy(@project.project_memberships.order(:created_at))
+          render json: ProjectMembershipSerializer.new(
             memberships,
             meta:  pagy_meta(@pagy),
             links: pagy_links(@pagy),
@@ -20,7 +18,7 @@ module Api
 
         def create
           user = current_api_organisation.users.find_by(id: params.dig(:membership, :user_id))
-          membership = @team.team_memberships.new(user: user)
+          membership = @project.project_memberships.new(user: user)
           authorize membership
 
           if user.nil?
@@ -28,14 +26,14 @@ module Api
           end
 
           if membership.save
-            render json: TeamMembershipSerializer.new(membership).serializable_hash, status: :created
+            render json: ProjectMembershipSerializer.new(membership).serializable_hash, status: :created
           else
             render_validation_errors!(membership)
           end
         end
 
         def destroy
-          membership = @team.team_memberships.find(params[:id])
+          membership = @project.project_memberships.find(params[:id])
           authorize membership
           membership.destroy
           head :no_content
@@ -43,8 +41,8 @@ module Api
 
         private
 
-        def load_team
-          @team = current_api_organisation.teams.find(params[:team_id])
+        def load_project
+          @project = current_api_organisation.projects.find(params[:project_id])
         end
       end
     end

@@ -37,8 +37,8 @@ ActiveAdmin.register Organisation do
       end
     end
 
-    panel "Teams" do
-      table_for organisation.teams.order(:name) do
+    panel "Projects" do
+      table_for organisation.projects.order(:name) do
         column :name
         column :slug
       end

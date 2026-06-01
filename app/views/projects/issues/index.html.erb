@@ -42,6 +42,6 @@
     <%= render "components/empty_state",
           icon: :inbox,
           title: "No issues yet",
-          description: policy(Issue.new(project: @project)).create? ? "Create the first issue for this project." : "Issues will appear here once the team lead adds them." %>
+          description: policy(Issue.new(project: @project)).create? ? "Create the first issue for this project." : "Issues will appear here once the project lead adds them." %>
   <% end %>
 <% end %>

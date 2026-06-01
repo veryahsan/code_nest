@@ -43,7 +43,6 @@ module TenantPolicy
     return target.organisation_id if target.respond_to?(:organisation_id) && target.organisation_id
     return target.organisation.id if target.respond_to?(:organisation) && target.organisation
     return target.project.organisation_id if target.respond_to?(:project) && target.project
-    return target.team.organisation_id if target.respond_to?(:team) && target.team
 
     nil
   end

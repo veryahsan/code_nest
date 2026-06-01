@@ -23,9 +23,10 @@ RSpec.describe "Api::V1::Projects", type: :request do
   end
 
   describe "GET /api/v1/projects" do
-    before { create(:project, organisation: org, name: "Phoenix") }
+    let!(:project) { create(:project, organisation: org, name: "Phoenix") }
 
-    it "lists for members" do
+    it "lists projects the member belongs to" do
+      create(:project_membership, project: project, user: member)
       get "/api/v1/projects", headers: auth_headers_for(member)
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)["data"].size).to eq(1)

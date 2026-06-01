@@ -3,8 +3,9 @@
 # Creates a Project inside an organisation. Mirrors the Project
 # creation flow described in the project's architecture standards
 # (see ProjectCreationFacade in README): one transaction, slug derived
-# via Projects::GenerateUniqueSlugService, optional team assignment,
-# bulk attachment of Languages and Technologies.
+# via Projects::GenerateUniqueSlugService, bulk attachment of Languages
+# and Technologies. The project's group conversation is created
+# automatically by a Project model callback.
 module Projects
   class CreationFacade < ApplicationFacade
     def initialize(organisation:, attributes:)
@@ -16,7 +17,6 @@ module Projects
       @project = @organisation.projects.new(
         name: @attributes[:name],
         description: @attributes[:description],
-        team_id: resolve_team_id,
       )
 
       ActiveRecord::Base.transaction do
@@ -32,13 +32,6 @@ module Projects
     end
 
     private
-
-    def resolve_team_id
-      raw = @attributes[:team_id]
-      return nil if raw.blank?
-
-      @organisation.teams.where(id: raw).pick(:id)
-    end
 
     def apply_slug
       base = @attributes[:slug].presence || @project.name

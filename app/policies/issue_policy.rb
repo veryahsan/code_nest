@@ -12,15 +12,15 @@ class IssuePolicy < ApplicationPolicy
   end
 
   def create?
-    team_lead_for_project?
+    lead_for_project?
   end
 
   def update?
-    team_lead_for_project?
+    lead_for_project?
   end
 
   def destroy?
-    team_lead_for_project?
+    lead_for_project?
   end
 
   class Scope < ApplicationPolicy::Scope
@@ -31,7 +31,7 @@ class IssuePolicy < ApplicationPolicy
       org_scope = scope.joins(:project).where(projects: { organisation_id: user.organisation_id })
       return org_scope if user.org_admin?
 
-      org_scope.where(projects: { team_id: user.team_memberships.select(:team_id) })
+      org_scope.where(project_id: user.project_memberships.select(:project_id))
     end
   end
 
@@ -47,10 +47,10 @@ class IssuePolicy < ApplicationPolicy
     ProjectPolicy.new(user, project).show?
   end
 
-  def team_lead_for_project?
-    return false unless project&.team_id
+  def lead_for_project?
+    return false unless project
     return false unless member_of_same_org?(project)
 
-    user.team_lead_for_project?(project)
+    user.lead_for_project?(project)
   end
 end

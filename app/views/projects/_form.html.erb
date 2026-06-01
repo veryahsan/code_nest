@@ -38,18 +38,6 @@
           class: input_classes(project.errors[:description].any?) %>
   <% end %>
 
-  <%= render "components/form_group",
-        label: "Team",
-        for_id: "project_team_id",
-        hint: "Optional. Pick the team that owns this project.",
-        error: project.errors[:team_id].first || project.errors[:team].first do %>
-    <%= f.select :team_id,
-          teams.map { |t| [t.name, t.id] },
-          { include_blank: "Unassigned" },
-          id: "project_team_id",
-          class: input_classes %>
-  <% end %>
-
   <% if local_assigns[:languages].present? %>
     <%= render "components/form_group", label: "Languages", hint: "Multi-select. Update later from the project page." do %>
       <%= f.collection_check_boxes :language_ids, languages, :id, :name do |b| %>

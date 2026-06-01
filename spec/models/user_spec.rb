@@ -4,10 +4,13 @@ require "rails_helper"
 
 RSpec.describe User, type: :model do
   describe "associations" do
-    it { is_expected.to have_many(:team_memberships).dependent(:destroy) }
-    it { is_expected.to have_many(:teams).through(:team_memberships) }
+    it { is_expected.to have_many(:project_memberships).dependent(:destroy) }
+    it { is_expected.to have_many(:projects).through(:project_memberships) }
     it { is_expected.to have_one(:employee).dependent(:destroy) }
     it { is_expected.to have_many(:sent_invitations).dependent(:nullify) }
+    it { is_expected.to have_many(:conversation_participants).dependent(:destroy) }
+    it { is_expected.to have_many(:conversations).through(:conversation_participants) }
+    it { is_expected.to have_many(:messages).dependent(:destroy) }
     it { is_expected.to have_one_attached(:avatar) }
 
     it "associates at most one organisation" do
@@ -79,6 +82,20 @@ RSpec.describe User, type: :model do
     it "organisation_admin? reflects org admin role" do
       expect(build(:user).organisation_admin?).to be false
       expect(build(:user, :organisation_admin).organisation_admin?).to be true
+    end
+  end
+
+  describe "project membership helpers" do
+    it "#member_of_project? and #lead_for_project? reflect membership" do
+      project = create(:project)
+      user = create(:user, organisation: project.organisation)
+      other = create(:user, organisation: project.organisation)
+      create(:project_membership, :lead, project: project, user: user)
+
+      expect(user.member_of_project?(project)).to be true
+      expect(user.lead_for_project?(project)).to be true
+      expect(other.member_of_project?(project)).to be false
+      expect(other.lead_for_project?(project)).to be false
     end
   end
 

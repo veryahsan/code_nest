@@ -3,10 +3,9 @@
 ActiveAdmin.register Project do
   menu priority: 4
 
-  permit_params :name, :slug, :description, :organisation_id, :team_id
+  permit_params :name, :slug, :description, :organisation_id
 
   filter :organisation
-  filter :team
   filter :name
   filter :slug
   filter :created_at
@@ -17,7 +16,7 @@ ActiveAdmin.register Project do
     column :name
     column :slug
     column :organisation
-    column :team
+    column(:members) { |p| p.users.count }
     column :created_at
     actions
   end
@@ -29,9 +28,15 @@ ActiveAdmin.register Project do
       row :slug
       row :description
       row :organisation
-      row :team
       row :created_at
       row :updated_at
+    end
+
+    panel "Members" do
+      table_for project.project_memberships.includes(:user) do
+        column(:email) { |m| m.user.email }
+        column :lead
+      end
     end
 
     panel "Languages" do
@@ -53,7 +58,6 @@ ActiveAdmin.register Project do
     f.semantic_errors
     f.inputs do
       f.input :organisation
-      f.input :team
       f.input :name
       f.input :slug
       f.input :description

@@ -6,7 +6,10 @@ class ProjectSerializer < ApplicationSerializer
   attributes :name, :slug, :description, :created_at, :updated_at
 
   attribute :organisation_id
-  attribute :team_id
+
+  attribute :member_ids do |project|
+    project.project_memberships.pluck(:user_id)
+  end
 
   attribute :language_ids do |project|
     project.languages.pluck(:id)

@@ -8,25 +8,23 @@ RSpec.describe "Projects", type: :request do
   let(:member) { create(:user, organisation: org) }
 
   describe "GET /projects" do
-    let!(:team) { create(:team, organisation: org) }
-    let!(:project) { create(:project, organisation: org, name: "Phoenix", team: team) }
+    let!(:project) { create(:project, organisation: org, name: "Phoenix") }
 
     it "redirects guests" do
       get projects_path
       expect(response).to redirect_to(new_user_session_path)
     end
 
-    it "lists projects owned by teams the member belongs to" do
-      create(:team_membership, team: team, user: member)
+    it "lists projects the member belongs to" do
+      create(:project_membership, project: project, user: member)
       sign_in member
       get projects_path
       expect(response.body).to include("Phoenix")
     end
 
-    it "hides projects whose team the member doesn't belong to" do
-      other_team = create(:team, organisation: org)
-      create(:project, organisation: org, name: "Hidden", team: other_team)
-      create(:team_membership, team: team, user: member)
+    it "hides projects the member doesn't belong to" do
+      create(:project, organisation: org, name: "Hidden")
+      create(:project_membership, project: project, user: member)
 
       sign_in member
       get projects_path
@@ -35,8 +33,7 @@ RSpec.describe "Projects", type: :request do
     end
 
     it "lists every project in the org for admins" do
-      other_team = create(:team, organisation: org)
-      create(:project, organisation: org, name: "Hidden", team: other_team)
+      create(:project, organisation: org, name: "Hidden")
 
       sign_in admin
       get projects_path
@@ -57,6 +54,16 @@ RSpec.describe "Projects", type: :request do
       expect(project.languages).to include(lang)
     end
 
+    it "auto-creates the project's group conversation" do
+      sign_in admin
+      expect {
+        post projects_path, params: { project: { name: "Phoenix" } }
+      }.to change(Conversation, :count).by(1)
+
+      project = Project.find_by!(name: "Phoenix")
+      expect(project.group_conversation.title).to eq("Phoenix")
+    end
+
     it "denies members" do
       sign_in member
       expect {
@@ -74,13 +81,10 @@ RSpec.describe "Projects", type: :request do
   describe "PATCH /projects/:id" do
     let(:project) { create(:project, organisation: org, name: "Phoenix") }
 
-    it "lets admin update name and team" do
+    it "lets admin update the name" do
       sign_in admin
-      team = create(:team, organisation: org)
-      patch project_path(project), params: { project: { name: "Phoenix v2", team_id: team.id } }
-      project.reload
-      expect(project.name).to eq("Phoenix v2")
-      expect(project.team).to eq(team)
+      patch project_path(project), params: { project: { name: "Phoenix v2" } }
+      expect(project.reload.name).to eq("Phoenix v2")
     end
 
     it "denies members" do

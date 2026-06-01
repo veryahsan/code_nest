@@ -26,32 +26,32 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(labels).to eq(%w[Dashboard Messages Projects Employees])
     end
 
-    it "only includes the user's own teams (up to MAX_TEAMS_IN_SIDEBAR)" do
-      my_team    = create(:team, organisation: org, name: "Alpha")
-      other_team = create(:team, organisation: org, name: "Zeta")
-      create(:team_membership, team: my_team, user: user)
+    it "only includes the user's own projects (up to MAX_PROJECTS_IN_SIDEBAR)" do
+      mine   = create(:project, organisation: org, name: "Alpha")
+      create(:project, organisation: org, name: "Zeta")
+      create(:project_membership, project: mine, user: user)
 
-      names = facade.teams.map(&:name)
+      names = facade.projects.map(&:name)
       expect(names).to include("Alpha")
       expect(names).not_to include("Zeta")
     end
 
-    it "caps the teams list at MAX_TEAMS_IN_SIDEBAR" do
-      (described_class::MAX_TEAMS_IN_SIDEBAR + 3).times do |i|
-        team = create(:team, organisation: org, name: "Team #{format('%02d', i)}")
-        create(:team_membership, team: team, user: user)
+    it "caps the projects list at MAX_PROJECTS_IN_SIDEBAR" do
+      (described_class::MAX_PROJECTS_IN_SIDEBAR + 3).times do |i|
+        project = create(:project, organisation: org, name: "Project #{format('%02d', i)}")
+        create(:project_membership, project: project, user: user)
       end
 
-      expect(facade.teams.size).to eq(described_class::MAX_TEAMS_IN_SIDEBAR)
+      expect(facade.projects.size).to eq(described_class::MAX_PROJECTS_IN_SIDEBAR)
     end
 
-    it "show_teams_section? is true" do
-      expect(facade.show_teams_section?).to be true
+    it "show_projects_section? is true" do
+      expect(facade.show_projects_section?).to be true
     end
 
-    it "exposes brand/teams/account/logout hrefs" do
+    it "exposes brand/projects/account/logout hrefs" do
       expect(facade.brand_href).to eq(url_helpers.dashboard_path)
-      expect(facade.teams_index_href).to eq(url_helpers.teams_path)
+      expect(facade.projects_index_href).to eq(url_helpers.projects_path)
       expect(facade.account_href).to eq(url_helpers.edit_user_registration_path)
       expect(facade.logout_href).to eq(url_helpers.destroy_user_session_path)
     end
@@ -82,9 +82,9 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(facade.has_organisation?).to be false
     end
 
-    it "hides the Teams section" do
-      expect(facade.show_teams_section?).to be false
-      expect(facade.teams).to eq([])
+    it "hides the Projects section" do
+      expect(facade.show_projects_section?).to be false
+      expect(facade.projects).to eq([])
     end
 
     it "only surfaces Messages in the primary nav" do
@@ -107,8 +107,8 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(labels).to eq(%w[Admin])
     end
 
-    it "hides the Teams section" do
-      expect(facade.show_teams_section?).to be false
+    it "hides the Projects section" do
+      expect(facade.show_projects_section?).to be false
     end
 
     it "reports super_admin? true" do

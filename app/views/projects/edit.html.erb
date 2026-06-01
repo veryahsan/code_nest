@@ -13,7 +13,6 @@
   <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
     <%= render "projects/form",
           project: @project,
-          teams: @teams,
           form_url: project_path(@project),
           form_method: :patch,
           submit_label: "Save changes" %>

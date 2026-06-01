@@ -49,16 +49,16 @@
           </li>
         <% end %>
 
-        <% if @sidebar.show_teams_section? %>
+        <% if @sidebar.show_projects_section? %>
           <li data-controller="disclosure">
             <button type="button"
                     data-action="click->disclosure#toggle"
                     data-disclosure-target="trigger"
-                    aria-controls="sidebar-teams-panel"
+                    aria-controls="sidebar-projects-panel"
                     aria-expanded="false"
                     class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
-              <%= render "shared/nav_icon", icon: :teams %>
-              <span class="flex-1 text-left">Teams</span>
+              <%= render "shared/nav_icon", icon: :projects %>
+              <span class="flex-1 text-left">My projects</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
                    data-disclosure-target="chevron"
                    class="h-4 w-4 text-muted-color transition-transform duration-150">
@@ -66,29 +66,29 @@
               </svg>
             </button>
 
-            <div id="sidebar-teams-panel"
+            <div id="sidebar-projects-panel"
                  data-disclosure-target="panel"
                  class="mt-0.5 hidden pl-9">
-              <% if @sidebar.teams? %>
+              <% if @sidebar.projects? %>
                 <ul class="flex flex-col gap-0.5 border-l border-surface pl-3">
-                  <% @sidebar.teams.each do |team| %>
+                  <% @sidebar.projects.each do |project| %>
                     <li>
-                      <%= link_to team.name, team.href,
+                      <%= link_to project.name, project.href,
                             data: main_frame_data,
                             class: "block truncate rounded-md px-2 py-1.5 text-sm text-muted-color transition-colors hover:bg-zinc-100 hover:text-base-color dark:hover:bg-zinc-800" %>
                     </li>
                   <% end %>
                   <li class="pt-1">
-                    <%= link_to "View all teams", @sidebar.teams_index_href,
+                    <%= link_to "View all projects", @sidebar.projects_index_href,
                           data: main_frame_data,
                           class: "block rounded-md px-2 py-1.5 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400" %>
                   </li>
                 </ul>
               <% else %>
                 <p class="px-2 py-1.5 text-xs text-muted-color">
-                  You're not on any team yet.
+                  You're not on any project yet.
                 </p>
-                <%= link_to "Browse teams", @sidebar.teams_index_href,
+                <%= link_to "Browse projects", @sidebar.projects_index_href,
                       data: main_frame_data,
                       class: "block px-2 py-1 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400" %>
               <% end %>

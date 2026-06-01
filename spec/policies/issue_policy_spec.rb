@@ -4,8 +4,7 @@ require "rails_helper"
 
 RSpec.describe IssuePolicy, type: :policy do
   let(:org)   { create(:organisation) }
-  let(:team)  { create(:team, organisation: org) }
-  let(:project) { create(:project, organisation: org, team: team) }
+  let(:project) { create(:project, organisation: org) }
   let(:issue) { create(:issue, project: project) }
 
   let(:admin)     { create(:user, :organisation_admin, organisation: org) }
@@ -14,12 +13,12 @@ RSpec.describe IssuePolicy, type: :policy do
   let(:outsider)  { create(:user, organisation: create(:organisation)) }
 
   before do
-    create(:team_membership, team: team, user: lead, lead: true)
-    create(:team_membership, team: team, user: member, lead: false)
+    create(:project_membership, project: project, user: lead, lead: true)
+    create(:project_membership, project: project, user: member, lead: false)
   end
 
   describe "viewing" do
-    it "allows team members to index and show" do
+    it "allows project members to index and show" do
       expect(described_class.new(member, issue)).to permit_actions(%i[index show])
     end
 
@@ -27,22 +26,22 @@ RSpec.describe IssuePolicy, type: :policy do
       expect(described_class.new(admin, issue)).to permit_actions(%i[index show])
     end
 
-    it "forbids users outside the team" do
+    it "forbids users outside the project" do
       other = create(:user, organisation: org)
       expect(described_class.new(other, issue)).to forbid_actions(%i[index show])
     end
   end
 
   describe "mutations" do
-    it "allows the team lead to create, update, and destroy" do
+    it "allows the project lead to create, update, and destroy" do
       expect(described_class.new(lead, issue)).to permit_actions(%i[create update destroy])
     end
 
-    it "forbids regular team members from mutating" do
+    it "forbids regular project members from mutating" do
       expect(described_class.new(member, issue)).to forbid_actions(%i[create update destroy])
     end
 
-    it "forbids org admins who are not team lead" do
+    it "forbids org admins who are not project lead" do
       expect(described_class.new(admin, issue)).to forbid_actions(%i[create update destroy])
     end
   end

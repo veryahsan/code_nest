@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
     authorize Project
     @pagy, @projects = pagy(
       policy_scope(current_organisation.projects)
-        .includes(:team, :languages, :technologies)
+        .includes(:users, :languages, :technologies)
         .order(:name),
     )
   end
@@ -22,10 +22,10 @@ class ProjectsController < ApplicationController
     @remote_resources = @project.remote_resources.order(:name).limit(5)
     @issues = policy_scope(@project.issues).order(number: :desc).limit(10)
     @can_manage_issues = IssuePolicy.new(current_user, @project.issues.new(project: @project)).create?
+    @members = @project.users.with_attached_avatar.order(:email)
   end
 
   def new
-    @teams = current_organisation.teams.order(:name)
     @languages = Language.order(:name)
     @technologies = Technology.order(:name)
   end
@@ -40,16 +40,13 @@ class ProjectsController < ApplicationController
       redirect_to project_path(result.value), notice: "Project created."
     else
       @project = result.error
-      @teams = current_organisation.teams.order(:name)
       @languages = Language.order(:name)
       @technologies = Technology.order(:name)
       render :new, status: :unprocessable_entity
     end
   end
 
-  def edit
-    @teams = current_organisation.teams.order(:name)
-  end
+  def edit; end
 
   def update
     result = Projects::UpdateFacade.call(project: @project, attributes: project_params)
@@ -58,7 +55,6 @@ class ProjectsController < ApplicationController
       redirect_to project_path(@project), notice: "Project updated."
     else
       @project = result.error
-      @teams = current_organisation.teams.order(:name)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -86,7 +82,7 @@ class ProjectsController < ApplicationController
 
   def project_params
     params.require(:project).permit(
-      :name, :slug, :description, :team_id,
+      :name, :slug, :description,
       language_ids: [], technology_ids: [],
     )
   end

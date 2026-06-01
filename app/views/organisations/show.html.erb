@@ -39,12 +39,12 @@
         <%= badge_tag @organisation.users.count.to_s, variant: :neutral %>
       </li>
       <li class="flex items-center justify-between">
-        <span class="text-muted-color">Teams</span>
-        <%= badge_tag @organisation.teams.count.to_s, variant: :neutral %>
-      </li>
-      <li class="flex items-center justify-between">
         <span class="text-muted-color">Projects</span>
         <%= badge_tag @organisation.projects.count.to_s, variant: :neutral %>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-muted-color">Employees</span>
+        <%= badge_tag @organisation.employees.count.to_s, variant: :neutral %>
       </li>
       <li class="flex items-center justify-between">
         <span class="text-muted-color">Pending invitations</span>

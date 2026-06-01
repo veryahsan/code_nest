@@ -9,10 +9,10 @@ class Organisation < ApplicationRecord
   include Sluggable
 
   has_many :users, inverse_of: :organisation, dependent: :restrict_with_error
-  has_many :teams, dependent: :restrict_with_error
   has_many :employees, dependent: :restrict_with_error
   has_many :invitations, dependent: :destroy
   has_many :projects, dependent: :restrict_with_error
+  has_many :conversations, dependent: :destroy
 
   validates :name, presence: true
   validates :slug, uniqueness: true
@@ -22,6 +22,6 @@ class Organisation < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[employees invitations projects teams users]
+    %w[conversations employees invitations projects users]
   end
 end

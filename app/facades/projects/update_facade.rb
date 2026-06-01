@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-# Updates a Project's mutable attributes. Same slug-uniqueness
-# discipline as Teams::UpdateFacade. Language/Technology assignments
-# are not handled here — they have their own dedicated controllers in
-# Phase C.
+# Updates a Project's mutable attributes with the same slug-uniqueness
+# discipline used at creation. Language/Technology assignments are not
+# handled here — they have their own dedicated controllers.
 module Projects
   class UpdateFacade < ApplicationFacade
     def initialize(project:, attributes:)
@@ -15,7 +14,6 @@ module Projects
       ActiveRecord::Base.transaction do
         @project.assign_attributes(name: @attributes[:name]) if @attributes.key?(:name)
         @project.assign_attributes(description: @attributes[:description]) if @attributes.key?(:description)
-        @project.team_id = resolve_team_id if @attributes.key?(:team_id)
 
         if @attributes.key?(:slug) && @attributes[:slug].present?
           slug_result = Projects::GenerateUniqueSlugService.call(
@@ -38,15 +36,6 @@ module Projects
       return failure(@project) if @project.errors.any?
 
       success(@project)
-    end
-
-    private
-
-    def resolve_team_id
-      raw = @attributes[:team_id]
-      return nil if raw.blank?
-
-      @project.organisation.teams.where(id: raw).pick(:id)
     end
   end
 end

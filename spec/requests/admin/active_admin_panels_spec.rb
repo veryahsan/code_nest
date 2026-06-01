@@ -10,11 +10,10 @@ RSpec.describe "ActiveAdmin panels", type: :request do
   %w[
     organisations
     users
-    teams
     projects
     employees
     invitations
-    team_memberships
+    project_memberships
     project_documents
     remote_resources
     languages

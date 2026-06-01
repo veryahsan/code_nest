@@ -19,12 +19,12 @@ RSpec.describe "Dashboard", type: :request do
     expect(response.body).to include(organisation.name)
   end
 
-  it "scopes the member dashboard to the user's own teams" do
+  it "scopes the member dashboard to the user's own projects" do
     sign_in user
 
-    my_team    = create(:team, organisation: organisation, name: "Alpha Squad")
-    other_team = create(:team, organisation: organisation, name: "Zeta Squad")
-    create(:team_membership, team: my_team, user: user)
+    mine = create(:project, organisation: organisation, name: "Alpha Squad")
+    create(:project, organisation: organisation, name: "Zeta Squad")
+    create(:project_membership, project: mine, user: user)
 
     get dashboard_path
     expect(response.body).to include("Alpha Squad")
