@@ -17,6 +17,15 @@
 
 <div class="card-grid-2">
   <%= render "components/card", title: "Profile" do %>
+    <div class="flex items-center gap-4 mb-5 pb-5 border-b border-zinc-200 dark:border-zinc-800">
+      <%= user_avatar_tag(@employee.user, variant: :profile, css: "h-14 w-14") %>
+      <div class="min-w-0">
+        <p class="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+          <%= @employee.display_name.presence || @employee.user.email %>
+        </p>
+        <p class="text-sm text-muted-color truncate"><%= @employee.user.email %></p>
+      </div>
+    </div>
     <dl class="grid grid-cols-1 gap-y-3 text-sm">
       <div>
         <dt class="text-xs uppercase tracking-wide text-muted-color">Email</dt>
@@ -32,20 +41,34 @@
       </div>
       <div>
         <dt class="text-xs uppercase tracking-wide text-muted-color">Manager</dt>
-        <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.manager&.display_name || @employee.manager&.user&.email || "—" %></dd>
+        <dd class="text-zinc-900 dark:text-zinc-100">
+          <% if @employee.manager&.user %>
+            <div class="flex items-center gap-2">
+              <%= user_avatar_tag(@employee.manager.user, css: "h-7 w-7") %>
+              <span><%= @employee.manager.display_name.presence || @employee.manager.user.email %></span>
+            </div>
+          <% else %>
+            —
+          <% end %>
+        </dd>
       </div>
     </dl>
   <% end %>
 
   <%= render "components/card", title: "Direct reports" do %>
-    <% reports = @employee.direct_reports.includes(:user).order(:display_name) %>
+    <% reports = @employee.direct_reports.includes(user: { avatar_attachment: :blob }).order(:display_name) %>
     <% if reports.any? %>
       <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
         <% reports.each do |r| %>
           <li class="py-3 first:pt-0">
-            <%= link_to (r.display_name.presence || r.user.email), employee_path(r),
-                  class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>
-            <p class="text-xs text-muted-color"><%= r.job_title %></p>
+            <div class="flex items-center gap-3">
+              <%= user_avatar_tag(r.user, css: "h-8 w-8") %>
+              <div class="min-w-0">
+                <%= link_to (r.display_name.presence || r.user.email), employee_path(r),
+                      class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline truncate block" %>
+                <p class="text-xs text-muted-color"><%= r.job_title %></p>
+              </div>
+            </div>
           </li>
         <% end %>
       </ul>

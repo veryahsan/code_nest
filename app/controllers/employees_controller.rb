@@ -10,7 +10,8 @@ class EmployeesController < ApplicationController
     authorize Employee
     @pagy, @employees = pagy(
       policy_scope(current_organisation.employees)
-        .includes(:user, :manager)
+        .includes(user: { avatar_attachment: :blob },
+                  manager: { user: { avatar_attachment: :blob } })
         .order(:display_name),
     )
   end
@@ -65,7 +66,10 @@ class EmployeesController < ApplicationController
   private
 
   def load_employee
-    @employee = current_organisation.employees.find(params[:id])
+    @employee = current_organisation.employees
+                                  .includes(user: { avatar_attachment: :blob },
+                                           manager: { user: { avatar_attachment: :blob } })
+                                  .find(params[:id])
     authorize @employee
   end
 

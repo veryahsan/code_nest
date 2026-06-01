@@ -90,23 +90,46 @@ module ApplicationHelper
   # ── Avatar helpers ────────────────────────────────────────────────────────────
 
   # Renders the user's avatar image if one is attached, otherwise a coloured
-  # circle showing the first letter of their email address.
+  # circle showing their name initials (employee display name, or email local-part).
   #
   # Usage:
   #   <%= user_avatar_tag(current_user) %>
   #   <%= user_avatar_tag(current_user, variant: :profile, css: "h-20 w-20") %>
   def user_avatar_tag(user, variant: :thumb, css: "h-8 w-8")
+    label = user_avatar_label(user)
     base_classes = "#{css} rounded-full object-cover"
     if user.avatar.attached?
       image_tag user.avatar.variant(variant),
                 class: base_classes,
-                alt: "#{user.email} avatar"
+                alt: "#{label} avatar"
     else
-      initial = user.email[0].upcase
-      content_tag :span, initial,
-                  class: "#{css} inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white select-none",
-                  aria: { label: "#{user.email} avatar" }
+      initials_avatar_tag(initials_for(label), label: label, css: css)
     end
+  end
+
+  # Initials-only avatar for people who don't have a User record yet (e.g. pending invitations).
+  def email_avatar_tag(email, css: "h-8 w-8")
+    label = email.to_s.split("@").first
+    initials_avatar_tag(initials_for(label), label: email, css: css)
+  end
+
+  def user_avatar_label(user)
+    user.employee&.display_name.presence || user.email.to_s.split("@").first
+  end
+
+  def initials_for(name)
+    parts = name.to_s.split(/\s+/).grep(/\S/)
+    case parts.length
+    when 0 then "?"
+    when 1 then parts.first[0].upcase
+    else parts.first(2).map { |part| part[0] }.join.upcase
+    end
+  end
+
+  def initials_avatar_tag(initials, label:, css: "h-8 w-8")
+    content_tag :span, initials,
+                class: "#{css} inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white select-none",
+                aria: { label: "#{label} avatar" }
   end
 
   # ── Pagination helpers ────────────────────────────────────────────────────────

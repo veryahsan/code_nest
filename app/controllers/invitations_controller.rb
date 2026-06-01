@@ -14,7 +14,9 @@ class InvitationsController < ApplicationController
     # Two independent paginators on one page — each gets its own page param so
     # navigating one side doesn't reset the other.
     @pagy_pending, @pending = pagy(
-      current_organisation.invitations.pending.order(created_at: :desc),
+      current_organisation.invitations.pending
+                          .includes(invited_by: { avatar_attachment: :blob })
+                          .order(created_at: :desc),
       page_key: "pending_page",
     )
     @pagy_accepted, @accepted = pagy(

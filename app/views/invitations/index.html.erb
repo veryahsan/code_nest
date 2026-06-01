@@ -18,16 +18,26 @@
       <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
         <% @pending.each do |inv| %>
           <li class="py-3 first:pt-0 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= inv.email %></p>
-              <p class="text-xs text-muted-color">
-                <%= inv.invited_by&.email || "System" %>
+            <div class="flex items-center gap-3 min-w-0">
+              <%= email_avatar_tag(inv.email, css: "h-8 w-8") %>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate"><%= inv.email %></p>
+                <p class="text-xs text-muted-color">
+                  <% if inv.invited_by %>
+                    <span class="inline-flex items-center gap-1.5">
+                      <%= user_avatar_tag(inv.invited_by, css: "h-4 w-4 text-[10px]") %>
+                      <%= inv.invited_by.email %>
+                    </span>
+                  <% else %>
+                    System
+                  <% end %>
                 <% if inv.expires_at %>
                   · Expires <%= inv.expires_at.strftime("%-d %b %Y") %>
                 <% else %>
                   · No expiry
                 <% end %>
-              </p>
+                </p>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <%= badge_tag inv.invite_admin? ? "Admin" : "Member", variant: inv.invite_admin? ? :brand : :neutral %>
@@ -54,8 +64,13 @@
       <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
         <% @accepted.each do |inv| %>
           <li class="py-3 first:pt-0">
-            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= inv.email %></p>
-            <p class="text-xs text-muted-color">Accepted <%= inv.accepted_at&.strftime("%-d %b %Y") %></p>
+            <div class="flex items-center gap-3">
+              <%= email_avatar_tag(inv.email, css: "h-8 w-8") %>
+              <div>
+                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= inv.email %></p>
+                <p class="text-xs text-muted-color">Accepted <%= inv.accepted_at&.strftime("%-d %b %Y") %></p>
+              </div>
+            </div>
           </li>
         <% end %>
       </ul>

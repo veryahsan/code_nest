@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe "Users::Registrations", type: :request do
+  include ActiveJob::TestHelper
+
   before { ActionMailer::Base.deliveries.clear }
 
   let(:valid_attributes) do
@@ -18,7 +20,9 @@ RSpec.describe "Users::Registrations", type: :request do
       organisations_before = Organisation.count
 
       expect {
-        post user_registration_path, params: { user: valid_attributes }
+        perform_enqueued_jobs do
+          post user_registration_path, params: { user: valid_attributes }
+        end
       }.to change(User, :count).by(1)
        .and change(ActionMailer::Base.deliveries, :size).by(1)
 
@@ -39,7 +43,9 @@ RSpec.describe "Users::Registrations", type: :request do
     end
 
     it "sends the confirmation email to the new user with the right sender and token" do
-      post user_registration_path, params: { user: valid_attributes }
+      perform_enqueued_jobs do
+        post user_registration_path, params: { user: valid_attributes }
+      end
       user = User.find_by!(email: "founder@new-co.example")
 
       mail = ActionMailer::Base.deliveries.last

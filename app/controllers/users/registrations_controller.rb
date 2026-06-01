@@ -15,8 +15,9 @@ module Users
     protected
 
     def update_resource(resource, params)
-      purge_avatar_if_requested(resource, params)
+      avatar_removed = purge_avatar_if_requested(resource, params)
       return resource.update_without_password(params) if resource.sso_only?
+      return resource.update_without_password(params) if avatar_only_update?(resource, params, avatar_removed: avatar_removed)
 
       super
     end
