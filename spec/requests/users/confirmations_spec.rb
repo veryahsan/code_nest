@@ -3,6 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Users::Confirmations", type: :request do
+  include ActiveJob::TestHelper
   let(:organisation) { create(:organisation) }
   let!(:user) do
     User.create!(
@@ -85,7 +86,9 @@ RSpec.describe "Users::Confirmations", type: :request do
   describe "POST /verify (resend instructions)" do
     it "delivers a fresh confirmation email" do
       expect {
-        post user_confirmation_path, params: { user: { email: user.email } }
+        perform_enqueued_jobs do
+          post user_confirmation_path, params: { user: { email: user.email } }
+        end
       }.to change(ActionMailer::Base.deliveries, :size).by(1)
 
       mail = ActionMailer::Base.deliveries.last

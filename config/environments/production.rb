@@ -46,13 +46,8 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Use Redis for cache (matches stack.md).
-  config.cache_store = :redis_cache_store, {
-    url: ENV.fetch("REDIS_URL"),
-    error_handler: ->(method:, returning:, exception:) {
-      Sentry.capture_exception(exception, level: "warning", tags: { method:, returning: }) if defined?(Sentry)
-    }
-  }
+  require Rails.root.join("config/cache_store")
+  CacheStore.apply_production!(config)
 
   # Background jobs run on Sidekiq.
   config.active_job.queue_adapter = :sidekiq

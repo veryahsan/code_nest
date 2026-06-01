@@ -23,6 +23,8 @@ Rails.application.configure do
 
   # Show full error reports.
   config.consider_all_requests_local = true
+  # No caching in tests — every fetch runs the block; specs that need caching
+  # swap in MemoryStore (see spec/facades/dashboard_facade_spec.rb).
   config.cache_store = :null_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
@@ -41,6 +43,10 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "example.com" }
+
+  # Devise notifications use deliver_later; the test adapter lets specs drain
+  # the queue with perform_enqueued_jobs instead of needing Sidekiq.
+  config.active_job.queue_adapter = :test
 
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr

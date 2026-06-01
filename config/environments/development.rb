@@ -31,13 +31,9 @@ Rails.application.configure do
   # by default when `rails dev:cache` is enabled.
   config.public_file_server.headers = { "cache-control" => "no-cache" }
 
-  # Use Redis for cache when available so dev mirrors production behaviour;
-  # otherwise fall back to in-memory caching.
-  if ENV["REDIS_URL"].present?
-    config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"] }
-  else
-    config.cache_store = :memory_store
-  end
+  # Redis when REDIS_URL is set (see config/cache_store.rb); otherwise :memory_store.
+  require Rails.root.join("config/cache_store")
+  CacheStore.apply!(config)
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local

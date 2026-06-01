@@ -3,22 +3,25 @@
 require "rails_helper"
 
 RSpec.describe Invitations::CreationFacade, type: :facade do
+  include ActiveJob::TestHelper
+
   let(:org) { create(:organisation) }
   let(:admin) { create(:user, :organisation_admin, organisation: org) }
 
   it "creates a pending invitation and enqueues the mailer" do
-    result = described_class.call(
-      organisation: org,
-      inviter: admin,
-      attributes: { email: "newbie@example.com", org_role: "member" },
-    )
+    result = nil
+    expect {
+      result = described_class.call(
+        organisation: org,
+        inviter: admin,
+        attributes: { email: "newbie@example.com", org_role: "member" },
+      )
+    }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
 
     expect(result).to be_success
     expect(result.value).to be_persisted
     expect(result.value.token).to be_present
     expect(result.value.expires_at).to be_within(1.minute).of(14.days.from_now)
-
-    expect(Sidekiq::Worker.jobs.size).to be >= 1
   end
 
   it "fails for an invalid email" do
