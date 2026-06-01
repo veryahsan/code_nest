@@ -85,10 +85,11 @@ RSpec.describe "Users::Confirmations", type: :request do
 
   describe "POST /verify (resend instructions)" do
     it "delivers a fresh confirmation email" do
+      reset_email_outbox # discard the signup's buffered welcome + confirmation mail
+
       expect {
-        perform_enqueued_jobs do
-          post user_confirmation_path, params: { user: { email: user.email } }
-        end
+        post user_confirmation_path, params: { user: { email: user.email } }
+        drain_email_outbox
       }.to change(ActionMailer::Base.deliveries, :size).by(1)
 
       mail = ActionMailer::Base.deliveries.last
@@ -99,9 +100,11 @@ RSpec.describe "Users::Confirmations", type: :request do
 
     it "does not deliver a second email when the account is already confirmed" do
       user.confirm
+      reset_email_outbox # discard the signup's buffered mail
 
       expect {
         post user_confirmation_path, params: { user: { email: user.email } }
+        drain_email_outbox
       }.not_to change(ActionMailer::Base.deliveries, :size)
     end
   end

@@ -32,6 +32,7 @@ gem "image_processing", "~> 1.13"
 # Background jobs (Sidekiq, per stack.md)
 # ---------------------------------------------------------------------------
 gem "sidekiq", "~> 7.3"
+gem "sidekiq-scheduler", "~> 5.0" # sub-minute recurring jobs (welcome-email batch drain)
 
 # ---------------------------------------------------------------------------
 # Authentication & authorization
@@ -116,6 +117,7 @@ end
 gem "activeadmin", "~> 3.5"
 
 group :test do
+  gem "mock_redis"
   gem "capybara"
   gem "selenium-webdriver"
   gem "database_cleaner-active_record"

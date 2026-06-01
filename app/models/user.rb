@@ -38,10 +38,15 @@ class User < ApplicationRecord
   # so they should never be blocked by the email-confirmation gate.
   before_create :auto_confirm_super_admin
 
-  # Enqueue all Devise notification emails through Active Job so they are
-  # processed by a Sidekiq worker instead of blocking the request thread.
+  # Buffer a welcome email the moment a signup is committed. The actual push
+  # onto the Redis queue lives in the service; this stays a one-line trigger.
+  after_create_commit :enqueue_welcome_email
+
+  # Route Devise notification emails (confirmation, password reset, …) through
+  # the centralized email outbox at high priority so they share the provider
+  # rate limiter and buffering with the rest of the system's mail.
   def send_devise_notification(notification, *args)
-    devise_mailer.send(notification, self, *args).deliver_later
+    Mailers::Outbox.enqueue(devise_mailer, notification, self, *args, priority: :high)
   end
 
   # Devise hook: fires once the email confirmation token is consumed.
@@ -100,6 +105,10 @@ class User < ApplicationRecord
 
   def auto_confirm_super_admin
     skip_confirmation! if super_admin?
+  end
+
+  def enqueue_welcome_email
+    Mailers::EnqueueWelcomeEmailService.call(user: self)
   end
 
   AVATAR_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze

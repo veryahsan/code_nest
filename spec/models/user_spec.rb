@@ -165,6 +165,20 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "#enqueue_welcome_email (after_create_commit trigger)" do
+    # Like #after_confirmation, the callback is a thin trigger that delegates
+    # to the service. The super-admin skip lives in the service and is covered
+    # by spec/services/mailers/enqueue_welcome_email_service_spec.rb.
+    it "delegates to Mailers::EnqueueWelcomeEmailService" do
+      user = build(:user)
+      allow(Mailers::EnqueueWelcomeEmailService).to receive(:call)
+
+      user.send(:enqueue_welcome_email)
+
+      expect(Mailers::EnqueueWelcomeEmailService).to have_received(:call).with(user: user)
+    end
+  end
+
   describe "#after_confirmation (Devise hook)" do
     # The hook is intentionally a thin trigger: it delegates to the facade
     # without doing any branching of its own. The facade owns the policy

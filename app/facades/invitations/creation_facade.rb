@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 # Creates a pending Invitation, sets a default expiry (14 days), and
-# enqueues the invite email through ActionMailer's :deliver_later
-# (which is routed to Sidekiq's :mailers queue per
-# config/application.rb).
+# enqueues the invite email onto the centralized email outbox at default
+# priority (drained by Mailers::DispatchBatchJob behind the shared rate
+# limiter).
 module Invitations
   class CreationFacade < ApplicationFacade
     DEFAULT_EXPIRY = 14.days
@@ -23,7 +23,7 @@ module Invitations
       )
 
       if @invitation.save
-        InvitationMailer.invite(@invitation).deliver_later
+        Mailers::Outbox.enqueue(InvitationMailer, :invite, @invitation, priority: :default)
         success(@invitation)
       else
         failure(@invitation)

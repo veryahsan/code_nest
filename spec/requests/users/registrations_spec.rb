@@ -20,11 +20,8 @@ RSpec.describe "Users::Registrations", type: :request do
       organisations_before = Organisation.count
 
       expect {
-        perform_enqueued_jobs do
-          post user_registration_path, params: { user: valid_attributes }
-        end
+        post user_registration_path, params: { user: valid_attributes }
       }.to change(User, :count).by(1)
-       .and change(ActionMailer::Base.deliveries, :size).by(1)
 
       expect(Organisation.count).to eq(organisations_before)
 
@@ -43,15 +40,13 @@ RSpec.describe "Users::Registrations", type: :request do
     end
 
     it "sends the confirmation email to the new user with the right sender and token" do
-      perform_enqueued_jobs do
-        post user_registration_path, params: { user: valid_attributes }
-      end
+      post user_registration_path, params: { user: valid_attributes }
+      drain_email_outbox
       user = User.find_by!(email: "founder@new-co.example")
 
-      mail = ActionMailer::Base.deliveries.last
+      mail = ActionMailer::Base.deliveries.find { |m| m.subject =~ /confirmation/i }
       expect(mail.to).to eq([ "founder@new-co.example" ])
       expect(mail.from).to eq([ Devise.mailer_sender ])
-      expect(mail.subject).to match(/confirmation/i)
       expect(mail.body.encoded).to include(user.confirmation_token)
     end
 
