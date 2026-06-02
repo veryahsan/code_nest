@@ -38,7 +38,7 @@ flowchart LR
   dev["Devise mail<br/>(confirm, reset)"] -->|high| hi[("mailer:outbox:high")]
   inv["InvitationMailer"] -->|default| def[("mailer:outbox:default")]
   wel["WelcomeMailer"] -->|low| lo[("mailer:outbox:low")]
-  hi --> job["DispatchBatchJob<br/>(every 5s)"]
+  hi --> job["DispatchBatchJob<br/>(every 1s)"]
   def --> job
   lo --> job
   job --> rl{"RateLimiter<br/>(shared sliding window)"}
@@ -85,10 +85,16 @@ Configuration (ENV):
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `MAILER_RATE_LIMIT` | `50` | Max sends per window |
-| `MAILER_RATE_WINDOW_SECONDS` | `5` | Window length |
-| `MAILER_DISPATCH_MAX` | `100` | Hard cap of sends attempted per tick |
+| `MAILER_RATE_LIMIT` | `25` | Max sends per window |
+| `MAILER_RATE_WINDOW_SECONDS` | `1` | Window length |
+| `MAILER_DISPATCH_MAX` | `25` | Hard cap of sends attempted per tick |
 | `MAILER_BACKOFF_SECONDS` | `30` | Global cooldown after a fully-failed tick |
+
+These defaults are tuned to a strict provider ceiling of **25 emails/second**: a
+1-second window with a limit of 25, drained by a 1-second tick whose per-tick cap
+also equals 25. Aligning the tick interval to the window is what makes the rate
+smooth (a steady ~25/s) rather than bursty; a longer tick would force either a
+burst of `25 × ticks` at once or under-delivery.
 
 Because there is a single drainer today, a sliding-window log is sufficient
 and needs no Lua. If we ever run multiple concurrent drainers, this should be
@@ -96,7 +102,7 @@ upgraded to an atomic Lua token bucket.
 
 ### The drainer
 
-`Mailers::DispatchBatchJob` runs every 5 seconds via sidekiq-scheduler (see
+`Mailers::DispatchBatchJob` runs every 1 second via sidekiq-scheduler (see
 [config/sidekiq.yml](../config/sidekiq.yml)). Each tick `Mailers::DispatchBatchService`:
 
 1. Skips entirely while a global backoff is in effect.
@@ -124,7 +130,7 @@ upgraded to an atomic Lua token bucket.
 
 ### Latency trade-off
 
-Buffering adds up to one tick (~5s) of latency to every email, including
+Buffering adds up to one tick (~1s) of latency to every email, including
 transactional Devise mail in the `high` tier. This is an accepted trade-off
 for a single coordinated egress. If a tighter SLA is needed for transactional
 mail, options are to shorten the tick, run a dedicated faster tick for `high`,

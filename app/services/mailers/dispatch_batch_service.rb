@@ -109,7 +109,7 @@ module Mailers
     end
 
     def max_per_tick
-      ENV.fetch("MAILER_DISPATCH_MAX", 100).to_i
+      ENV.fetch("MAILER_DISPATCH_MAX", 25).to_i
     end
 
     def pause_seconds

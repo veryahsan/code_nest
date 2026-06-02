@@ -46,11 +46,11 @@ module Mailers
     end
 
     def self.default_limit
-      ENV.fetch("MAILER_RATE_LIMIT", 50).to_i
+      ENV.fetch("MAILER_RATE_LIMIT", 25).to_i
     end
 
     def self.default_window
-      ENV.fetch("MAILER_RATE_WINDOW_SECONDS", 5).to_f
+      ENV.fetch("MAILER_RATE_WINDOW_SECONDS", 1).to_f
     end
   end
 end

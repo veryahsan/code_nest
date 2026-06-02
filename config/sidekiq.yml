@@ -10,7 +10,7 @@
 :scheduler:
   :schedule:
     email_dispatch:
-      every: '5s'
+      every: '1s'
       class: Mailers::DispatchBatchJob
       queue: mailers
-      description: "Drain the centralized email outbox every 5 seconds"
+      description: "Drain the centralized email outbox every 1 second (25 emails/sec)"
