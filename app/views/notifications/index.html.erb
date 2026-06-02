@@ -1,0 +1,30 @@
+<% page_title "Notifications" %>
+
+<% if @notifications.any? && current_user.notifications.unread.exists? %>
+  <% content_for :page_actions do %>
+    <%= button_to "Mark all read", read_all_notifications_path,
+          method: :patch,
+          class: "btn-base btn-ghost btn-sm",
+          data: { turbo_frame: "_top" } %>
+  <% end %>
+<% end %>
+
+<%= render "components/page_header",
+      title: "Notifications",
+      description: "Your recent activity across Code Nest." %>
+
+<%= render "components/card" do %>
+  <% if @notifications.any? %>
+    <div class="-mx-2 divide-y divide-surface" data-controller="notifications">
+      <div data-notifications-target="list">
+        <%= render @notifications %>
+      </div>
+    </div>
+    <%= pagination_tag(@pagy) %>
+  <% else %>
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "No notifications yet",
+          description: "When someone messages you, it'll show up here." %>
+  <% end %>
+<% end %>

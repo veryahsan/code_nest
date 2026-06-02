@@ -1,0 +1,50 @@
+<%# Notifications bell + unread badge + dropdown panel. The `dropdown`
+    controller handles open/close; the `notifications` controller owns the
+    live ActionCable feed and badge count. Seeded server-side from
+    @sidebar so the count/list reflect the DB on first paint. %>
+<% count = @sidebar.unread_notifications_count %>
+<div class="relative"
+     data-controller="dropdown notifications"
+     data-notifications-count-value="<%= count %>"
+     data-notifications-frame-value="<%= main_content_frame_id %>">
+  <button type="button"
+          data-action="click->dropdown#toggle"
+          data-dropdown-target="trigger"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-label="Notifications"
+          class="btn-base btn-ghost btn-icon-sm relative text-zinc-600 dark:text-zinc-400">
+    <%= render "shared/nav_icon", icon: :notifications, css: "h-5 w-5" %>
+    <span data-notifications-target="badge"
+          class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold leading-none text-white <%= 'hidden' if count.zero? %>">
+      <%= count %>
+    </span>
+  </button>
+
+  <div data-dropdown-target="menu"
+       class="absolute left-0 z-50 mt-2 hidden w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-surface bg-surface-raised shadow-card">
+    <div class="flex items-center justify-between border-b border-surface px-3 py-2">
+      <span class="text-sm font-semibold text-base-color">Notifications</span>
+      <button type="button"
+              data-action="click->notifications#markAllRead"
+              class="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">
+        Mark all read
+      </button>
+    </div>
+
+    <div data-notifications-target="list" class="max-h-80 overflow-y-auto divide-y divide-surface">
+      <%= render @sidebar.recent_notifications %>
+    </div>
+
+    <p data-notifications-target="empty"
+       class="px-3 py-6 text-center text-sm text-muted-color <%= 'hidden' if @sidebar.recent_notifications.any? %>">
+      You're all caught up.
+    </p>
+
+    <div class="border-t border-surface px-3 py-2 text-center">
+      <%= link_to "View all", @sidebar.notifications_index_href,
+            data: main_frame_data,
+            class: "text-xs font-medium text-brand-600 hover:underline dark:text-brand-400" %>
+    </div>
+  </div>
+</div>

@@ -25,14 +25,18 @@
         <%= render "shared/brand_mark" %>
       <% end %>
 
-      <button type="button"
-              data-action="click->sidebar#close"
-              class="btn-base btn-ghost btn-icon-sm md:hidden text-zinc-600 dark:text-zinc-400"
-              aria-label="Close navigation">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 0 1 1.414 0L10 8.586l4.293-4.293a1 1 0 1 1 1.414 1.414L11.414 10l4.293 4.293a1 1 0 0 1-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L8.586 10 4.293 5.707a1 1 0 0 1 0-1.414Z" clip-rule="evenodd" />
-        </svg>
-      </button>
+      <div class="flex items-center gap-1">
+        <%= render "shared/notifications_bell" %>
+
+        <button type="button"
+                data-action="click->sidebar#close"
+                class="btn-base btn-ghost btn-icon-sm md:hidden text-zinc-600 dark:text-zinc-400"
+                aria-label="Close navigation">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 0 1 1.414 0L10 8.586l4.293-4.293a1 1 0 1 1 1.414 1.414L11.414 10l4.293 4.293a1 1 0 0 1-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L8.586 10 4.293 5.707a1 1 0 0 1 0-1.414Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <%# ── Primary nav ──────────────────────────────────────────────── %>
@@ -96,6 +100,41 @@
           </li>
         <% end %>
       </ul>
+
+      <%# ── Messages: DMs + groups with unread counts ──────────────────── %>
+      <% if @sidebar.show_messages_section? %>
+        <div class="mt-5" data-controller="conversations-nav">
+          <div class="flex items-center justify-between px-3 pb-1">
+            <%= link_to "Messages", @sidebar.messages_index_href,
+                  data: main_frame_data,
+                  class: "text-xs font-semibold uppercase tracking-wide text-muted-color transition-colors hover:text-base-color" %>
+          </div>
+
+          <% if @sidebar.conversations? %>
+            <ul class="flex flex-col gap-0.5">
+              <% @sidebar.conversations.each do |conversation| %>
+                <li>
+                  <%= link_to conversation.href,
+                        data: main_frame_data("conversations-nav-target" => "item",
+                                              "conversation-id" => conversation.id),
+                        class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
+                    <%= render "shared/nav_icon", icon: (conversation.direct? ? :teams : :messages) %>
+                    <span class="min-w-0 flex-1 truncate"><%= conversation.title %></span>
+                    <span data-conversations-nav-target="badge"
+                          data-conversation-id="<%= conversation.id %>"
+                          data-count="<%= conversation.unread_count %>"
+                          class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold leading-none text-white <%= 'hidden' if conversation.unread_count.zero? %>">
+                      <%= conversation.unread_count %>
+                    </span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="px-3 py-1.5 text-xs text-muted-color">No conversations yet.</p>
+          <% end %>
+        </div>
+      <% end %>
     </nav>
 
     <%# ── Footer: theme toggle + account + logout ──────────────────── %>

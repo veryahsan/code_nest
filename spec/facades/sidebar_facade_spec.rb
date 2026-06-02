@@ -21,9 +21,9 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(facade.super_admin?).to be false
     end
 
-    it "exposes a primary nav with Dashboard, Messages, Projects, Employees (no admin items)" do
+    it "exposes a primary nav with Dashboard, Projects, Employees (no Messages or admin items)" do
       labels = facade.primary_nav.map(&:label)
-      expect(labels).to eq(%w[Dashboard Messages Projects Employees])
+      expect(labels).to eq(%w[Dashboard Projects Employees])
     end
 
     it "only includes the user's own projects (up to MAX_PROJECTS_IN_SIDEBAR)" do
@@ -54,6 +54,49 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(facade.projects_index_href).to eq(url_helpers.projects_path)
       expect(facade.account_href).to eq(url_helpers.edit_user_registration_path)
       expect(facade.logout_href).to eq(url_helpers.destroy_user_session_path)
+    end
+
+    it "exposes the notifications index href" do
+      expect(facade.notifications_index_href).to eq(url_helpers.notifications_path)
+    end
+  end
+
+  describe "notifications" do
+    let(:org)   { create(:organisation) }
+    let(:user)  { create(:user, organisation: org) }
+    let(:actor) { create(:user, organisation: org) }
+    let(:conversation) { create(:conversation, organisation: org) }
+
+    subject(:facade) { described_class.call(user: user, url_helpers: url_helpers).value }
+
+    def notify!(read: false)
+      message = create(:message, user: actor, conversation: conversation)
+      Notification.create!(recipient: user, actor: actor, notifiable: message,
+                           kind: "message_created", read_at: read ? Time.current : nil)
+    end
+
+    it "counts only the user's unread notifications" do
+      notify!
+      notify!
+      notify!(read: true)
+      create(:notification) # belongs to some other user
+
+      expect(facade.unread_notifications_count).to eq(2)
+    end
+
+    it "returns recent notifications newest-first, capped at the limit" do
+      oldest = notify!
+      newest = nil
+      (described_class::RECENT_NOTIFICATIONS_LIMIT + 2).times { newest = notify! }
+
+      expect(facade.recent_notifications.size).to eq(described_class::RECENT_NOTIFICATIONS_LIMIT)
+      expect(facade.recent_notifications.first).to eq(newest)
+      expect(facade.recent_notifications).not_to include(oldest)
+    end
+
+    it "defaults to zero unread and an empty list when there is nothing" do
+      expect(facade.unread_notifications_count).to eq(0)
+      expect(facade.recent_notifications).to eq([])
     end
   end
 
@@ -87,9 +130,13 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(facade.projects).to eq([])
     end
 
-    it "only surfaces Messages in the primary nav" do
-      labels = facade.primary_nav.map(&:label)
-      expect(labels).to eq(%w[Messages])
+    it "surfaces no primary nav items (no organisation yet)" do
+      expect(facade.primary_nav).to eq([])
+    end
+
+    it "hides the Messages section" do
+      expect(facade.show_messages_section?).to be false
+      expect(facade.conversations).to eq([])
     end
 
     it "brand_href falls back to root" do
@@ -113,6 +160,85 @@ RSpec.describe SidebarFacade, type: :facade do
 
     it "reports super_admin? true" do
       expect(facade.super_admin?).to be true
+    end
+
+    it "hides the Messages section" do
+      expect(facade.show_messages_section?).to be false
+      expect(facade.conversations).to eq([])
+    end
+  end
+
+  describe "messages section" do
+    let(:org)   { create(:organisation) }
+    let(:user)  { create(:user, organisation: org) }
+    let(:other) { create(:user, organisation: org) }
+
+    subject(:facade) { described_class.call(user: user, url_helpers: url_helpers).value }
+
+    it "show_messages_section? is true for an org member" do
+      expect(facade.show_messages_section?).to be true
+    end
+
+    it "lists the user's conversations newest-first" do
+      older = create(:conversation, organisation: org, title: "Older")
+      newer = create(:conversation, organisation: org, title: "Newer")
+      [ older, newer ].each { |c| c.add_participant(user) }
+      older.update_column(:updated_at, 1.hour.ago)
+
+      titles = facade.conversations.map(&:title)
+      expect(titles).to eq(%w[Newer Older])
+    end
+
+    it "names a direct conversation after the other participant" do
+      dm = create(:conversation, :direct, organisation: org)
+      dm.add_participant(user)
+      dm.add_participant(other)
+
+      entry = facade.conversations.first
+      expect(entry.direct?).to be true
+      expect(entry.title).to eq(Conversation.participant_label(other))
+    end
+
+    it "uses the group title for group conversations" do
+      group = create(:conversation, organisation: org, title: "Roadmap")
+      group.add_participant(user)
+
+      expect(facade.conversations.first.title).to eq("Roadmap")
+    end
+
+    it "counts messages from others received after the user last read" do
+      conversation = create(:conversation, organisation: org)
+      conversation.add_participant(user)
+      conversation.add_participant(other)
+
+      create(:message, conversation: conversation, user: other)
+      create(:message, conversation: conversation, user: other)
+      create(:message, conversation: conversation, user: user) # own message: not counted
+
+      expect(facade.conversations.first.unread_count).to eq(2)
+    end
+
+    it "excludes messages received before the last_read_at watermark" do
+      conversation = create(:conversation, organisation: org)
+      conversation.add_participant(user)
+      conversation.add_participant(other)
+
+      create(:message, conversation: conversation, user: other, created_at: 2.hours.ago)
+      conversation.conversation_participants
+                  .find_by(user: user)
+                  .update_column(:last_read_at, 1.hour.ago)
+      create(:message, conversation: conversation, user: other)
+
+      expect(facade.conversations.first.unread_count).to eq(1)
+    end
+
+    it "caps the conversation list at MAX_CONVERSATIONS_IN_SIDEBAR" do
+      (described_class::MAX_CONVERSATIONS_IN_SIDEBAR + 2).times do |i|
+        c = create(:conversation, organisation: org, title: "Chat #{i}")
+        c.add_participant(user)
+      end
+
+      expect(facade.conversations.size).to eq(described_class::MAX_CONVERSATIONS_IN_SIDEBAR)
     end
   end
 end

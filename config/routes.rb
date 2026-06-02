@@ -64,6 +64,11 @@ Rails.application.routes.draw do
   get "dashboard", to: "dashboard#show", as: :dashboard
   get "messages",  to: "conversations#index", as: :messages
 
+  resources :notifications, only: %i[index] do
+    member     { patch :read }
+    collection { patch :read_all }
+  end
+
   # Real-time messaging: direct messages and group conversations.
   resources :conversations, only: %i[index show new create] do
     resources :messages, only: %i[index create], controller: "conversations/messages"
