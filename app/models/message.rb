@@ -11,6 +11,7 @@ class Message < ApplicationRecord
   validates :body, presence: true, length: { maximum: MAX_LENGTH }
 
   after_create_commit :broadcast_to_conversation
+  after_create_commit :publish_message_event
 
   scope :chronological, -> { order(:created_at) }
 
@@ -41,5 +42,9 @@ class Message < ApplicationRecord
 
   def broadcast_to_conversation
     ConversationChannel.broadcast_to(conversation, message: broadcast_payload)
+  end
+
+  def publish_message_event
+    Events::PublishService.call(event: "message.created", message: self)
   end
 end

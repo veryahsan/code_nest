@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 # Creates a pending Invitation, sets a default expiry (14 days), and
-# enqueues the invite email onto the centralized email outbox at default
-# priority (drained by Mailers::DispatchBatchJob behind the shared rate
-# limiter).
+# publishes an "invitation.created" event through the fan-out bus.
+# Mailers::InvitationEmailJob picks it up and enqueues it onto the centralized
+# email outbox at default priority.
 module Invitations
   class CreationFacade < ApplicationFacade
     DEFAULT_EXPIRY = 14.days
@@ -23,7 +23,7 @@ module Invitations
       )
 
       if @invitation.save
-        Mailers::Outbox.enqueue(InvitationMailer, :invite, @invitation, priority: :default)
+        Events::PublishService.call(event: "invitation.created", invitation: @invitation)
         success(@invitation)
       else
         failure(@invitation)

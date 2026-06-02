@@ -23,6 +23,8 @@ class User < ApplicationRecord
   has_many :conversation_participants, dependent: :destroy
   has_many :conversations, through: :conversation_participants
   has_many :messages, dependent: :destroy
+  has_many :notifications, foreign_key: :recipient_id, inverse_of: :recipient,
+                           dependent: :destroy
 
   enum :org_role, { member: 0, admin: 1 }, prefix: :org
 
@@ -38,15 +40,20 @@ class User < ApplicationRecord
   # so they should never be blocked by the email-confirmation gate.
   before_create :auto_confirm_super_admin
 
-  # Buffer a welcome email the moment a signup is committed. The actual push
-  # onto the Redis queue lives in the service; this stays a one-line trigger.
+  # Publish a user.signed_up event the moment a signup is committed so the
+  # fan-out bus can fan it out to the welcome email channel (and future ones).
   after_create_commit :enqueue_welcome_email
 
   # Route Devise notification emails (confirmation, password reset, …) through
-  # the centralized email outbox at high priority so they share the provider
-  # rate limiter and buffering with the rest of the system's mail.
+  # the fan-out event bus. Mailers::DeviseNotificationJob picks them up and
+  # enqueues them onto the centralized email outbox at high priority.
   def send_devise_notification(notification, *args)
-    Mailers::Outbox.enqueue(devise_mailer, notification, self, *args, priority: :high)
+    Events::PublishService.call(
+      event:        "devise.notification",
+      user:         self,
+      notification: notification.to_s,
+      args:         args
+    )
   end
 
   # Devise hook: fires once the email confirmation token is consumed.
@@ -108,7 +115,7 @@ class User < ApplicationRecord
   end
 
   def enqueue_welcome_email
-    Mailers::EnqueueWelcomeEmailService.call(user: self)
+    Events::PublishService.call(event: "user.signed_up", user: self)
   end
 
   AVATAR_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze

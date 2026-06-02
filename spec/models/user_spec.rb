@@ -166,16 +166,15 @@ RSpec.describe User, type: :model do
   end
 
   describe "#enqueue_welcome_email (after_create_commit trigger)" do
-    # Like #after_confirmation, the callback is a thin trigger that delegates
-    # to the service. The super-admin skip lives in the service and is covered
-    # by spec/services/mailers/enqueue_welcome_email_service_spec.rb.
-    it "delegates to Mailers::EnqueueWelcomeEmailService" do
+    # The callback is a thin trigger that publishes through the event bus.
+    # Mailers::WelcomeEmailJob (and any future subscribers) pick it up from there.
+    it "publishes user.signed_up through Events::PublishService" do
       user = build(:user)
-      allow(Mailers::EnqueueWelcomeEmailService).to receive(:call)
+      allow(Events::PublishService).to receive(:call)
 
       user.send(:enqueue_welcome_email)
 
-      expect(Mailers::EnqueueWelcomeEmailService).to have_received(:call).with(user: user)
+      expect(Events::PublishService).to have_received(:call).with(event: "user.signed_up", user: user)
     end
   end
 

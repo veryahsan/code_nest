@@ -6,7 +6,9 @@ RSpec.describe Invitations::CreationFacade, type: :facade do
   let(:org) { create(:organisation) }
   let(:admin) { create(:user, :organisation_admin, organisation: org) }
 
-  it "creates a pending invitation and buffers the invite email at default priority" do
+  it "creates a pending invitation and publishes invitation.created through the event bus" do
+    allow(Events::PublishService).to receive(:call)
+
     result = described_class.call(
       organisation: org,
       inviter: admin,
@@ -17,7 +19,9 @@ RSpec.describe Invitations::CreationFacade, type: :facade do
     expect(result.value).to be_persisted
     expect(result.value.token).to be_present
     expect(result.value.expires_at).to be_within(1.minute).of(14.days.from_now)
-    expect(Mailers::Outbox.new.size(:default)).to eq(1)
+    expect(Events::PublishService).to have_received(:call).with(
+      event: "invitation.created", invitation: result.value
+    )
   end
 
   it "fails for an invalid email" do
