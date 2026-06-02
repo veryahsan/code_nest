@@ -65,6 +65,6 @@ export default class extends Controller {
   #setCount(badge, count) {
     badge.dataset.count = count
     badge.textContent = count > 99 ? "99+" : count
-    badge.classList.toggle("hidden", count <= 0)
+    badge.style.display = count > 0 ? "" : "none"
   }
 }

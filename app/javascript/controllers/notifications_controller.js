@@ -28,7 +28,7 @@ export default class extends Controller {
 
     const count = this.countValue
     this.badgeTarget.textContent = count > 99 ? "99+" : count
-    this.badgeTarget.classList.toggle("hidden", count <= 0)
+    this.badgeTarget.style.display = count > 0 ? "" : "none"
   }
 
   // Clicking a row navigates to its target (via Turbo) and the server marks it
@@ -72,6 +72,7 @@ export default class extends Controller {
     const link = document.createElement("a")
     link.href = `/notifications/${data.id}/read`
     link.dataset.turboFrame = this.frameValue
+    link.dataset.turboMethod = "patch"
     link.dataset.action = "click->notifications#markReadOptimistic"
     link.dataset.notificationId = data.id
     link.dataset.read = data.read ? "true" : "false"

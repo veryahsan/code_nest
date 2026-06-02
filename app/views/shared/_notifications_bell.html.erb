@@ -16,7 +16,8 @@
           class="btn-base btn-ghost btn-icon-sm relative text-zinc-600 dark:text-zinc-400">
     <%= render "shared/nav_icon", icon: :notifications, css: "h-5 w-5" %>
     <span data-notifications-target="badge"
-          class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold leading-none text-white <%= 'hidden' if count.zero? %>">
+          style="<%= 'display:none' if count.zero? %>"
+          class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold leading-none text-white">
       <%= count %>
     </span>
   </button>

@@ -7,7 +7,8 @@
   body_preview = notifiable.is_a?(Message) ? notifiable.body.to_s.truncate(80) : ""
 %>
 <%= link_to read_notification_path(notification),
-      data: main_frame_data("action" => "click->notifications#markReadOptimistic",
+      data: main_frame_data("turbo-method" => :patch,
+                            "action" => "click->notifications#markReadOptimistic",
                             "notification-id" => notification.id,
                             "read" => notification.read?),
       class: "flex items-start gap-2 px-3 py-2 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 #{'bg-brand-50/60 dark:bg-brand-500/10' unless notification.read?}" do %>
