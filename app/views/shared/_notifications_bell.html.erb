@@ -34,7 +34,11 @@
     </div>
 
     <div data-notifications-target="list" class="max-h-80 overflow-y-auto divide-y divide-surface">
-      <%= render @sidebar.recent_notifications %>
+      <%# Explicit partial path so collection lookup isn't prefixed with the
+          current controller's namespace (e.g. `users/` under Devise). %>
+      <%= render partial: "notifications/notification",
+            collection: @sidebar.recent_notifications,
+            as: :notification %>
     </div>
 
     <p data-notifications-target="empty"

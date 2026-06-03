@@ -98,7 +98,10 @@ module ApplicationHelper
   def user_avatar_tag(user, variant: :thumb, css: "h-8 w-8")
     label = user_avatar_label(user)
     base_classes = "#{css} rounded-full object-cover"
-    if user.avatar.attached?
+    # The blob must be persisted to build a variant URL (it needs a signed_id).
+    # On a failed profile update the just-selected avatar is attached in memory
+    # but not yet saved, so fall back to initials instead of raising.
+    if user.avatar.attached? && user.avatar.blob&.persisted?
       image_tag user.avatar.variant(variant),
                 class: base_classes,
                 alt: "#{label} avatar"

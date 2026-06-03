@@ -118,7 +118,6 @@
                         data: main_frame_data("conversations-nav-target" => "item",
                                               "conversation-id" => conversation.id),
                         class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
-                    <%= render "shared/nav_icon", icon: (conversation.direct? ? :teams : :messages) %>
                     <span class="min-w-0 flex-1 truncate"><%= conversation.title %></span>
                     <span data-conversations-nav-target="badge"
                           data-conversation-id="<%= conversation.id %>"

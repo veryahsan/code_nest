@@ -68,43 +68,39 @@ RSpec.describe "Users::Registrations", type: :request do
   end
 
   describe "GET /edit (profile settings)" do
-    context "for a local-password user" do
-      let(:user) { create(:user) }
+    let(:user) { create(:user) }
 
-      before { sign_in user }
+    before { sign_in user }
 
-      it "renders the password fields" do
-        get edit_user_registration_path
+    it "does not render the email field" do
+      get edit_user_registration_path
 
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("user[password]")
-        expect(response.body).to include("user[password_confirmation]")
-        expect(response.body).to include("user[current_password]")
-      end
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("user[email]")
     end
 
-    context "for an SSO-only user (any identity linked)" do
-      let(:user) { create(:user) }
+    it "does not render any password fields" do
+      get edit_user_registration_path
 
-      before do
-        create(:identity, user: user)
-        sign_in user
-      end
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("user[password]")
+      expect(response.body).not_to include("user[password_confirmation]")
+      expect(response.body).not_to include("user[current_password]")
+    end
+  end
 
-      it "hides all password inputs" do
-        get edit_user_registration_path
+  describe "GET /edit with notifications in the sidebar" do
+    let(:user) { create(:user) }
 
-        expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include("user[password]")
-        expect(response.body).not_to include("user[password_confirmation]")
-        expect(response.body).not_to include("user[current_password]")
-      end
+    before do
+      create(:notification, recipient: user)
+      sign_in user
+    end
 
-      it "tells the user why the password section is missing" do
-        get edit_user_registration_path
+    it "renders the notifications dropdown without a missing-partial error" do
+      get edit_user_registration_path
 
-        expect(response.body).to match(/single sign-on/i)
-      end
+      expect(response).to have_http_status(:ok)
     end
   end
 
@@ -148,47 +144,39 @@ RSpec.describe "Users::Registrations", type: :request do
 
       expect(user.reload.avatar).not_to be_attached
     end
+
+    it "re-renders the form with errors when the upload is rejected" do
+      rejected = fixture_file_upload(
+        Rails.root.join("spec/fixtures/files/not_an_image.txt"),
+        "text/plain"
+      )
+
+      put user_registration_path, params: { user: { avatar: rejected } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("JPEG, PNG, or WebP")
+      expect(user.reload.avatar).not_to be_attached
+    end
   end
 
   describe "PATCH /edit (profile update)" do
-    context "for an SSO-only user" do
-      let(:user) { create(:user, email: "old@example.com") }
+    let(:user) { create(:user, email: "old@example.com", password: "password12345") }
 
-      before do
-        create(:identity, user: user)
-        sign_in user
-      end
+    before { sign_in user }
 
-      it "updates the email without asking for the current password" do
-        patch user_registration_path, params: { user: { email: "new@example.com" } }
+    it "ignores an email change submitted directly to the endpoint" do
+      patch user_registration_path, params: { user: { email: "new@example.com" } }
 
-        expect(response).to redirect_to(root_path).or redirect_to(dashboard_path)
-        # Confirmable is enabled, so the new address lands in unconfirmed_email
-        # until the user clicks the link in the confirmation mail — either way,
-        # the request itself must have succeeded.
-        user.reload
-        expect([ user.email, user.unconfirmed_email ]).to include("new@example.com")
-      end
-
-      it "does not crash when the form submits without password params at all" do
-        expect {
-          patch user_registration_path, params: { user: { email: "x@example.com" } }
-        }.not_to raise_error
-      end
+      user.reload
+      expect(user.email).to eq("old@example.com")
+      expect(user.unconfirmed_email).to be_nil
     end
 
-    context "for a local-password user" do
-      let(:user) { create(:user, password: "password12345") }
+    it "ignores a password change submitted directly to the endpoint" do
+      patch user_registration_path,
+            params: { user: { password: "brand-new-secret", password_confirmation: "brand-new-secret" } }
 
-      before { sign_in user }
-
-      it "still requires the current password to change the email" do
-        patch user_registration_path,
-              params: { user: { email: "renamed@example.com", current_password: "" } }
-
-        expect(user.reload.email).not_to eq("renamed@example.com")
-        expect(user.unconfirmed_email).to be_nil
-      end
+      expect(user.reload.valid_password?("password12345")).to be true
     end
   end
 end
