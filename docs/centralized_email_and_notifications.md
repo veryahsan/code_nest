@@ -141,7 +141,7 @@ rate limiter.
 
 - `User#send_devise_notification` -> `high` ([app/models/user.rb](../app/models/user.rb)).
 - `Invitations::CreationFacade` -> `default` ([app/facades/invitations/creation_facade.rb](../app/facades/invitations/creation_facade.rb)).
-- `Mailers::EnqueueWelcomeEmailService` -> `low`, triggered by `User#after_create_commit` ([app/services/mailers/enqueue_welcome_email_service.rb](../app/services/mailers/enqueue_welcome_email_service.rb)).
+- `Mailers::WelcomeEmailJob` -> `low`, triggered by `User#after_create_commit` (skips super admins) ([app/jobs/mailers/welcome_email_job.rb](../app/jobs/mailers/welcome_email_job.rb)).
 
 ### Testing
 
