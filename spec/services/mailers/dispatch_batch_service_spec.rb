@@ -5,11 +5,8 @@ require "rails_helper"
 RSpec.describe Mailers::DispatchBatchService, type: :service do
   let(:outbox) { Mailers::Outbox.new }
 
-  # Creating users triggers the welcome-email enqueue (after_create_commit);
-  # stub it so only the payloads each example sets up are in the outbox.
   before do
     ActionMailer::Base.deliveries.clear
-    allow(Mailers::EnqueueWelcomeEmailService).to receive(:call)
   end
 
   def stub_failing_delivery

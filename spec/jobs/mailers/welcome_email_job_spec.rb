@@ -7,12 +7,23 @@ RSpec.describe Mailers::WelcomeEmailJob, type: :job do
     expect(described_class.new.queue_name).to eq("mailers")
   end
 
-  it "delegates to Mailers::EnqueueWelcomeEmailService" do
+  it "enqueues the welcome email onto the outbox at low priority" do
+    allow(Mailers::Outbox).to receive(:enqueue)
     user = create(:user)
-    allow(Mailers::EnqueueWelcomeEmailService).to receive(:call)
 
     described_class.new.perform(user: user)
 
-    expect(Mailers::EnqueueWelcomeEmailService).to have_received(:call).with(user: user)
+    expect(Mailers::Outbox).to have_received(:enqueue).with(
+      WelcomeMailer, :welcome, user, priority: :low
+    )
+  end
+
+  it "skips super admins (provisioned out-of-band)" do
+    allow(Mailers::Outbox).to receive(:enqueue)
+    user = create(:user, :super_admin)
+
+    described_class.new.perform(user: user)
+
+    expect(Mailers::Outbox).not_to have_received(:enqueue)
   end
 end

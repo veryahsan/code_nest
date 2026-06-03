@@ -5,10 +5,6 @@ require "rails_helper"
 RSpec.describe Mailers::Outbox, type: :service do
   subject(:outbox) { described_class.new }
 
-  # Creating users triggers the welcome-email enqueue (after_create_commit);
-  # stub it so only the payloads each example sets up are in the outbox.
-  before { allow(Mailers::EnqueueWelcomeEmailService).to receive(:call) }
-
   it "routes an enqueue to the requested priority tier" do
     outbox.enqueue(WelcomeMailer, :welcome, 1, priority: :low)
 
