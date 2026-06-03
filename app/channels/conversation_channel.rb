@@ -31,6 +31,28 @@ class ConversationChannel < ApplicationCable::Channel
     )
   end
 
+  # Marks the conversation read for the current user and tells everyone else
+  # so they can place this reader's avatar under the latest message. Only the
+  # latest message's read state matters, so we broadcast just the reader and
+  # the message they caught up to.
+  def read(_data = {})
+    conversation = find_conversation
+    return if conversation.nil?
+
+    participant = conversation.conversation_participants.find_by(user: current_user)
+    return if participant.nil?
+
+    participant.mark_read!
+
+    last_message_id = conversation.messages.maximum(:id)
+    return if last_message_id.nil?
+
+    ConversationChannel.broadcast_to(
+      conversation,
+      read_receipt: { user_id: current_user.id, last_message_id: last_message_id },
+    )
+  end
+
   private
 
   def find_conversation

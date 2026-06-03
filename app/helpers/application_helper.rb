@@ -95,7 +95,7 @@ module ApplicationHelper
   # Usage:
   #   <%= user_avatar_tag(current_user) %>
   #   <%= user_avatar_tag(current_user, variant: :profile, css: "h-20 w-20") %>
-  def user_avatar_tag(user, variant: :thumb, css: "h-8 w-8")
+  def user_avatar_tag(user, variant: :thumb, css: "h-8 w-8", text: "text-xs")
     label = user_avatar_label(user)
     base_classes = "#{css} rounded-full object-cover"
     # The blob must be persisted to build a variant URL (it needs a signed_id).
@@ -106,7 +106,7 @@ module ApplicationHelper
                 class: base_classes,
                 alt: "#{label} avatar"
     else
-      initials_avatar_tag(initials_for(label), label: label, css: css)
+      initials_avatar_tag(initials_for(label), label: label, css: css, text: text)
     end
   end
 
@@ -129,9 +129,9 @@ module ApplicationHelper
     end
   end
 
-  def initials_avatar_tag(initials, label:, css: "h-8 w-8")
+  def initials_avatar_tag(initials, label:, css: "h-8 w-8", text: "text-xs")
     content_tag :span, initials,
-                class: "#{css} inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white select-none",
+                class: "#{css} #{text} inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 font-semibold text-white select-none",
                 aria: { label: "#{label} avatar" }
   end
 

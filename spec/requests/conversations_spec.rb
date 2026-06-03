@@ -65,6 +65,17 @@ RSpec.describe "Conversations", type: :request do
       get conversation_path(conversation)
       expect(response).to redirect_to(root_path)
     end
+
+    it "marks the conversation read for the viewer" do
+      conversation.add_participant(user)
+      create(:message, conversation: conversation, user: user, body: "Hi")
+
+      sign_in user
+      get conversation_path(conversation)
+
+      participant = conversation.conversation_participants.find_by(user: user)
+      expect(participant.last_read_at).to be_present
+    end
   end
 
   describe "POST /conversations/:id/messages" do

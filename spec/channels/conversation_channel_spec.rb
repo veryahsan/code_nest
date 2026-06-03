@@ -32,4 +32,36 @@ RSpec.describe ConversationChannel, type: :channel do
       perform :speak, "body" => "Hi team"
     }.to change(conversation.messages, :count).by(1)
   end
+
+  describe "#read" do
+    let(:author) { create(:user, organisation: conversation.organisation) }
+
+    before { conversation.add_participant(author) }
+
+    it "advances the participant's read watermark" do
+      create(:message, conversation: conversation, user: author)
+      stub_connection current_user: member
+      subscribe(id: conversation.id)
+
+      participant = conversation.conversation_participants.find_by(user: member)
+      expect { perform :read }.to(change { participant.reload.last_read_at })
+    end
+
+    it "broadcasts a read receipt for the newest message" do
+      message = create(:message, conversation: conversation, user: author)
+      stub_connection current_user: member
+      subscribe(id: conversation.id)
+
+      expect { perform :read }
+        .to have_broadcasted_to(conversation)
+        .with(read_receipt: { user_id: member.id, last_message_id: message.id })
+    end
+
+    it "does not broadcast when there are no messages" do
+      stub_connection current_user: member
+      subscribe(id: conversation.id)
+
+      expect { perform :read }.not_to have_broadcasted_to(conversation)
+    end
+  end
 end

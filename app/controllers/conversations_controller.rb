@@ -18,6 +18,7 @@ class ConversationsController < ApplicationController
   def show
     @messages = @conversation.messages.includes(:user).chronological.last(100)
     mark_read
+    @readers = ConversationReadReceiptsFacade.new(@conversation, @messages, current_user).readers
     @contacts = contacts
   end
 
@@ -62,6 +63,8 @@ class ConversationsController < ApplicationController
     authorize @conversation
   end
 
+  # Advance the viewer's read watermark (used for sidebar unread counts). Live
+  # read receipts are broadcast from ConversationChannel#read instead.
   def mark_read
     @conversation.conversation_participants.find_by(user: current_user)&.mark_read!
   end
