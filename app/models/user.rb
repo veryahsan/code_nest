@@ -25,6 +25,7 @@ class User < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_many :notifications, foreign_key: :recipient_id, inverse_of: :recipient,
                            dependent: :destroy
+  has_many :reactions, dependent: :destroy
 
   enum :org_role, { member: 0, admin: 1 }, prefix: :org
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_03_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_04_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -235,6 +235,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_03_000001) do
     t.index ["organisation_id"], name: "index_projects_on_organisation_id"
   end
 
+  create_table "reactions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "reactable_type", null: false
+    t.bigint "reactable_id", null: false
+    t.integer "kind", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reactable_type", "reactable_id"], name: "index_reactions_on_reactable"
+    t.index ["user_id", "reactable_type", "reactable_id", "kind"], name: "index_reactions_uniqueness", unique: true
+    t.index ["user_id"], name: "index_reactions_on_user_id"
+  end
+
   create_table "remote_resources", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.string "name", null: false
@@ -301,6 +313,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_03_000001) do
   add_foreign_key "project_technologies", "projects"
   add_foreign_key "project_technologies", "technologies"
   add_foreign_key "projects", "organisations"
+  add_foreign_key "reactions", "users"
   add_foreign_key "remote_resources", "projects"
   add_foreign_key "users", "organisations"
 end

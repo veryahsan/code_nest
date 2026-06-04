@@ -3,6 +3,8 @@
 # A single chat message inside a conversation. On commit it is pushed to
 # every subscriber of the conversation's Action Cable stream.
 class Message < ApplicationRecord
+  include Reactable
+
   MAX_LENGTH = 5_000
 
   belongs_to :conversation
