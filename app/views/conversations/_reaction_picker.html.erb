@@ -1,0 +1,34 @@
+<%#
+  Hover-revealed reaction affordance for a single message bubble.
+  UI only: selecting an emoji closes the panel; the submission flow is wired
+  later via the reaction-picker controller's `select` action.
+%>
+<div class="relative shrink-0 self-center opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 aria-expanded:opacity-100"
+     data-controller="reaction-picker">
+  <button type="button"
+          data-reaction-picker-target="trigger"
+          data-action="click->reaction-picker#toggle"
+          aria-expanded="false"
+          aria-label="Add reaction"
+          class="grid h-7 w-7 place-items-center rounded-full text-muted-color hover:bg-zinc-100 dark:hover:bg-zinc-800">
+    <span class="relative inline-flex">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+        <path fill-rule="evenodd" d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM7.5 8.5A1 1 0 1 0 7.5 6.5a1 1 0 0 0 0 2Zm5 0A1 1 0 1 0 12.5 6.5a1 1 0 0 0 0 2Zm-5.6 3.2a.75.75 0 0 0-1.2.9 5 5 0 0 0 8.6 0 .75.75 0 1 0-1.2-.9 3.5 3.5 0 0 1-6.2 0Z" clip-rule="evenodd" />
+      </svg>
+      <span class="absolute -right-1 -top-1 text-[10px] font-bold leading-none">+</span>
+    </span>
+  </button>
+
+  <div data-reaction-picker-target="panel"
+       class="hidden absolute bottom-9 left-1/2 z-20 -translate-x-1/2 flex gap-1 rounded-full border border-surface bg-surface-raised px-2 py-1.5 shadow-card">
+    <% Reaction.kinds.keys.each do |kind| %>
+      <button type="button"
+              data-action="click->reaction-picker#select"
+              data-reaction-kind="<%= kind %>"
+              title="<%= kind.humanize %>"
+              class="grid h-8 w-8 place-items-center rounded-full text-lg leading-none hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <%= Reaction::KIND_EMOJI[kind] %>
+      </button>
+    <% end %>
+  </div>
+</div>

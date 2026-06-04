@@ -16,7 +16,7 @@ class ConversationsController < ApplicationController
   end
 
   def show
-    @messages = @conversation.messages.includes(:user).chronological.last(100)
+    @messages = @conversation.messages.includes(:user, :reactions).chronological.last(100)
     mark_read
     @readers = ConversationReadReceiptsFacade.new(@conversation, @messages, current_user).readers
     @contacts = contacts

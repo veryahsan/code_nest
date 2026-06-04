@@ -10,24 +10,31 @@
 
 <div data-controller="conversation"
      data-conversation-id-value="<%= @conversation.id %>"
-     data-conversation-user-id-value="<%= current_user.id %>">
+     data-conversation-user-id-value="<%= current_user.id %>"
+     data-action="reaction-picker:selected->conversation#react">
   <%# Avatars the client clones into read-receipt rows; keyed by participant id. %>
   <div data-conversation-target="roster" class="hidden" aria-hidden="true">
     <% @conversation.conversation_participants.includes(user: :employee).each do |cp| %>
       <span data-roster-user="<%= cp.user_id %>" title="<%= user_avatar_label(cp.user) %>" class="inline-flex"><%= user_avatar_tag(cp.user, css: "h-5 w-5", text: "text-[9px]") %></span>
     <% end %>
   </div>
+  <%# Cloned by conversation_controller#appendMessage so live messages get the picker too. %>
+  <template data-conversation-target="reactionTemplate"><%= render "conversations/reaction_picker" %></template>
   <%= render "components/card", padded: false do %>
     <div data-conversation-target="list"
          class="flex h-[60vh] flex-col gap-3 overflow-y-auto p-4">
       <% if @messages.any? %>
         <% @messages.each do |message| %>
           <% mine = message.user_id == current_user.id %>
-          <div class="flex flex-col <%= mine ? 'items-end' : 'items-start' %>" data-message-id="<%= message.id %>">
+          <div class="group flex flex-col <%= mine ? 'items-end' : 'items-start' %>" data-message-id="<%= message.id %>">
             <span class="px-1 text-xs text-muted-color"><%= mine ? "You" : message.sender_label %></span>
-            <div class="<%= mine ? 'mt-0.5 max-w-[75%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white' : 'mt-0.5 max-w-[75%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color' %>">
-              <%= message.body %>
+            <div class="mt-0.5 flex items-center gap-1 <%= mine ? 'flex-row-reverse' : '' %>">
+              <div class="<%= mine ? 'max-w-[75%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white' : 'max-w-[75%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color' %>">
+                <%= message.body %>
+              </div>
+              <%= render "conversations/reaction_picker" %>
             </div>
+            <%= render "conversations/reactions", message: message %>
             <div data-receipts-for="<%= message.id %>" class="flex flex-wrap gap-1 px-1 mt-1.5">
               <% if message == @messages.last %>
                 <% @readers.each do |reader| %>

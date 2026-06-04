@@ -66,6 +66,17 @@ RSpec.describe "Conversations", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "renders existing reactions on a message" do
+      conversation.add_participant(user)
+      message = create(:message, conversation: conversation, user: user, body: "Ship it")
+      create(:reaction, user: user, reactable: message, kind: :celebrate)
+
+      sign_in user
+      get conversation_path(conversation)
+
+      expect(response.body).to include(Reaction::KIND_EMOJI["celebrate"])
+    end
+
     it "marks the conversation read for the viewer" do
       conversation.add_participant(user)
       create(:message, conversation: conversation, user: user, body: "Hi")

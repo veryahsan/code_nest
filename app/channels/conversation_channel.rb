@@ -31,6 +31,17 @@ class ConversationChannel < ApplicationCable::Channel
     )
   end
 
+  # data => { "message_id" => 1, "kind" => "like" }
+  def react(data)
+    conversation = find_conversation
+    return if conversation.nil?
+
+    message = conversation.messages.find_by(id: data["message_id"])
+    return if message.nil?
+
+    Reactions::ToggleService.call(message: message, user: current_user, kind: data["kind"])
+  end
+
   # Marks the conversation read for the current user and tells everyone else
   # so they can place this reader's avatar under the latest message. Only the
   # latest message's read state matters, so we broadcast just the reader and

@@ -1,0 +1,18 @@
+<%#
+  Aggregated reaction pills for a single message. One pill per kind present,
+  highlighted when the viewer reacted with that kind. Clicking a pill toggles
+  the viewer's reaction of that kind (handled by conversation#toggleKind).
+%>
+<div data-reactions-for="<%= message.id %>" class="flex flex-wrap gap-1 px-1 mt-1">
+  <% message.reactions.group_by(&:kind).each do |kind, list| %>
+    <% mine = list.any? { |r| r.user_id == current_user.id } %>
+    <button type="button"
+            data-reaction-pill
+            data-kind="<%= kind %>"
+            data-action="click->conversation#toggleKind"
+            class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs <%= mine ? 'border-brand-500 bg-brand-50 dark:bg-brand-950' : 'border-surface bg-surface-raised' %>">
+      <span><%= Reaction::KIND_EMOJI[kind] %></span>
+      <span data-reaction-count><%= list.size %></span>
+    </button>
+  <% end %>
+</div>
