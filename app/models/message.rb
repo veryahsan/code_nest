@@ -10,6 +10,9 @@ class Message < ApplicationRecord
   belongs_to :conversation
   belongs_to :user
 
+  has_many :message_mentions, dependent: :destroy
+  has_many :mentioned_users, through: :message_mentions, source: :mentioned_user
+
   validates :body, presence: true, length: { maximum: MAX_LENGTH }
 
   after_create_commit :broadcast_to_conversation
@@ -21,6 +24,12 @@ class Message < ApplicationRecord
     Conversation.participant_label(user)
   end
 
+  # True when the message carries sanitized rich HTML to render instead of the
+  # plain text body.
+  def rich?
+    body_html.present?
+  end
+
   def broadcast_payload
     {
       id: id,
@@ -28,7 +37,8 @@ class Message < ApplicationRecord
       user_id: user_id,
       sender_label: sender_label,
       body: body,
-      created_at: created_at.iso8601,
+      body_html: body_html,
+      created_at: created_at.iso8601
     }
   end
 

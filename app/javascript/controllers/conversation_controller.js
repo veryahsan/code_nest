@@ -10,10 +10,14 @@ import consumer from "channels/consumer"
 // { user_id, last_message_id } event. Other clients clone that user's avatar
 // from the hidden roster and place it under the latest message.
 export default class extends Controller {
-  static targets = ["list", "input", "form", "empty", "roster", "reactionTemplate"]
-  static values = { id: Number, userId: Number }
+  static targets = ["list", "input", "form", "empty", "roster", "reactionTemplate", "participants"]
+  static values = { id: Number, userId: Number, currentHandle: String }
+
+  // Matches an @handle token (not preceded by a word char, so emails are skipped).
+  static MENTION_PATTERN = /(?<!\w)@([a-z0-9_]+)/gi
 
   connect() {
+    this.mentionHandles = this.#loadMentionHandles()
     this.lastMessageId = this.#currentLastMessageId()
 
     this.subscription = consumer.subscriptions.create(
@@ -57,12 +61,34 @@ export default class extends Controller {
 
   submit(event) {
     event.preventDefault()
-    const body = this.inputTarget.value.trim()
-    if (body === "") return
 
-    this.subscription.perform("speak", { body })
+    const trix = this.#trixElement
+    if (!trix) return
+
+    // Guard on the editor's plain text so an "empty" document (e.g. <div><br></div>)
+    // isn't sent. The hidden input carries the HTML the server sanitizes.
+    if (trix.editor.getDocument().toString().trim() === "") return
+
+    this.subscription.perform("speak", { body_html: this.inputTarget.value })
+
+    trix.editor.loadHTML("")
     this.inputTarget.value = ""
-    this.inputTarget.focus()
+    trix.focus()
+  }
+
+  // Trix never submits the form on Enter (it inserts a newline), so send on
+  // Enter here. Shift+Enter keeps a newline, and a key the mention autocomplete
+  // already consumed (event.defaultPrevented) is left alone. Use Shift+Enter for
+  // multi-line messages.
+  onKeydown(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.defaultPrevented) return
+
+    event.preventDefault()
+    this.submit(event)
+  }
+
+  get #trixElement() {
+    return this.element.querySelector("trix-editor")
   }
 
   // Picker emitted a chosen emoji (reaction-picker:selected). Toggle it.
@@ -133,7 +159,7 @@ export default class extends Controller {
     bubble.className = mine
       ? "max-w-[75%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white"
       : "max-w-[75%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color"
-    bubble.textContent = message.body
+    this.#renderBody(bubble, message)
 
     row.appendChild(bubble)
     const picker = this.#reactionPicker()
@@ -236,6 +262,101 @@ export default class extends Controller {
     this.listTarget
       .querySelectorAll("[data-receipt-user]")
       .forEach((node) => node.remove())
+  }
+
+  // Set of participant handles (lowercased) used to highlight mentions. Mirrors
+  // the server-side highlight_mentions helper so live and seeded messages match.
+  #loadMentionHandles() {
+    const set = new Set()
+    if (!this.hasParticipantsTarget) return set
+    try {
+      JSON.parse(this.participantsTarget.textContent || "[]").forEach((p) => {
+        if (p.handle) set.add(p.handle.toLowerCase())
+      })
+    } catch {
+      // ignore malformed JSON
+    }
+    return set
+  }
+
+  // Render a message bubble. Rich messages carry server-sanitized HTML; plain
+  // messages are built from text + span nodes. Either way @mention highlighting
+  // is applied client-side so the viewer's own-handle highlight stays per-viewer.
+  #renderBody(el, message) {
+    if (message.body_html) {
+      el.classList.add("trix-content")
+      this.#renderRichBody(el, message.body_html)
+    } else {
+      this.#appendMentionNodes(el, message.body || "")
+    }
+  }
+
+  // The HTML is already sanitized by the server (see Messages::CreateService),
+  // so we can parse it; we then rewrite @mentions inside its text nodes (mirrors
+  // ApplicationHelper#highlight_mentions_html), skipping links and code.
+  #renderRichBody(el, html) {
+    const template = document.createElement("template")
+    template.innerHTML = html
+
+    this.#mentionableTextNodes(template.content).forEach((node) => {
+      const frag = document.createDocumentFragment()
+      this.#appendMentionNodes(frag, node.textContent)
+      node.replaceWith(frag)
+    })
+
+    el.appendChild(template.content)
+  }
+
+  // Text nodes eligible for mention highlighting (not inside <a> or <pre>).
+  #mentionableTextNodes(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        for (let p = node.parentElement; p && p !== root; p = p.parentElement) {
+          if (p.tagName === "A" || p.tagName === "PRE") return NodeFilter.FILTER_REJECT
+        }
+        return NodeFilter.FILTER_ACCEPT
+      },
+    })
+
+    const nodes = []
+    while (walker.nextNode()) nodes.push(walker.currentNode)
+    return nodes
+  }
+
+  // Append `text` to `el` (an element or fragment) as text + span nodes (never
+  // innerHTML), wrapping @handles that match a known participant.
+  #appendMentionNodes(el, text) {
+    const pattern = this.constructor.MENTION_PATTERN
+    pattern.lastIndex = 0
+    const current = (this.currentHandleValue || "").toLowerCase()
+
+    let lastIndex = 0
+    let match
+    while ((match = pattern.exec(text)) !== null) {
+      const handle = match[1].toLowerCase()
+
+      if (match.index > lastIndex) {
+        el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)))
+      }
+
+      if (this.mentionHandles.has(handle)) {
+        const span = document.createElement("span")
+        span.className =
+          current !== "" && handle === current
+            ? "rounded bg-brand-100 px-0.5 font-medium text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
+            : "font-medium text-brand-600 dark:text-brand-400"
+        span.textContent = `@${match[1]}`
+        el.appendChild(span)
+      } else {
+        el.appendChild(document.createTextNode(match[0]))
+      }
+
+      lastIndex = pattern.lastIndex
+    }
+
+    if (lastIndex < text.length) {
+      el.appendChild(document.createTextNode(text.slice(lastIndex)))
+    }
   }
 
   #currentLastMessageId() {

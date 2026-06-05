@@ -72,4 +72,25 @@ RSpec.describe Notifications::DeliverJob, type: :job do
       described_class.new.perform(message_id: message.id, recipient_id: recipient_id)
     }.not_to change(Notification, :count)
   end
+
+  context "with the user_mentioned kind" do
+    def deliver_mention
+      described_class.new.perform(
+        message_id: message.id, recipient_id: recipient.id, kind: "user_mentioned"
+      )
+    end
+
+    it "creates a user_mentioned notification" do
+      expect { deliver_mention }.to change(Notification, :count).by(1)
+      expect(Notification.last.kind).to eq("user_mentioned")
+    end
+
+    it "is additive — coexists with a message_created notification on the same message" do
+      deliver
+      deliver_mention
+
+      kinds = Notification.where(recipient: recipient, notifiable: message).pluck(:kind)
+      expect(kinds).to contain_exactly("message_created", "user_mentioned")
+    end
+  end
 end

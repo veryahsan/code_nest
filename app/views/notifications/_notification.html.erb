@@ -5,6 +5,7 @@
   actor_label  = Conversation.participant_label(notification.actor)
   notifiable   = notification.notifiable
   body_preview = notifiable.is_a?(Message) ? notifiable.body.to_s.truncate(80) : ""
+  kind_caption = notification.kind == "user_mentioned" ? "mentioned you" : "sent a message"
 %>
 <%= link_to read_notification_path(notification),
       data: main_frame_data("turbo-method" => :patch,
@@ -15,7 +16,7 @@
   <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full <%= notification.read? ? 'bg-transparent' : 'bg-brand-500' %>"
         aria-hidden="true"></span>
   <span class="min-w-0 flex-1">
-    <span class="block truncate font-medium text-base-color"><%= actor_label %></span>
+    <span class="block truncate font-medium text-base-color"><%= actor_label %> <span class="font-normal text-muted-color"><%= kind_caption %></span></span>
     <% if body_preview.present? %>
       <span class="block truncate text-xs text-muted-color"><%= body_preview %></span>
     <% end %>

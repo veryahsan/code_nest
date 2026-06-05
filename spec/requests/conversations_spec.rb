@@ -99,5 +99,17 @@ RSpec.describe "Conversations", type: :request do
         post conversation_messages_path(conversation), params: { message: { body: "Hey" } }
       }.to change(conversation.messages, :count).by(1)
     end
+
+    it "stores sanitized rich html and derived plain text from body_html" do
+      conversation.add_participant(user)
+      sign_in user
+
+      post conversation_messages_path(conversation),
+           params: { message: { body_html: "<div><strong>bold</strong> hi</div>" } }
+
+      message = conversation.messages.last
+      expect(message.body_html).to include("<strong>bold</strong>")
+      expect(message.body).to eq("bold hi")
+    end
   end
 end

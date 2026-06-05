@@ -135,6 +135,75 @@ module ApplicationHelper
                 aria: { label: "#{label} avatar" }
   end
 
+  # ── Mention helpers ───────────────────────────────────────────────────────────
+
+  MENTION_PATTERN = /(?<!\w)@([a-z0-9_]+)/i
+
+  MENTION_CLASS = "font-medium text-brand-600 dark:text-brand-400"
+  MENTION_SELF_CLASS = "rounded bg-brand-100 px-0.5 font-medium text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
+
+  # Renders a plain-text message body as safe HTML, wrapping @handle tokens that
+  # match a known participant handle in a styled span (the viewer's own handle
+  # gets a distinct highlight). All non-mention text is HTML-escaped, so the
+  # output is XSS-safe even though the body is plain text.
+  #
+  #   handles:        Array/Set of valid handles for this conversation
+  #   current_handle: the viewer's handle, highlighted distinctly when mentioned
+  def highlight_mentions(body, handles:, current_handle: nil)
+    wrap_mentions(
+      body.to_s,
+      handle_set: mention_handle_set(handles),
+      current: current_handle.to_s.downcase,
+    ).html_safe
+  end
+
+  # Renders an already-sanitized rich HTML body, highlighting @handles inside its
+  # text nodes while leaving the formatting markup intact. Links and code are
+  # skipped so mentions inside them are not rewritten. The HTML is expected to be
+  # server-sanitized; mention text is still escaped per node.
+  def highlight_mentions_html(html, handles:, current_handle: nil)
+    handle_set = mention_handle_set(handles)
+    current = current_handle.to_s.downcase
+
+    fragment = Nokogiri::HTML5.fragment(html.to_s)
+    fragment.xpath(".//text()").each do |node|
+      next if node.ancestors.any? { |a| %w[a pre].include?(a.name) }
+
+      node.replace(wrap_mentions(node.content, handle_set: handle_set, current: current))
+    end
+    fragment.to_html.html_safe
+  end
+
+  # Escapes `text` and wraps participant @handles in highlight spans. Returns a
+  # plain (non-html_safe) String so callers can compose/parse it further.
+  def wrap_mentions(text, handle_set:, current:)
+    out = +""
+    cursor = 0
+
+    text.scan(MENTION_PATTERN) do
+      match  = Regexp.last_match
+      handle = match[1].downcase
+
+      out << ERB::Util.html_escape(text[cursor...match.begin(0)])
+
+      if handle_set.include?(handle)
+        css = (current.present? && handle == current) ? MENTION_SELF_CLASS : MENTION_CLASS
+        out << %(<span class="#{css}">@#{ERB::Util.html_escape(match[1])}</span>)
+      else
+        out << ERB::Util.html_escape(match[0])
+      end
+
+      cursor = match.end(0)
+    end
+
+    out << ERB::Util.html_escape(text[cursor..]) if cursor < text.length
+    out
+  end
+
+  def mention_handle_set(handles)
+    Array(handles).map { |h| h.to_s.downcase }.to_set
+  end
+
   # ── Pagination helpers ────────────────────────────────────────────────────────
 
   # Render the shared pagination partial for a Pagy::Offset instance.

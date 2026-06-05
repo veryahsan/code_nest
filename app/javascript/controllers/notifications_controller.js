@@ -90,6 +90,11 @@ export default class extends Controller {
     const actor = document.createElement("span")
     actor.className = "block truncate font-medium text-base-color"
     actor.textContent = data.actor_label || "Someone"
+    const caption = document.createElement("span")
+    caption.className = "font-normal text-muted-color"
+    caption.textContent =
+      data.kind === "user_mentioned" ? " mentioned you" : " sent a message"
+    actor.appendChild(caption)
     body.appendChild(actor)
 
     if (data.body_preview) {

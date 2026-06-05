@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_04_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_06_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,7 +88,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_04_000001) do
     t.string "job_title"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "handle"
     t.index ["manager_id"], name: "index_employees_on_manager_id"
+    t.index ["organisation_id", "handle"], name: "index_employees_on_org_and_handle", unique: true
     t.index ["organisation_id"], name: "index_employees_on_organisation_id"
     t.index ["user_id"], name: "index_employees_on_user_id", unique: true
   end
@@ -145,12 +147,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_04_000001) do
     t.index ["code"], name: "index_languages_on_code", unique: true
   end
 
+  create_table "message_mentions", force: :cascade do |t|
+    t.bigint "message_id", null: false
+    t.bigint "mentioned_user_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["mentioned_user_id"], name: "index_message_mentions_on_mentioned_user_id"
+    t.index ["message_id", "mentioned_user_id"], name: "index_message_mentions_on_message_id_and_mentioned_user_id", unique: true
+    t.index ["message_id"], name: "index_message_mentions_on_message_id"
+  end
+
   create_table "messages", force: :cascade do |t|
     t.bigint "conversation_id", null: false
     t.bigint "user_id", null: false
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "body_html"
     t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["user_id"], name: "index_messages_on_user_id"
@@ -301,6 +313,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_04_000001) do
   add_foreign_key "invitations", "organisations"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "issues", "projects"
+  add_foreign_key "message_mentions", "messages"
+  add_foreign_key "message_mentions", "users", column: "mentioned_user_id"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users"
   add_foreign_key "notifications", "users", column: "actor_id"

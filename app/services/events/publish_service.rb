@@ -20,7 +20,7 @@ module Events
       "user.signed_up"      => %w[Mailers::WelcomeEmailJob],
       "devise.notification" => %w[Mailers::DeviseNotificationJob],
       "invitation.created"  => %w[Mailers::InvitationEmailJob],
-      "message.created"     => %w[Notifications::FanoutJob],
+      "message.created"     => %w[Notifications::FanoutJob Mentions::NotifyJob],
     }.freeze
 
     def initialize(event:, **payload)

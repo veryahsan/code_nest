@@ -19,7 +19,7 @@ class ConversationChannel < ApplicationCable::Channel
     stop_all_streams
   end
 
-  # data => { "body" => "..." }
+  # data => { "body_html" => "<div>…</div>" } (rich) or { "body" => "…" } (plain)
   def speak(data)
     conversation = find_conversation
     return if conversation.nil?
@@ -28,6 +28,7 @@ class ConversationChannel < ApplicationCable::Channel
       conversation: conversation,
       user: current_user,
       body: data["body"],
+      body_html: data["body_html"],
     )
   end
 

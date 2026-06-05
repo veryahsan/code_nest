@@ -8,9 +8,16 @@
         { label: @conversation.display_title(current_user) },
       ] %>
 
-<div data-controller="conversation"
+<% mention_participants = @conversation.conversation_participants.includes(user: :employee).filter_map do |cp|
+     handle = cp.user.employee&.handle
+     next if handle.blank?
+
+     { user_id: cp.user_id, handle: handle, label: Conversation.participant_label(cp.user) }
+   end %>
+<div data-controller="conversation mention-autocomplete"
      data-conversation-id-value="<%= @conversation.id %>"
      data-conversation-user-id-value="<%= current_user.id %>"
+     data-conversation-current-handle-value="<%= current_user.employee&.handle %>"
      data-action="reaction-picker:selected->conversation#react">
   <%# Avatars the client clones into read-receipt rows; keyed by participant id. %>
   <div data-conversation-target="roster" class="hidden" aria-hidden="true">
@@ -18,6 +25,11 @@
       <span data-roster-user="<%= cp.user_id %>" title="<%= user_avatar_label(cp.user) %>" class="inline-flex"><%= user_avatar_tag(cp.user, css: "h-5 w-5", text: "text-[9px]") %></span>
     <% end %>
   </div>
+  <%# Participant handles for @mention autocomplete and highlighting (read by
+      both the conversation and mention-autocomplete controllers). %>
+  <script type="application/json"
+          data-conversation-target="participants"
+          data-mention-autocomplete-target="participants"><%= raw json_escape(mention_participants.to_json) %></script>
   <%# Cloned by conversation_controller#appendMessage so live messages get the picker too. %>
   <template data-conversation-target="reactionTemplate"><%= render "conversations/reaction_picker" %></template>
   <%= render "components/card", padded: false do %>
@@ -29,8 +41,12 @@
           <div class="group flex flex-col <%= mine ? 'items-end' : 'items-start' %>" data-message-id="<%= message.id %>">
             <span class="px-1 text-xs text-muted-color"><%= mine ? "You" : message.sender_label %></span>
             <div class="mt-0.5 flex items-center gap-1 <%= mine ? 'flex-row-reverse' : '' %>">
-              <div class="<%= mine ? 'max-w-[75%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white' : 'max-w-[75%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color' %>">
-                <%= message.body %>
+              <div class="<%= mine ? 'max-w-[75%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white' : 'max-w-[75%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color' %> <%= 'trix-content' if message.rich? %>">
+                <% if message.rich? %>
+                  <%= highlight_mentions_html(message.body_html, handles: mention_participants.map { |p| p[:handle] }, current_handle: current_user.employee&.handle) %>
+                <% else %>
+                  <%= highlight_mentions(message.body, handles: mention_participants.map { |p| p[:handle] }, current_handle: current_user.employee&.handle) %>
+                <% end %>
               </div>
               <%= render "conversations/reaction_picker" %>
             </div>
@@ -51,18 +67,35 @@
       <% end %>
     </div>
 
-    <div class="border-t border-surface p-3">
+    <div class="relative border-t border-surface p-3">
+      <%# Autocomplete suggestions; populated and toggled by the controller. %>
+      <ul data-mention-autocomplete-target="menu"
+          class="absolute bottom-full left-3 right-3 mb-1 hidden max-h-48 overflow-y-auto rounded-lg border border-surface bg-surface-raised shadow-lg z-10"></ul>
       <%= form_with url: conversation_messages_path(@conversation),
             scope: :message,
             method: :post,
             data: { conversation_target: "form", action: "submit->conversation#submit" },
-            class: "flex items-center gap-2" do |f| %>
-        <%= f.text_field :body,
-              placeholder: "Write a message…",
-              autocomplete: "off",
-              data: { conversation_target: "input" },
-              class: input_classes %>
-        <%= render "components/btn", label: "Send", type: :submit, variant: :primary, size: :sm %>
+            class: "flex flex-col gap-2" do |f| %>
+        <%# Trix writes its HTML into this hidden field; the conversation
+            controller reads it on submit and sends it over the channel. %>
+        <%= f.hidden_field :body_html, data: { conversation_target: "input" } %>
+        <%# Toolbar + editor share one bordered, focus-aware box. Trix inserts
+            its <trix-toolbar> as the first child of this wrapper. %>
+        <div class="composer">
+          <trix-editor input="<%= "#{f.object_name}_body_html" %>"
+                       placeholder="Write a message…"
+                       class="trix-content"
+                       data-mention-autocomplete-target="input"
+                       data-action="trix-change->mention-autocomplete#onInput keydown->mention-autocomplete#onKeydown keydown->conversation#onKeydown"></trix-editor>
+        </div>
+        <%# No-JS fallback: plain text field used when Trix never boots. %>
+        <noscript>
+          <%= f.text_field :body, placeholder: "Write a message…", autocomplete: "off", class: input_classes %>
+        </noscript>
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-muted-color">Enter to send · Shift + Enter for a new line</p>
+          <%= render "components/btn", label: "Send", type: :submit, variant: :primary, size: :sm %>
+        </div>
       <% end %>
     </div>
   <% end %>

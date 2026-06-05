@@ -1,19 +1,21 @@
 # frozen_string_literal: true
 
-# Delivers a single "message_created" notification to one recipient:
+# Delivers a single notification of the given kind to one recipient:
 #   1. Upserts the Notification row (find_or_create_by! on the uniqueness key so
 #      retries are idempotent).
 #   2. Broadcasts the payload to the recipient's NotificationsChannel stream so
 #      connected clients update the badge in real time.
 #
-# Enqueued (one per recipient) by Notifications::FanoutJob. Takes ids rather
-# than records so arguments stay small; if either record has since been
-# deleted the job no-ops.
+# Enqueued (one per recipient) by Notifications::FanoutJob ("message_created")
+# and Mentions::NotifyJob ("user_mentioned"). The kind is part of the
+# uniqueness key, so a mention and a generic message notification coexist on
+# the same message. Takes ids rather than records so arguments stay small; if
+# either record has since been deleted the job no-ops.
 module Notifications
   class DeliverJob < ApplicationJob
     queue_as :default
 
-    def perform(message_id:, recipient_id:)
+    def perform(message_id:, recipient_id:, kind: "message_created")
       message   = Message.find_by(id: message_id)
       recipient = User.find_by(id: recipient_id)
       return if message.nil? || recipient.nil?
@@ -22,7 +24,7 @@ module Notifications
         recipient:  recipient,
         actor:      message.user,
         notifiable: message,
-        kind:       "message_created"
+        kind:       kind
       )
 
       NotificationsChannel.broadcast_to(recipient, broadcast_payload(notification, message))
