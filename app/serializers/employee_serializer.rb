@@ -3,7 +3,7 @@
 class EmployeeSerializer < ApplicationSerializer
   set_type :employee
 
-  attributes :display_name, :job_title, :created_at, :updated_at
+  attributes :display_name, :handle, :job_title, :created_at, :updated_at
 
   attribute :user_id
   attribute :organisation_id

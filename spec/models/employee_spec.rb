@@ -50,4 +50,60 @@ RSpec.describe Employee, type: :model do
       expect(employee.errors[:manager]).to be_present
     end
   end
+
+  describe "handle generation" do
+    let(:org) { create(:organisation) }
+
+    it "auto-generates a handle from the email local-part on create" do
+      user = create(:user, organisation: org, email: "ada.lovelace@example.com")
+      employee = create(:employee, user: user, organisation: org)
+
+      expect(employee.handle).to eq("ada_lovelace")
+    end
+
+    it "appends a random suffix when the base is already taken in the org" do
+      first = create(:user, organisation: org, email: "sam@example.com")
+      second = create(:user, organisation: org, email: "sam@other.com")
+      create(:employee, user: first, organisation: org)
+
+      employee = create(:employee, user: second, organisation: org)
+
+      expect(employee.handle).to start_with("sam_")
+      expect(employee.handle).to match(/\Asam_[a-z0-9]{6}\z/)
+    end
+
+    it "allows the same handle in different organisations" do
+      other_org = create(:organisation)
+      user_a = create(:user, organisation: org, email: "lee@example.com")
+      user_b = create(:user, organisation: other_org, email: "lee@elsewhere.com")
+
+      create(:employee, user: user_a, organisation: org)
+      employee_b = create(:employee, user: user_b, organisation: other_org)
+
+      expect(employee_b.handle).to eq("lee")
+    end
+
+    it "honours an explicitly provided handle" do
+      user = create(:user, organisation: org)
+      employee = create(:employee, user: user, organisation: org, handle: "custom_handle")
+
+      expect(employee.handle).to eq("custom_handle")
+    end
+
+    it "rejects a handle outside the allowed grammar" do
+      employee = build(:employee, organisation: org, handle: "Has Spaces")
+      expect(employee).not_to be_valid
+      expect(employee.errors[:handle]).to be_present
+    end
+
+    it "enforces uniqueness within an organisation (case-insensitive)" do
+      user_a = create(:user, organisation: org)
+      user_b = create(:user, organisation: org)
+      create(:employee, user: user_a, organisation: org, handle: "dupe")
+
+      clash = build(:employee, user: user_b, organisation: org, handle: "DUPE")
+      expect(clash).not_to be_valid
+      expect(clash.errors[:handle]).to be_present
+    end
+  end
 end

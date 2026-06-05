@@ -11,6 +11,8 @@ module Employees
       @attributes = attributes.to_h.symbolize_keys
     end
 
+    MAX_HANDLE_RETRIES = 3
+
     def call
       @employee = @organisation.employees.new(
         user_id: @attributes[:user_id],
@@ -19,10 +21,24 @@ module Employees
         job_title: @attributes[:job_title],
       )
 
-      if @employee.save
-        success(@employee)
-      else
-        failure(@employee)
+      save_with_handle_retry
+    end
+
+    private
+
+    # The handle's uniqueness is guarded by a DB index, so a rare concurrent
+    # insert can raise RecordNotUnique even though validation passed. Clear the
+    # handle and retry so a fresh candidate is generated.
+    def save_with_handle_retry
+      attempts = 0
+
+      begin
+        @employee.save ? success(@employee) : failure(@employee)
+      rescue ActiveRecord::RecordNotUnique
+        raise if (attempts += 1) > MAX_HANDLE_RETRIES
+
+        @employee.handle = nil
+        retry
       end
     end
   end

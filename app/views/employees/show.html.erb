@@ -36,6 +36,10 @@
         <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.display_name.presence || "—" %></dd>
       </div>
       <div>
+        <dt class="text-xs uppercase tracking-wide text-muted-color">Handle</dt>
+        <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.handle.present? ? "@#{@employee.handle}" : "—" %></dd>
+      </div>
+      <div>
         <dt class="text-xs uppercase tracking-wide text-muted-color">Job title</dt>
         <dd class="text-zinc-900 dark:text-zinc-100"><%= @employee.job_title.presence || "—" %></dd>
       </div>
