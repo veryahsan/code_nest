@@ -15,6 +15,9 @@
   when "project_membership_created"
     lead, kind_caption = "You were added to #{notifiable.is_a?(Project) ? notifiable.name : "a project"}", ""
     body_preview = ""
+  when "issue_assigned"
+    lead, kind_caption = actor_label, "assigned you an issue"
+    body_preview = notifiable.is_a?(Issue) ? notifiable.issue_key : ""
   else
     lead, kind_caption = actor_label, "sent a message"
     body_preview = notifiable.is_a?(Message) ? notifiable.body.to_s.truncate(80) : ""

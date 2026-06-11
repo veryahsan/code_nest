@@ -61,6 +61,25 @@ RSpec.describe Notifications::DeliveryJob, type: :job do
       .exactly(:once)
   end
 
+  it "enqueues a RecordJob for the assignee on issue.assigned" do
+    project  = create(:project)
+    assignee = create(:user, organisation: project.organisation)
+    assignor = create(:user, organisation: project.organisation)
+    issue    = create(:issue, project: project, assignee: assignee, assignor: assignor)
+
+    expect {
+      described_class.new.perform(event: "issue.assigned", issue: issue)
+    }.to have_enqueued_job(Notifications::RecordJob)
+      .with(
+        recipient_id:    assignee.id,
+        actor_id:        assignor.id,
+        notifiable_type: "Issue",
+        notifiable_id:   issue.id,
+        kind:            "issue_assigned"
+      )
+      .exactly(:once)
+  end
+
   it "enqueues nothing for an event without a notification route" do
     user = create(:user)
 

@@ -25,7 +25,8 @@ module Events
       "invitation.created"         => %w[Mailers::DeliveryJob],
       "invitation.accepted"        => %w[Mailers::DeliveryJob Notifications::DeliveryJob],
       "project_membership.created" => %w[Mailers::DeliveryJob Notifications::DeliveryJob],
-      "message.created"            => %w[Notifications::DeliveryJob]
+      "message.created"            => %w[Notifications::DeliveryJob],
+      "issue.assigned"             => %w[Notifications::DeliveryJob]
     }.freeze
 
     def initialize(event:, **payload)

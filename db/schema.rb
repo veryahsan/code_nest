@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_11_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_11_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_11_120000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "comments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "commentable_type", null: false
+    t.bigint "commentable_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["commentable_type", "commentable_id", "created_at"], name: "index_comments_on_commentable_and_created_at"
+    t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
   create_table "conversation_participants", force: :cascade do |t|
@@ -145,6 +157,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_11_120000) do
     t.integer "priority", default: 1, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "assignee_id"
+    t.bigint "assignor_id"
+    t.index ["assignee_id"], name: "index_issues_on_assignee_id"
+    t.index ["assignor_id"], name: "index_issues_on_assignor_id"
     t.index ["issue_key"], name: "index_issues_on_issue_key", unique: true
     t.index ["project_id", "number"], name: "index_issues_on_project_id_and_number", unique: true
     t.index ["project_id"], name: "index_issues_on_project_id"
@@ -311,6 +327,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_11_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "comments", "users"
   add_foreign_key "conversation_participants", "conversations"
   add_foreign_key "conversation_participants", "users"
   add_foreign_key "conversations", "organisations"
@@ -323,6 +340,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_11_120000) do
   add_foreign_key "invitations", "organisations"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "issues", "projects"
+  add_foreign_key "issues", "users", column: "assignee_id"
+  add_foreign_key "issues", "users", column: "assignor_id"
   add_foreign_key "message_mentions", "messages"
   add_foreign_key "message_mentions", "users", column: "mentioned_user_id"
   add_foreign_key "messages", "conversations"

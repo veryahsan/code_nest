@@ -58,6 +58,16 @@ RSpec.describe Events::PublishService, type: :service do
       .with(event: "project_membership.created", project_membership: membership)
   end
 
+  it "routes issue.assigned to Notifications::DeliveryJob only" do
+    issue = create(:issue)
+    clear_enqueued_jobs
+
+    expect { described_class.call(event: "issue.assigned", issue: issue) }
+      .to have_enqueued_job(Notifications::DeliveryJob).with(event: "issue.assigned", issue: issue)
+
+    expect(Mailers::DeliveryJob).not_to have_been_enqueued
+  end
+
   it "enqueues nothing for an unregistered event" do
     expect { described_class.call(event: "unknown.event", foo: "bar") }
       .not_to have_enqueued_job

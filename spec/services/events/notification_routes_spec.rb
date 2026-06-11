@@ -70,6 +70,37 @@ RSpec.describe Events::NotificationRoutes do
       end
     end
 
+    describe "issue.assigned" do
+      let(:project) { create(:project) }
+      let(:assignee) { create(:user, organisation: project.organisation) }
+      let(:assignor) { create(:user, organisation: project.organisation) }
+
+      it "notifies the assignee with the issue as notifiable and the assignor as actor" do
+        issue = create(:issue, project: project, assignee: assignee, assignor: assignor)
+
+        deliveries = described_class.deliveries_for("issue.assigned", issue: issue)
+
+        expect(deliveries.size).to eq(1)
+        delivery = deliveries.first
+        expect(delivery[:recipient_ids]).to eq([ assignee.id ])
+        expect(delivery[:actor_id]).to eq(assignor.id)
+        expect(delivery[:notifiable]).to eq(issue)
+        expect(delivery[:kind]).to eq("issue_assigned")
+      end
+
+      it "returns no deliveries when there is no assignee" do
+        issue = create(:issue, project: project)
+
+        expect(described_class.deliveries_for("issue.assigned", issue: issue)).to be_empty
+      end
+
+      it "returns no deliveries for a self-assignment" do
+        issue = create(:issue, project: project, assignee: assignee, assignor: assignee)
+
+        expect(described_class.deliveries_for("issue.assigned", issue: issue)).to be_empty
+      end
+    end
+
     it "returns no deliveries for an unregistered event" do
       expect(described_class.deliveries_for("unknown.event")).to eq([])
     end

@@ -5,6 +5,19 @@ require "rails_helper"
 RSpec.describe Issue, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:project) }
+    it { is_expected.to belong_to(:assignee).class_name("User").optional }
+    it { is_expected.to belong_to(:assignor).class_name("User").optional }
+    it { is_expected.to have_many(:comments).dependent(:destroy) }
+
+    it "has many attachments" do
+      issue = create(:issue)
+      issue.attachments.attach(
+        io: StringIO.new("hello"), filename: "note.txt", content_type: "text/plain"
+      )
+
+      expect(issue.attachments).to be_attached
+      expect(issue.attachments.count).to eq(1)
+    end
   end
 
   describe "validations" do
@@ -12,6 +25,32 @@ RSpec.describe Issue, type: :model do
 
     it { is_expected.to validate_presence_of(:summary) }
     it { is_expected.to validate_length_of(:summary).is_at_most(255) }
+
+    it "rejects an assignee from another organisation" do
+      project = create(:project)
+      foreign = create(:user, organisation: create(:organisation))
+      issue = build(:issue, project: project, assignee: foreign)
+
+      expect(issue).not_to be_valid
+      expect(issue.errors[:assignee]).to be_present
+    end
+
+    it "rejects an assignor from another organisation" do
+      project = create(:project)
+      foreign = create(:user, organisation: create(:organisation))
+      issue = build(:issue, project: project, assignor: foreign)
+
+      expect(issue).not_to be_valid
+      expect(issue.errors[:assignor]).to be_present
+    end
+
+    it "accepts an assignee from the project's organisation" do
+      project = create(:project)
+      member = create(:user, organisation: project.organisation)
+      issue = build(:issue, project: project, assignee: member)
+
+      expect(issue).to be_valid
+    end
 
     it "rejects blank summary after normalization" do
       issue = build(:issue, summary: "   ")
@@ -93,6 +132,42 @@ RSpec.describe Issue, type: :model do
 
       expect { issue.update!(summary: "Updated summary") }
         .to change { project.reload.updated_at }
+    end
+  end
+
+  describe "event publishing" do
+    let(:project) { create(:project) }
+    let(:assignee) { create(:user, organisation: project.organisation) }
+    let(:assignor) { create(:user, organisation: project.organisation) }
+
+    it "publishes issue.assigned when an assignee is set" do
+      issue = create(:issue, project: project)
+      allow(Events::PublishService).to receive(:call).and_call_original
+
+      issue.update!(assignee: assignee, assignor: assignor)
+
+      expect(Events::PublishService).to have_received(:call)
+        .with(event: "issue.assigned", issue: issue)
+    end
+
+    it "does not publish issue.assigned when the assignee did not change" do
+      issue = create(:issue, project: project, assignee: assignee, assignor: assignor)
+      allow(Events::PublishService).to receive(:call).and_call_original
+
+      issue.update!(summary: "Changed summary")
+
+      expect(Events::PublishService).not_to have_received(:call)
+        .with(event: "issue.assigned", issue: issue)
+    end
+
+    it "does not publish issue.assigned when the assignee is cleared" do
+      issue = create(:issue, project: project, assignee: assignee, assignor: assignor)
+      allow(Events::PublishService).to receive(:call).and_call_original
+
+      issue.update!(assignee: nil)
+
+      expect(Events::PublishService).not_to have_received(:call)
+        .with(event: "issue.assigned", issue: issue)
     end
   end
 end

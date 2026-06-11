@@ -102,6 +102,9 @@ export default class extends Controller {
       case "project_membership_created":
         lead = `You were added to ${data.body_preview || "a project"}`
         break
+      case "issue_assigned":
+        captionText = "assigned you an issue"
+        break
       default:
         captionText = "sent a message"
     }

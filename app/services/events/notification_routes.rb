@@ -53,6 +53,18 @@ module Events
           notifiable:    project_membership.project,
           kind:          "project_membership_created"
         } ]
+      end,
+
+      "issue.assigned" => lambda do |issue:|
+        next [] if issue.assignee_id.nil?
+        next [] if issue.assignee_id == issue.assignor_id
+
+        [ {
+          recipient_ids: [ issue.assignee_id ],
+          actor_id:      issue.assignor_id,
+          notifiable:    issue,
+          kind:          "issue_assigned"
+        } ]
       end
     }.freeze
 

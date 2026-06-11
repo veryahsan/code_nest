@@ -72,6 +72,24 @@ RSpec.describe Notifications::RecordJob, type: :job do
     )
   end
 
+  it "broadcasts the issue key as the body preview for an assigned issue" do
+    project  = create(:project, organisation: org)
+    assignee = create(:user, organisation: org)
+    issue    = create(:issue, project: project, assignee: assignee, assignor: sender)
+
+    described_class.new.perform(
+      recipient_id:    assignee.id,
+      actor_id:        sender.id,
+      notifiable_type: "Issue",
+      notifiable_id:   issue.id,
+      kind:            "issue_assigned"
+    )
+
+    expect(NotificationsChannel).to have_received(:broadcast_to).with(
+      assignee, hash_including(kind: "issue_assigned", body_preview: issue.issue_key)
+    )
+  end
+
   it "no-ops when the notifiable no longer exists" do
     message_id = message.id
     message.destroy!

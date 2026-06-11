@@ -10,6 +10,7 @@ RSpec.describe Project, type: :model do
     it { is_expected.to have_many(:remote_resources).dependent(:destroy) }
     it { is_expected.to have_many(:project_documents).dependent(:destroy) }
     it { is_expected.to have_many(:issues).dependent(:destroy) }
+    it { is_expected.to have_many(:comments).dependent(:destroy) }
     it { is_expected.to have_one(:group_conversation).dependent(:destroy) }
   end
 

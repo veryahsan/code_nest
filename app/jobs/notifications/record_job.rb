@@ -55,6 +55,7 @@ module Notifications
       when Message    then notifiable.body.to_s.truncate(120)
       when Project    then notifiable.name
       when Invitation then notifiable.email
+      when Issue      then notifiable.issue_key
       else ""
       end
     end

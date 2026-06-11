@@ -33,13 +33,14 @@ class NotificationsController < ApplicationController
 
   # Resolve where a notification should take the user, based on its notifiable:
   # a Message lands on its conversation, a Project on the project page, an
-  # accepted Invitation on the invitations list. Unknown/deleted notifiables
-  # fall back to the notifications list.
+  # accepted Invitation on the invitations list, an assigned Issue on the issue
+  # page. Unknown/deleted notifiables fall back to the notifications list.
   def notification_target_path(notification)
     case notification.notifiable
     when Message    then conversation_path(notification.notifiable.conversation_id)
     when Project    then project_path(notification.notifiable)
     when Invitation then invitations_path
+    when Issue      then project_issue_path(notification.notifiable.project, notification.notifiable)
     else notifications_path
     end
   end

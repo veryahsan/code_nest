@@ -14,6 +14,7 @@ class Project < ApplicationRecord
   has_many :remote_resources, dependent: :destroy
   has_many :project_documents, dependent: :destroy
   has_many :issues, dependent: :destroy
+  has_many :comments, as: :commentable, dependent: :destroy
 
   # Every project owns exactly one group conversation, created the moment
   # the project is.
