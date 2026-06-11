@@ -1,0 +1,40 @@
+<%# Layout for show pages opened in the generic overlay. Selected by
+    ApplicationController#resolved_layout when a request targets the
+    `modal` Turbo Frame. Turbo swaps the matching <turbo-frame id="modal">
+    into the persistent host in the application layout, which carries the
+    `modal-frame` Stimulus controller that reveals/locks/closes the overlay.
+
+    The backdrop and close button dispatch to that controller via data-action
+    (events bubble up to the host element). The panel takes 95vw x 95vh. %>
+<%= turbo_frame_tag "modal" do %>
+  <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+    <%# Backdrop %>
+    <div data-action="click->modal-frame#close"
+         class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+         aria-hidden="true"></div>
+
+    <%# Panel — 95% of the viewport. %>
+    <div class="relative z-10 flex h-[95vh] w-[95vw] flex-col overflow-hidden rounded-2xl bg-white shadow-overlay dark:bg-zinc-900"
+         role="dialog"
+         aria-modal="true">
+      <div class="flex shrink-0 items-center justify-end border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+        <button type="button"
+                data-action="click->modal-frame#close"
+                class="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 ring-focus dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+          </svg>
+        </button>
+      </div>
+
+      <%# Default any links/forms in the show body to break out of the overlay
+          (full-page navigation) so edits, deletes, and their redirects don't
+          get trapped inside the modal frame. %>
+      <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6" data-turbo-frame="_top">
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </div>
+    </div>
+  </div>
+<% end %>

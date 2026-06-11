@@ -26,6 +26,22 @@ module ApplicationHelper
     title
   end
 
+  # ── Navigation helpers ───────────────────────────────────────────────────────
+
+  # Whether a top-nav link should render in its active state. Matches the
+  # current request against the link's path: exact match for the root/dashboard,
+  # otherwise a path-prefix match so nested pages (e.g. a project's show page)
+  # keep their section tab highlighted.
+  def nav_active?(href)
+    return false if href.blank?
+
+    link_path = href.to_s.split("?").first.sub(%r{/\z}, "")
+    current   = request.path.sub(%r{/\z}, "")
+    return current == link_path if link_path.blank? || link_path == "/"
+
+    current == link_path || current.start_with?("#{link_path}/")
+  end
+
   # ── Inline component helpers ──────────────────────────────────────────────────
   # These are convenience wrappers that render the component partials
   # when you want an inline call rather than a separate render statement.
@@ -133,6 +149,41 @@ module ApplicationHelper
     content_tag :span, initials,
                 class: "#{css} #{text} inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 font-semibold text-white select-none",
                 aria: { label: "#{label} avatar" }
+  end
+
+  # Conversation roster avatar(s): a single avatar for a direct message, or up
+  # to MAX_JAMMED_AVATARS overlapping ("jammed") avatars for a group, with a
+  # +N overflow badge when the group has more members. Used by the messages
+  # list rows and the thread header so both stay visually consistent.
+  MAX_JAMMED_AVATARS = 4
+
+  def conversation_avatars_tag(conversation, viewer = nil, css: "h-9 w-9", text: "text-xs")
+    members = conversation.participants.to_a
+
+    if conversation.direct?
+      other = viewer ? (members.reject { |u| u.id == viewer.id }.first || members.first) : members.first
+      return user_avatar_tag(other, css: css, text: text) if other
+
+      return initials_avatar_tag("?", label: "Direct message", css: css, text: text)
+    end
+
+    shown    = members.first(MAX_JAMMED_AVATARS)
+    overflow = members.size - shown.size
+
+    content_tag :div, class: "flex items-center" do
+      stack = shown.map do |member|
+        content_tag :span, class: "-ml-2 first:ml-0 rounded-full ring-2 ring-surface-raised" do
+          user_avatar_tag(member, css: css, text: text)
+        end
+      end
+
+      if overflow.positive?
+        stack << content_tag(:span, "+#{overflow}",
+          class: "-ml-2 inline-flex items-center justify-center rounded-full bg-zinc-100 #{text} font-semibold text-muted-color ring-2 ring-surface-raised dark:bg-zinc-800 #{css}")
+      end
+
+      safe_join(stack)
+    end
   end
 
   # ── Pagination helpers ────────────────────────────────────────────────────────

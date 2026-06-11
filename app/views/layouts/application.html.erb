@@ -49,22 +49,28 @@
 
   <body class="min-h-full bg-surface text-base-color">
     <% if user_signed_in? %>
-      <div data-controller="sidebar"
-           data-sidebar-main-frame-value="<%= main_content_frame_id %>">
-        <%= render "shared/sidebar" %>
+      <div class="flex min-h-full flex-col">
+        <%= render "shared/menu_capsule" %>
 
-        <div class="flex min-h-full flex-col md:pl-64">
-          <%= render "shared/mobile_topbar" %>
-
-          <main class="flex-1 relative z-0 isolate">
-            <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-5 pb-8">
-              <%= main_content_frame do %>
-                <%= yield %>
-              <% end %>
-            </div>
-          </main>
-        </div>
+        <main class="flex-1 relative z-0 isolate">
+          <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 pb-8">
+            <%= main_content_frame do %>
+              <%= yield %>
+            <% end %>
+          </div>
+        </main>
       </div>
+
+      <%# Generic show-page overlay. Links targeting this frame render their
+          show page inside a 95vw/95vh modal (see layouts/modal_show.html.erb);
+          the modal-frame controller toggles the overlay chrome on/off. %>
+      <%= turbo_frame_tag "modal",
+            class: "hidden",
+            data: {
+              controller: "modal-frame",
+              turbo_action: "advance",
+              action: "turbo:frame-load->modal-frame#onFrameLoad"
+            } %>
     <% else %>
       <div class="flex min-h-full flex-col">
         <%= render "shared/navbar" %>

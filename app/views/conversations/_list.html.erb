@@ -1,0 +1,47 @@
+<%# Left-hand conversation list for the messages split view. Required locals:
+    conversations, contacts, last_messages. `active_id` (optional) highlights
+    the open conversation. %>
+<% active_id = local_assigns.fetch(:active_id, nil) %>
+<div class="flex min-h-0 flex-col overflow-hidden border-r border-surface bg-surface-raised">
+  <div class="flex items-center justify-between gap-2 border-b border-surface px-4 py-3.5">
+    <h1 class="text-base font-semibold text-base-color">Messages</h1>
+    <%= link_to new_conversation_path,
+          class: "btn-base btn-secondary btn-sm",
+          title: "New group" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+      </svg>
+      <span class="ml-1">New group</span>
+    <% end %>
+  </div>
+
+  <% if contacts.any? %>
+    <div class="border-b border-surface px-3 py-2.5">
+      <%= form_with url: conversations_path, method: :post, class: "flex items-center gap-2", local: true do |f| %>
+        <%= f.select :other_user_id,
+              contacts.map { |u| [u.email, u.id] },
+              { include_blank: "Start a direct message\u2026" },
+              class: input_classes %>
+        <%= render "components/btn", label: "Go", type: :submit, variant: :primary, size: :sm %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+    <% if conversations.any? %>
+      <ul class="space-y-0.5">
+        <% conversations.each do |conversation| %>
+          <%= render "conversations/conversation_list_item",
+                conversation: conversation,
+                last_message: last_messages[conversation.id],
+                active: conversation.id == active_id %>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= render "components/empty_state",
+            icon: :inbox,
+            title: "No conversations yet",
+            description: "Start a direct message or create a group to begin chatting." %>
+    <% end %>
+  </div>
+</div>

@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
     authorize Project
     @pagy, @projects = pagy(
       policy_scope(current_organisation.projects)
-        .includes(:users, :languages, :technologies)
+        .includes(:languages, :technologies, users: { avatar_attachment: :blob })
         .order(:name),
     )
   end

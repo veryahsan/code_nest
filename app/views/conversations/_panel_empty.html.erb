@@ -1,0 +1,11 @@
+<%# Placeholder shown in the right-hand pane before a conversation is opened.
+    Wrapped in the `conversation_panel` frame so opening a conversation swaps
+    it for the thread. %>
+<%= turbo_frame_tag "conversation_panel", class: "flex min-h-0 flex-1 flex-col" do %>
+  <div class="flex flex-1 items-center justify-center">
+    <%= render "components/empty_state",
+          icon: :inbox,
+          title: "Select a conversation",
+          description: "Choose a conversation from the list to start chatting." %>
+  </div>
+<% end %>

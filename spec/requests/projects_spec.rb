@@ -78,6 +78,24 @@ RSpec.describe "Projects", type: :request do
     end
   end
 
+  describe "GET /projects/:id" do
+    let(:project) { create(:project, organisation: org, name: "Phoenix") }
+
+    it "renders the tabbed show page with the project name and section tabs" do
+      create(:project_membership, project: project, user: member)
+      sign_in member
+      get project_path(project)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Phoenix")
+      expect(response.body).to include('data-controller="tabs"')
+      %w[Overview Issues Members Documents Resources].each do |label|
+        expect(response.body).to include(label)
+      end
+      expect(response.body).to include(member.email)
+    end
+  end
+
   describe "PATCH /projects/:id" do
     let(:project) { create(:project, organisation: org, name: "Phoenix") }
 

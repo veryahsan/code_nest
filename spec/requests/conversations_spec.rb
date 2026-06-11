@@ -23,6 +23,28 @@ RSpec.describe "Conversations", type: :request do
       expect(response.body).to include("Roadmap")
       expect(response.body).not_to include("Secret")
     end
+
+    it "renders rows that load the thread into the conversation_panel frame" do
+      conversation = create(:conversation, organisation: org, title: "Roadmap")
+      conversation.add_participant(user)
+
+      sign_in user
+      get conversations_path
+
+      expect(response.body).to include('id="conversation_panel"')
+      expect(response.body).to include('data-turbo-frame="conversation_panel"')
+    end
+
+    it "shows the latest message as a preview in each row" do
+      conversation = create(:conversation, organisation: org, title: "Roadmap")
+      conversation.add_participant(user)
+      create(:message, conversation: conversation, user: other, body: "Latest line")
+
+      sign_in user
+      get conversations_path
+
+      expect(response.body).to include("Latest line")
+    end
   end
 
   describe "POST /conversations (direct)" do
@@ -86,6 +108,34 @@ RSpec.describe "Conversations", type: :request do
 
       participant = conversation.conversation_participants.find_by(user: user)
       expect(participant.last_read_at).to be_present
+    end
+
+    it "returns the thread inside the conversation_panel frame for a frame request" do
+      conversation.add_participant(user)
+      create(:message, conversation: conversation, user: user, body: "Hello world")
+
+      sign_in user
+      get conversation_path(conversation), headers: { "Turbo-Frame" => "conversation_panel" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('id="conversation_panel"')
+      expect(response.body).to include("Hello world")
+    end
+
+    it "renders the conversation list alongside the thread on a full-page load" do
+      conversation.add_participant(user)
+      create(:message, conversation: conversation, user: user, body: "Hello world")
+      other_convo = create(:conversation, organisation: org, title: "Roadmap")
+      other_convo.add_participant(user)
+
+      sign_in user
+      get conversation_path(conversation)
+
+      expect(response).to have_http_status(:ok)
+      # The open thread...
+      expect(response.body).to include("Hello world")
+      # ...and the left list (another conversation the user belongs to).
+      expect(response.body).to include("Roadmap")
     end
   end
 

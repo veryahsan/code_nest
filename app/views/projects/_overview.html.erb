@@ -1,0 +1,81 @@
+<%# Overview tab: project metadata (slug, lead, languages, technologies) plus
+    attach-language / attach-technology forms for editors. %>
+<dl class="grid grid-cols-1 gap-y-4 text-sm sm:max-w-2xl">
+  <div>
+    <dt class="text-xs uppercase tracking-wide text-muted-color">Slug</dt>
+    <dd class="font-mono text-xs text-muted-color"><%= @project.slug %></dd>
+  </div>
+  <div>
+    <dt class="text-xs uppercase tracking-wide text-muted-color">Lead</dt>
+    <dd class="text-zinc-900 dark:text-zinc-100"><%= @project.lead&.email || "Unassigned" %></dd>
+  </div>
+  <div>
+    <dt class="text-xs uppercase tracking-wide text-muted-color">Languages</dt>
+    <dd class="text-zinc-900 dark:text-zinc-100">
+      <% if @languages.any? %>
+        <div class="flex flex-wrap gap-1 mt-1">
+          <% @languages.each do |l| %>
+            <% if policy(@project).update? %>
+              <%= button_to project_project_language_path(@project, @project.project_languages.find_by(language: l)),
+                    method: :delete,
+                    data: { turbo_confirm: "Detach #{l.name}?" },
+                    form: { class: "inline" },
+                    class: "btn-base btn-ghost btn-sm" do %>
+                <%= l.name %>
+              <% end %>
+            <% else %>
+              <%= badge_tag l.name, variant: :neutral %>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="italic text-muted-color">None</span>
+      <% end %>
+    </dd>
+  </div>
+  <div>
+    <dt class="text-xs uppercase tracking-wide text-muted-color">Technologies</dt>
+    <dd class="text-zinc-900 dark:text-zinc-100">
+      <% if @technologies.any? %>
+        <div class="flex flex-wrap gap-1 mt-1">
+          <% @technologies.each do |t| %>
+            <% if policy(@project).update? %>
+              <%= button_to project_project_technology_path(@project, @project.project_technologies.find_by(technology: t)),
+                    method: :delete,
+                    data: { turbo_confirm: "Detach #{t.name}?" },
+                    form: { class: "inline" },
+                    class: "btn-base btn-ghost btn-sm" do %>
+                <%= t.name %>
+              <% end %>
+            <% else %>
+              <%= badge_tag t.name, variant: :brand %>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="italic text-muted-color">None</span>
+      <% end %>
+    </dd>
+  </div>
+</dl>
+
+<% if policy(@project).update? %>
+  <hr class="my-6 border-zinc-200 dark:border-zinc-800 sm:max-w-2xl" />
+  <h4 class="text-xs uppercase tracking-wide text-muted-color mb-2">Attach a language</h4>
+  <%= form_with url: project_project_languages_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
+    <%= f.select :language_id,
+          Language.where.not(id: @languages.select(:id)).order(:name).map { |l| [l.name, l.id] },
+          { include_blank: "Select…" },
+          class: input_classes %>
+    <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
+  <% end %>
+
+  <h4 class="text-xs uppercase tracking-wide text-muted-color mt-6 mb-2">Attach a technology</h4>
+  <%= form_with url: project_project_technologies_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
+    <%= f.select :technology_id,
+          Technology.where.not(id: @technologies.select(:id)).order(:name).map { |t| [t.name, t.id] },
+          { include_blank: "Select…" },
+          class: input_classes %>
+    <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
+  <% end %>
+<% end %>

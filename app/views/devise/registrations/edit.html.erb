@@ -5,7 +5,7 @@
       description: "Update your profile picture." %>
 
 <div class="max-w-lg">
-  <%= render "components/card", title: "Profile" do %>
+  <%= render "components/card", boxed: true, title: "Profile" do %>
     <%= render "devise/shared/error_messages", resource: resource %>
 
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name),

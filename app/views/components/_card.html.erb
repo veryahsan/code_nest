@@ -2,30 +2,55 @@
   # Optional:
   #   title        card heading
   #   description  subtitle below title
-  #   padded       true/false  (default: true)
-  #   shadow       true/false  (default: false – border only)
+  #   padded       true/false  (default: true) — applies only when boxed
+  #   shadow       true/false  (default: false – border only) — boxed only
+  #   boxed        true/false  (default: false) — when true, render the framed
+  #                card (rounded border + raised background + padding). When
+  #                false (default), render a plain full-width section so the
+  #                content uses all available space without the boxed chrome.
   #   extra_class
+  #   body_class   extra classes for the content wrapper
 
   card_title   = local_assigns.fetch(:title, nil)
   card_desc    = local_assigns.fetch(:description, nil)
   padded       = local_assigns.fetch(:padded, true)
   show_shadow  = local_assigns.fetch(:shadow, false)
+  boxed        = local_assigns.fetch(:boxed, false)
   extra_class  = local_assigns.fetch(:extra_class, nil)
-
-  wrapper_cls = ["card", show_shadow ? "shadow-card" : nil, extra_class].compact.join(" ")
+  body_class   = local_assigns.fetch(:body_class, nil)
 %>
 
-<div class="<%= wrapper_cls %>">
-  <% if card_title.present? %>
-    <div class="card-header">
-      <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= card_title %></h3>
-      <% if card_desc.present? %>
-        <p class="mt-0.5 text-xs text-muted-color"><%= card_desc %></p>
-      <% end %>
-    </div>
-  <% end %>
+<% if boxed %>
+  <% wrapper_cls = ["card", show_shadow ? "shadow-card" : nil, extra_class].compact.join(" ") %>
+  <div class="<%= wrapper_cls %>">
+    <% if card_title.present? %>
+      <div class="card-header">
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= card_title %></h3>
+        <% if card_desc.present? %>
+          <p class="mt-0.5 text-xs text-muted-color"><%= card_desc %></p>
+        <% end %>
+      </div>
+    <% end %>
 
-  <div class="<%= padded ? "card-body" : "" %>">
-    <%= yield %>
+    <div class="<%= [padded ? "card-body" : nil, body_class].compact.join(" ") %>">
+      <%= yield %>
+    </div>
   </div>
-</div>
+<% else %>
+  <section class="<%= ["flex flex-col", extra_class].compact.join(" ") %>">
+    <% if card_title.present? %>
+      <div class="mb-5 flex items-baseline justify-between gap-3 border-b border-surface pb-4">
+        <div class="min-w-0">
+          <h3 class="text-base font-semibold tracking-tight text-base-color"><%= card_title %></h3>
+          <% if card_desc.present? %>
+            <p class="mt-1 text-xs text-muted-color"><%= card_desc %></p>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="<%= ["min-w-0", body_class].compact.join(" ") %>">
+      <%= yield %>
+    </div>
+  </section>
+<% end %>

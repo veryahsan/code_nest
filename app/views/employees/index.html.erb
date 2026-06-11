@@ -32,7 +32,9 @@
               <td class="py-3.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
                 <div class="flex items-center gap-3">
                   <%= user_avatar_tag(emp.user, css: "h-8 w-8") %>
-                  <%= link_to (emp.display_name.presence || emp.user.email), employee_path(emp), class: "hover:underline truncate" %>
+                  <%= link_to (emp.display_name.presence || emp.user.email), employee_path(emp),
+                        data: { turbo_frame: "modal" },
+                        class: "hover:underline truncate" %>
                 </div>
               </td>
               <td class="py-3.5 pr-4 text-muted-color"><%= emp.job_title.presence || "—" %></td>

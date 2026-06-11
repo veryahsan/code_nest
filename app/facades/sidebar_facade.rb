@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# Packages everything the signed-in chrome (`shared/_sidebar.html.erb` +
-# `shared/_mobile_topbar.html.erb`) needs to render itself, so the views
-# never have to query the model layer or branch on user role inline.
+# Packages everything the signed-in chrome (`shared/_menu_capsule.html.erb`)
+# needs to render itself, so the views never have to query the model layer or
+# branch on user role inline.
 #
 # Set on the request via the `prepare_sidebar` before_action in
 # `ApplicationController`. Views read structured fields from `@sidebar`.

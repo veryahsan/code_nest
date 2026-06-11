@@ -21,28 +21,50 @@
         <thead>
           <tr class="text-xs text-muted-color border-b border-zinc-200 dark:border-zinc-800">
             <th class="pb-3 pr-4 font-medium">Name</th>
+            <th class="pb-3 pr-4 font-medium">Description</th>
             <th class="pb-3 pr-4 font-medium">Members</th>
-            <th class="pb-3 pr-4 font-medium">Stack</th>
-            <th class="pb-3 font-medium">Slug</th>
+            <th class="pb-3 font-medium text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
           <% @projects.each do |project| %>
+            <% members = project.users.to_a %>
             <tr>
-              <td class="py-3.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
-                <%= link_to project.name, project_path(project), class: "hover:underline" %>
+              <td class="py-3.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100 align-top">
+                <%= link_to project.name, project_path(project),
+                      data: { turbo_frame: "modal" },
+                      class: "hover:underline" %>
               </td>
-              <td class="py-3.5 pr-4 text-muted-color">
-                <%= pluralize(project.users.size, "member") %>
+              <td class="py-3.5 pr-4 text-muted-color align-top max-w-md">
+                <% if project.description.present? %>
+                  <p class="line-clamp-2"><%= project.description %></p>
+                <% else %>
+                  <span class="italic">No description</span>
+                <% end %>
               </td>
-              <td class="py-3.5 pr-4">
-                <div class="flex flex-wrap gap-1.5">
-                  <% project.technologies.each do |t| %>
-                    <%= badge_tag t.name, variant: :brand %>
-                  <% end %>
-                </div>
+              <td class="py-3.5 pr-4 align-top">
+                <% if members.any? %>
+                  <div class="flex items-center">
+                    <% members.first(3).each do |u| %>
+                      <span class="-ml-2 first:ml-0 rounded-full ring-2 ring-surface-raised">
+                        <%= user_avatar_tag(u, css: "h-7 w-7") %>
+                      </span>
+                    <% end %>
+                    <% if members.size > 3 %>
+                      <span class="-ml-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-[11px] font-semibold text-muted-color ring-2 ring-surface-raised dark:bg-zinc-800">
+                        +<%= members.size - 3 %>
+                      </span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-muted-color">—</span>
+                <% end %>
               </td>
-              <td class="py-3.5 font-mono text-xs text-muted-color"><%= project.slug %></td>
+              <td class="py-3.5 align-top text-right">
+                <%= link_to "View", project_path(project),
+                      data: { turbo_frame: "modal" },
+                      class: "btn-base btn-secondary btn-sm" %>
+              </td>
             </tr>
           <% end %>
         </tbody>

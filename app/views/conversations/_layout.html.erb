@@ -1,0 +1,22 @@
+<%# Messages split-pane shell: conversation list on the left, active pane on
+    the right. Required locals: conversations, contacts, last_messages.
+    `active_id` highlights the open row; `right_partial`/`right_locals` choose
+    what renders in the right pane (defaults to the empty placeholder). %>
+<%
+  active_id    = local_assigns.fetch(:active_id, nil)
+  right_partial = local_assigns.fetch(:right_partial, "conversations/panel_empty")
+  right_locals  = local_assigns.fetch(:right_locals, {})
+%>
+<%# Break out of the layout's horizontal padding + bottom padding so the chat
+    spans the full content width and height. %>
+<div class="-mx-4 -mb-8 grid h-[calc(100vh-6rem)] grid-cols-1 overflow-hidden border-t border-surface sm:-mx-6 lg:-mx-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+  <%= render "conversations/list",
+        conversations: conversations,
+        contacts: contacts,
+        last_messages: last_messages,
+        active_id: active_id %>
+
+  <div class="flex min-h-0 flex-col overflow-hidden bg-surface-raised">
+    <%= render right_partial, **right_locals %>
+  </div>
+</div>

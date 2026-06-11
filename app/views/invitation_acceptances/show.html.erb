@@ -5,7 +5,7 @@
       description: "Confirm to join as a #{@invitation.invite_admin? ? 'administrator' : 'member'}." %>
 
 <div class="flex justify-center">
-  <%= render "components/card", extra_class: "w-full max-w-lg" do %>
+  <%= render "components/card", boxed: true, extra_class: "w-full max-w-lg" do %>
     <%= form_with url: submit_invitation_acceptance_path(@invitation.token),
           method: :post,
           scope: :invitation_acceptance,

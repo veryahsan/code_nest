@@ -28,9 +28,19 @@ class ApplicationController < ActionController::Base
   end
 
   def resolved_layout
-    return "turbo_frame" if user_signed_in? && turbo_frame_request?
+    if user_signed_in? && turbo_frame_request?
+      return "modal_show" if turbo_frame_request_id == "modal"
+
+      return "turbo_frame"
+    end
 
     "application"
+  end
+
+  # The id of the Turbo Frame the current request targets, if any.
+  # (Rails sends it in the `Turbo-Frame` request header.)
+  def turbo_frame_request_id
+    request.headers["Turbo-Frame"]
   end
 
   # Prepares the structured data the signed-in chrome (sidebar + mobile

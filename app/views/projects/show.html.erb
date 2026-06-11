@@ -1,228 +1,93 @@
 <% page_title "#{@project.name} — Projects" %>
 
-<% if policy(@project).update? %>
-  <% content_for :page_actions do %>
-    <%= render "components/btn", label: "Edit", href: edit_project_path(@project), variant: :secondary, size: :sm %>
-    <%= render "components/btn", label: "Documents", href: project_documents_path(@project), variant: :secondary, size: :sm %>
-    <%= render "components/btn", label: "Resources", href: project_remote_resources_path(@project), variant: :secondary, size: :sm %>
-  <% end %>
-<% end %>
-
-<%= render "components/page_header",
-      title: @project.name,
-      description: @project.description,
-      breadcrumbs: [
-        { label: "Dashboard", href: dashboard_path },
-        { label: "Projects", href: projects_path },
-        { label: @project.name },
-      ] %>
-
-<div class="card-grid-2">
-  <%= render "components/card", title: "Overview" do %>
-    <dl class="grid grid-cols-1 gap-y-4 text-sm">
-      <div>
-        <dt class="text-xs uppercase tracking-wide text-muted-color">Slug</dt>
-        <dd class="font-mono text-xs text-muted-color"><%= @project.slug %></dd>
-      </div>
-      <div>
-        <dt class="text-xs uppercase tracking-wide text-muted-color">Lead</dt>
-        <dd class="text-zinc-900 dark:text-zinc-100"><%= @project.lead&.email || "Unassigned" %></dd>
-      </div>
-      <div>
-        <dt class="text-xs uppercase tracking-wide text-muted-color">Languages</dt>
-        <dd class="text-zinc-900 dark:text-zinc-100">
-          <% if @languages.any? %>
-            <div class="flex flex-wrap gap-1 mt-1">
-              <% @languages.each do |l| %>
-                <% if policy(@project).update? %>
-                  <%= button_to project_project_language_path(@project, @project.project_languages.find_by(language: l)),
-                        method: :delete,
-                        data: { turbo_confirm: "Detach #{l.name}?" },
-                        form: { class: "inline" },
-                        class: "btn-base btn-ghost btn-sm" do %>
-                    <%= l.name %>
-                  <% end %>
-                <% else %>
-                  <%= badge_tag l.name, variant: :neutral %>
-                <% end %>
-              <% end %>
-            </div>
-          <% else %>
-            <span class="italic text-muted-color">None</span>
-          <% end %>
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs uppercase tracking-wide text-muted-color">Technologies</dt>
-        <dd class="text-zinc-900 dark:text-zinc-100">
-          <% if @technologies.any? %>
-            <div class="flex flex-wrap gap-1 mt-1">
-              <% @technologies.each do |t| %>
-                <% if policy(@project).update? %>
-                  <%= button_to project_project_technology_path(@project, @project.project_technologies.find_by(technology: t)),
-                        method: :delete,
-                        data: { turbo_confirm: "Detach #{t.name}?" },
-                        form: { class: "inline" },
-                        class: "btn-base btn-ghost btn-sm" do %>
-                    <%= t.name %>
-                  <% end %>
-                <% else %>
-                  <%= badge_tag t.name, variant: :brand %>
-                <% end %>
-              <% end %>
-            </div>
-          <% else %>
-            <span class="italic text-muted-color">None</span>
-          <% end %>
-        </dd>
-      </div>
-    </dl>
-
-    <% if policy(@project).update? %>
-      <hr class="my-6 border-zinc-200 dark:border-zinc-800" />
-      <h4 class="text-xs uppercase tracking-wide text-muted-color mb-2">Attach a language</h4>
-      <%= form_with url: project_project_languages_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
-        <%= f.select :language_id,
-              Language.where.not(id: @languages.select(:id)).order(:name).map { |l| [l.name, l.id] },
-              { include_blank: "Select…" },
-              class: input_classes %>
-        <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
-      <% end %>
-
-      <h4 class="text-xs uppercase tracking-wide text-muted-color mt-6 mb-2">Attach a technology</h4>
-      <%= form_with url: project_project_technologies_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
-        <%= f.select :technology_id,
-              Technology.where.not(id: @technologies.select(:id)).order(:name).map { |t| [t.name, t.id] },
-              { include_blank: "Select…" },
-              class: input_classes %>
-        <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
-      <% end %>
+<%# ── Header: project name + real-data pills + actions ──────────────────── %>
+<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <div class="min-w-0">
+    <h1 class="text-2xl font-semibold tracking-tight text-base-color"><%= @project.name %></h1>
+    <% if @project.description.present? %>
+      <p class="mt-1 text-sm text-muted-color"><%= @project.description %></p>
     <% end %>
-  <% end %>
 
-  <%= render "components/card", title: "Issues", description: "Tracked work items for this project" do %>
-    <% if @issues.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-        <% @issues.each do |issue| %>
-          <li class="py-4 first:pt-0 flex items-start justify-between gap-3">
-            <div>
-              <%= link_to issue.issue_key, project_issue_path(@project, issue),
-                    class: "text-sm font-mono font-medium text-brand-600 hover:underline dark:text-brand-400" %>
-              <p class="text-sm text-zinc-900 dark:text-zinc-100 mt-1"><%= issue.summary %></p>
-              <div class="flex flex-wrap gap-2 mt-2">
-                <%= badge_tag issue.status.humanize, variant: :brand %>
-                <%= badge_tag issue.priority.humanize, variant: :warning %>
-              </div>
-            </div>
-            <% if policy(issue).update? %>
-              <%= link_to "Edit", edit_project_issue_path(@project, issue), class: "btn-link text-xs font-medium" %>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-    <% else %>
-      <%= render "components/empty_state",
-            icon: :inbox,
-            title: "No issues yet",
-            description: @can_manage_issues ? "You can create issues as project lead." : "Issues are managed by the project lead." %>
-    <% end %>
-    <div class="mt-6 flex flex-wrap gap-2">
-      <%= link_to "View all", project_issues_path(@project), class: "btn-link text-sm font-medium" %>
-      <% if @can_manage_issues %>
-        <%= render "components/btn", label: "New issue", href: new_project_issue_path(@project), variant: :primary, size: :sm %>
-      <% end %>
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-surface px-2.5 py-1 text-xs font-medium text-base-color">
+        <%= user_avatar_tag(@project.lead, css: "h-4 w-4", text: "text-[8px]") if @project.lead %>
+        <%= @project.lead ? Conversation.participant_label(@project.lead) : "Unassigned" %>
+        <span class="text-muted-color">· Lead</span>
+      </span>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-surface px-2.5 py-1 text-xs font-medium text-base-color">
+        <%= pluralize(@members.size, "member") %>
+      </span>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-surface px-2.5 py-1 text-xs font-medium text-base-color">
+        <%= pluralize(@languages.size, "language") %>
+      </span>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-surface px-2.5 py-1 text-xs font-medium text-base-color">
+        <%= pluralize(@technologies.size, "technology") %>
+      </span>
     </div>
-  <% end %>
+  </div>
 
-  <%= render "components/card", title: "Sub-resources" do %>
-    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-      <li class="py-4 first:pt-0 flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Documents</p>
-          <p class="text-xs text-muted-color"><%= pluralize(@project.project_documents.count, "doc") %> attached</p>
-        </div>
-        <%= link_to "Manage", project_documents_path(@project), class: "btn-link text-sm font-medium" %>
-      </li>
-      <li class="py-4 flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Remote resources</p>
-          <p class="text-xs text-muted-color"><%= pluralize(@project.remote_resources.count, "resource") %> attached</p>
-        </div>
-        <%= link_to "Manage", project_remote_resources_path(@project), class: "btn-link text-sm font-medium" %>
-      </li>
-    </ul>
-  <% end %>
-
-  <%= render "components/card", title: "Members", description: "People on this project and its group chat" do %>
-    <% if @members.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-        <% @members.each do |u| %>
-          <% membership = @project.project_memberships.find_by(user: u) %>
-          <li class="py-4 first:pt-0 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-3 min-w-0">
-              <%= user_avatar_tag(u, css: "h-8 w-8") %>
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                  <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate"><%= u.email %></p>
-                  <% if membership&.lead? %>
-                    <%= badge_tag "Project lead", variant: :brand, dot: true %>
-                  <% end %>
-                </div>
-                <p class="text-xs text-muted-color"><%= u.org_role.humanize %></p>
-              </div>
-            </div>
-            <div class="flex shrink-0 items-center gap-2">
-              <% if membership && policy(membership).promote_lead? && !membership.lead? %>
-                <%= button_to "Make lead",
-                      promote_lead_project_membership_path(@project, membership),
-                      method: :patch,
-                      class: "btn-base btn-ghost btn-sm text-brand-600 dark:text-brand-400" %>
-              <% end %>
-              <% if membership && policy(@project).update? %>
-                <%= button_to "Remove",
-                      project_membership_path(@project, membership),
-                      method: :delete,
-                      data: { turbo_confirm: "Remove #{u.email} from #{@project.name}?" },
-                      class: "btn-base btn-ghost btn-sm" %>
-              <% end %>
-            </div>
-          </li>
-        <% end %>
-      </ul>
-    <% else %>
-      <%= render "components/empty_state",
-            icon: :inbox,
-            title: "No members yet",
-            description: policy(@project).update? ? "Add people using the form below." : "Members will appear here once an admin adds them." %>
-    <% end %>
-
-    <% if policy(@project).update? %>
-      <% available = current_organisation.users.where.not(id: @project.users.select(:id)).order(:email) %>
-      <hr class="my-6 border-zinc-200 dark:border-zinc-800" />
-      <h4 class="text-xs uppercase tracking-wide text-muted-color mb-2">Add a member</h4>
-      <% if available.any? %>
-        <%= form_with url: project_memberships_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
-          <%= f.select :user_id,
-                available.map { |u| [u.email, u.id] },
-                { include_blank: "Select a user" },
-                class: input_classes %>
-          <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
-        <% end %>
-      <% else %>
-        <p class="text-sm text-muted-color">All organisation members are already on this project.</p>
-      <% end %>
-    <% end %>
+  <% if policy(@project).update? %>
+    <div class="flex shrink-0 flex-wrap items-center gap-2">
+      <%= render "components/btn", label: "Edit", href: edit_project_path(@project), variant: :secondary, size: :sm %>
+      <%= render "components/btn", label: "Documents", href: project_documents_path(@project), variant: :secondary, size: :sm %>
+      <%= render "components/btn", label: "Resources", href: project_remote_resources_path(@project), variant: :secondary, size: :sm %>
+    </div>
   <% end %>
 </div>
 
-<% if policy(@project).destroy? %>
-  <div class="mt-10">
-    <%= render "components/card", title: "Danger zone" do %>
-      <%= button_to "Delete project",
-            project_path(@project),
-            method: :delete,
-            data: { turbo_confirm: "Delete #{@project.name}? Documents, resources, and tag assignments will all be removed." },
-            class: "btn-base btn-danger btn-md" %>
+<%# ── Tabs ──────────────────────────────────────────────────────────────── %>
+<%
+  tab_base     = "border-b-2 px-1 py-3 text-sm font-medium transition-colors -mb-px"
+  tab_active   = "text-brand-600 border-brand-600 dark:text-brand-400 dark:border-brand-400"
+  tab_inactive = "text-muted-color border-transparent hover:text-base-color"
+%>
+<div class="mt-6"
+     data-controller="tabs"
+     data-tabs-active-value="<%= tab_active %>"
+     data-tabs-inactive-value="<%= tab_inactive %>">
+  <nav class="flex flex-wrap gap-6 border-b border-surface" aria-label="Project sections">
+    <% [
+         ["overview",  "Overview",  nil],
+         ["issues",    "Issues",    @issues.size],
+         ["members",   "Members",   @members.size],
+         ["documents", "Documents", @documents.size],
+         ["resources", "Resources", @remote_resources.size],
+       ].each do |name, label, count| %>
+      <button type="button"
+              role="tab"
+              data-tabs-target="tab"
+              data-tab-name="<%= name %>"
+              data-action="click->tabs#select"
+              class="<%= tab_base %> <%= tab_inactive %>">
+        <%= label %><% if count %> <span class="text-muted-color">(<%= count %>)</span><% end %>
+      </button>
     <% end %>
+  </nav>
+
+  <div data-tabs-target="panel" data-tab-panel="overview" class="py-6">
+    <%= render "projects/overview" %>
+  </div>
+  <div data-tabs-target="panel" data-tab-panel="issues" class="hidden py-6">
+    <%= render "projects/issues_panel" %>
+  </div>
+  <div data-tabs-target="panel" data-tab-panel="members" class="hidden py-6">
+    <%= render "projects/members_panel" %>
+  </div>
+  <div data-tabs-target="panel" data-tab-panel="documents" class="hidden py-6">
+    <%= render "projects/documents_panel" %>
+  </div>
+  <div data-tabs-target="panel" data-tab-panel="resources" class="hidden py-6">
+    <%= render "projects/resources_panel" %>
+  </div>
+</div>
+
+<% if policy(@project).destroy? %>
+  <div class="mt-8 border-t border-surface pt-6">
+    <h4 class="text-xs uppercase tracking-wide text-muted-color mb-3">Danger zone</h4>
+    <%= button_to "Delete project",
+          project_path(@project),
+          method: :delete,
+          data: { turbo_confirm: "Delete #{@project.name}? Documents, resources, and tag assignments will all be removed." },
+          class: "btn-base btn-danger btn-md" %>
   </div>
 <% end %>

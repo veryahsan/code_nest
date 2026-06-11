@@ -1,0 +1,29 @@
+<%# One row in the messages list. Clicking it loads the thread into the
+    right-hand `conversation_panel` frame and advances the URL to the
+    conversation. Required local: conversation. Optional: last_message, active. %>
+<% last_message = local_assigns.fetch(:last_message, nil) %>
+<% active = local_assigns.fetch(:active, false) %>
+<li>
+  <%= link_to conversation_path(conversation),
+        data: { turbo_frame: "conversation_panel", turbo_action: "advance" },
+        class: cn("flex items-center gap-3 rounded-lg px-2 py-2.5",
+                  active ? "bg-brand-50 dark:bg-brand-500/10" : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50") do %>
+    <div class="shrink-0">
+      <%= conversation_avatars_tag(conversation, current_user, css: "h-10 w-10") %>
+    </div>
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-sm font-medium text-base-color">
+        <%= conversation.display_title(current_user) %>
+      </p>
+      <p class="truncate text-xs text-muted-color mt-0.5">
+        <% if last_message %>
+          <% prefix = last_message.user_id == current_user.id ? "You: " : "#{last_message.sender_label}: " %>
+          <%= truncate("#{prefix}#{last_message.body}", length: 48) %>
+        <% else %>
+          <%= conversation.group? ? "Group" : "Direct message" %>
+          · <%= pluralize(conversation.conversation_participants.size, "member") %>
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+</li>

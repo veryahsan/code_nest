@@ -1,0 +1,150 @@
+<%# Renders a full conversation thread (header, scrollable messages, composer
+    and modals) for the right-hand pane of the messages split view. Required
+    locals: conversation, messages, readers. Wrapped in the `conversation_panel`
+    Turbo Frame so list rows can swap it in place. %>
+<%= turbo_frame_tag "conversation_panel", class: "flex min-h-0 flex-1 flex-col" do %>
+  <div data-controller="conversation image-lightbox"
+       data-conversation-id-value="<%= conversation.id %>"
+       data-conversation-user-id-value="<%= current_user.id %>"
+       data-image-lightbox-modal-value="#image-lightbox-modal"
+       data-action="reaction-picker:selected->conversation#react"
+       class="flex min-h-0 flex-1 flex-col">
+    <%# ── Thread header ──────────────────────────────────────────────────── %>
+    <div class="flex items-center justify-between gap-3 border-b border-surface px-4 py-3">
+      <div class="flex min-w-0 items-center gap-3">
+        <%= conversation_avatars_tag(conversation, current_user, css: "h-9 w-9") %>
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold text-base-color">
+            <%= conversation.display_title(current_user) %>
+          </p>
+          <p class="truncate text-xs text-muted-color">
+            <% if conversation.group? %>
+              Group · <%= pluralize(conversation.conversation_participants.size, "member") %>
+              <% if conversation.project_id %> · Project channel<% end %>
+            <% else %>
+              Direct message
+            <% end %>
+          </p>
+        </div>
+      </div>
+
+      <% if conversation.group? %>
+        <div class="flex shrink-0 items-center gap-2">
+          <button type="button"
+                  class="btn-base btn-secondary btn-sm"
+                  onclick="document.getElementById('members-modal').dispatchEvent(new CustomEvent('modal:open'))">
+            Members
+            <span class="ml-1 text-muted-color">· <%= conversation.conversation_participants.size %></span>
+          </button>
+          <% if policy(conversation).destroy? %>
+            <%= button_to "Delete group",
+                  conversation_path(conversation),
+                  method: :delete,
+                  data: { turbo_confirm: "Delete \u201C#{conversation.display_title(current_user)}\u201D? This removes the group and all its messages for everyone." },
+                  class: "btn-base btn-danger btn-sm" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Avatars the client clones into read-receipt rows; keyed by participant id. %>
+    <div data-conversation-target="roster" class="hidden" aria-hidden="true">
+      <% conversation.conversation_participants.includes(user: :employee).each do |cp| %>
+        <span data-roster-user="<%= cp.user_id %>" title="<%= user_avatar_label(cp.user) %>" class="inline-flex"><%= user_avatar_tag(cp.user, css: "h-5 w-5", text: "text-[9px]") %></span>
+      <% end %>
+    </div>
+    <%# Cloned by conversation_controller#appendMessage so live messages get the picker too. %>
+    <template data-conversation-target="reactionTemplate"><%= render "conversations/reaction_picker" %></template>
+
+    <div data-conversation-target="list"
+         class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+      <% if messages.any? %>
+        <% messages.each do |message| %>
+          <% mine = message.user_id == current_user.id %>
+          <div class="group flex flex-col <%= mine ? 'items-end' : 'items-start' %>" data-message-id="<%= message.id %>">
+            <span class="px-1 text-xs text-muted-color"><%= mine ? "You" : message.sender_label %></span>
+            <div class="mt-1 flex items-center gap-2 <%= mine ? 'flex-row-reverse' : '' %>">
+              <div class="<%= mine ? 'max-w-[85%] rounded-2xl rounded-br-sm bg-brand-600 px-4 py-2.5 text-sm text-white' : 'max-w-[85%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-4 py-2.5 text-sm text-base-color' %>">
+                <% if message.rich? %>
+                  <%= render "conversations/message_body", message: message %>
+                <% else %>
+                  <%= message.body %>
+                <% end %>
+              </div>
+              <%= render "conversations/reaction_picker" %>
+            </div>
+            <%= render "conversations/reactions", message: message %>
+            <div data-receipts-for="<%= message.id %>" class="flex flex-wrap gap-1 px-1 mt-1.5">
+              <% if message == messages.last %>
+                <% readers.each do |reader| %>
+                  <span data-receipt-user="<%= reader.id %>" title="<%= user_avatar_label(reader) %>" class="inline-flex"><%= user_avatar_tag(reader, css: "h-5 w-5", text: "text-[9px]") %></span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div data-conversation-target="empty" class="m-auto text-center">
+          <p class="text-sm text-muted-color">No messages yet. Say hello!</p>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="relative border-t border-surface px-4 py-3">
+      <% mention_users = conversation.conversation_participants
+                                      .includes(user: :employee)
+                                      .map(&:user) %>
+      <%# image-lightbox modal lives nearby but is referenced by id, so live
+          delegation still finds it. %>
+      <%= form_with url: conversation_messages_path(conversation),
+            scope: :message,
+            method: :post,
+            data: { conversation_target: "form", action: "submit->conversation#submit" },
+            class: "flex flex-col gap-2" do |f| %>
+        <%# Lexxy editor. It is a form-associated element, so it submits its HTML
+            under message[body_text] for the no-JS path; the conversation
+            controller reads its .value to send over the channel. The nested
+            <lexxy-prompt> drives @mention autocomplete natively, inserting an
+            Action Text attachment (sgid) for the chosen employee. %>
+        <div class="composer flex flex-col">
+          <%= f.lexxy_rich_text_area :body_text,
+                placeholder: "Write a message\u2026",
+                data: { conversation_target: "input" } do %>
+            <lexxy-prompt trigger="@" name="mention">
+              <%= render partial: "users/prompt_item", collection: mention_users, as: :user %>
+            </lexxy-prompt>
+          <% end %>
+          <div class="flex justify-end px-2 pb-2">
+            <%= render "components/btn", label: "Send", type: :submit, variant: :primary, size: :sm %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Shared lightbox for message image attachments. Driven by the
+        image-lightbox controller, which sets the <img> src on thumbnail click.
+        Sits above the pinned sidebar (z-[60]) on a transparent blurred backdrop;
+        the panel itself is chrome-less so the image floats over the blur. %>
+    <%= render "components/modal",
+          id: "image-lightbox-modal",
+          size: :xl,
+          z: "z-[60]",
+          hide_close: true,
+          backdrop_class: "bg-black/40 backdrop-blur-md",
+          panel_class: "bg-transparent shadow-none",
+          body_padding: "p-0" do %>
+      <img data-image-lightbox-target="image"
+           data-action="click->modal#close"
+           src=""
+           alt=""
+           class="mx-auto max-h-[85vh] w-auto cursor-zoom-out rounded-xl object-contain shadow-overlay">
+    <% end %>
+
+    <% if conversation.group? %>
+      <%# Members list. Admins (policy.remove_member?) get a per-row Remove. %>
+      <%= render "components/modal", id: "members-modal", title: "Members", size: :md do %>
+        <%= render "conversations/members", conversation: conversation %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

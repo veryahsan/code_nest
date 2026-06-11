@@ -1,59 +1,6 @@
 <% page_title "Messages — Code Nest" %>
 
-<% content_for :page_actions do %>
-  <%= render "components/btn", label: "New group", href: new_conversation_path, variant: :primary, size: :sm %>
-<% end %>
-
-<%= render "components/page_header",
-      title: "Messages",
-      description: "Direct messages and group conversations, in real time." %>
-
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-  <div class="lg:col-span-2">
-    <%= render "components/card", title: "Conversations" do %>
-      <% if @conversations.any? %>
-        <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-          <% @conversations.each do |conversation| %>
-            <li class="py-4 first:pt-0">
-              <%= link_to conversation_path(conversation),
-                    class: "flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50" do %>
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                    <%= conversation.display_title(current_user) %>
-                  </p>
-                  <p class="text-xs text-muted-color mt-0.5">
-                    <%= conversation.group? ? "Group" : "Direct message" %>
-                    · <%= pluralize(conversation.conversation_participants.size, "member") %>
-                    <% if conversation.project_id %> · Project channel<% end %>
-                  </p>
-                </div>
-                <%= badge_tag conversation.group? ? "Group" : "DM", variant: conversation.group? ? :brand : :neutral %>
-              <% end %>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <%= render "components/empty_state",
-              icon: :inbox,
-              title: "No conversations yet",
-              description: "Start a direct message or create a group to begin chatting." %>
-      <% end %>
-    <% end %>
-  </div>
-
-  <div class="space-y-6">
-    <%= render "components/card", title: "Start a direct message", description: "Message anyone in your organisation." do %>
-      <% if @contacts.any? %>
-        <%= form_with url: conversations_path, method: :post, class: "flex items-center gap-2", local: true do |f| %>
-          <%= f.select :other_user_id,
-                @contacts.map { |u| [u.email, u.id] },
-                { include_blank: "Select a person" },
-                class: input_classes %>
-          <%= render "components/btn", label: "Message", type: :submit, variant: :primary, size: :sm %>
-        <% end %>
-      <% else %>
-        <p class="text-sm text-muted-color">No one else is in your organisation yet.</p>
-      <% end %>
-    <% end %>
-  </div>
-</div>
+<%= render "conversations/layout",
+      conversations: @conversations,
+      contacts: @contacts,
+      last_messages: @last_messages %>

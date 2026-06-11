@@ -15,7 +15,7 @@
 
 <%= render "components/card" do %>
   <% if @notifications.any? %>
-    <div class="-mx-6 divide-y divide-surface" data-controller="notifications">
+    <div class="divide-y divide-surface" data-controller="notifications">
       <div data-notifications-target="list">
         <%= render @notifications %>
       </div>

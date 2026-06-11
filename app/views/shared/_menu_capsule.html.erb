@@ -1,0 +1,182 @@
+<%# Centered top "menu capsule" — replaces the left sidebar for signed-in app
+    pages. Pure markup; every field comes from @sidebar (SidebarFacade),
+    assembled by ApplicationController's `prepare_sidebar` before_action.
+
+    Layout: a pill-shaped bar pinned to the top-middle of the viewport. On md+
+    the section links sit inline inside the capsule; on small screens they
+    collapse into a `dropdown` menu behind a burger button. %>
+<% return if @sidebar.nil? %>
+
+<div class="sticky top-3 z-40 mb-6 flex justify-center px-3 sm:px-4">
+  <div class="flex w-full max-w-5xl items-center justify-between gap-2 sm:gap-3 rounded-full border border-surface bg-surface-raised/95 px-2 py-1.5 shadow-card backdrop-blur supports-[backdrop-filter]:bg-surface-raised/80 sm:px-3">
+
+    <%# ── Brand ─────────────────────────────────────────────────────────── %>
+    <%= link_to @sidebar.brand_href,
+          data: main_frame_data,
+          class: "flex shrink-0 items-center gap-2 rounded-full px-1.5 py-1 outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:px-2" do %>
+      <%= render "shared/brand_mark" %>
+    <% end %>
+
+    <%#
+      Active-tab state is recomputed client-side by `active_nav_controller.js`
+      after every Turbo navigation, because the capsule lives outside the
+      `main` frame and is not re-rendered on frame loads. The server-side
+      `nav_active?` is kept only for the correct first paint.
+    %>
+    <% nav_base        = "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors" %>
+    <% nav_active_cls  = "bg-brand-600 text-white shadow-sm" %>
+    <% nav_inactive    = "text-base-color hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+    <% icon_active_cls = "text-white" %>
+    <% icon_inactive   = "text-muted-color" %>
+
+    <%# ── Primary nav (inline at md+) ───────────────────────────────────── %>
+    <nav class="ml-1 hidden flex-1 items-center justify-center gap-1 md:flex"
+         aria-label="Primary navigation"
+         data-controller="active-nav"
+         data-active-nav-active-value="<%= nav_active_cls %>"
+         data-active-nav-inactive-value="<%= nav_inactive %>"
+         data-active-nav-active-icon-value="<%= icon_active_cls %>"
+         data-active-nav-inactive-icon-value="<%= icon_inactive %>">
+      <% @sidebar.primary_nav.each do |item| %>
+        <% active = nav_active?(item.href) %>
+        <%= link_to item.href,
+              data: main_frame_data("active-nav-target" => "link"),
+              aria: { current: ("page" if active) },
+              class: cn(nav_base, active ? nav_active_cls : nav_inactive) do %>
+          <%= render "shared/nav_icon", icon: item.icon, css: cn("h-4 w-4", active ? icon_active_cls : icon_inactive) %>
+          <%= item.label %>
+        <% end %>
+      <% end %>
+
+      <% if @sidebar.show_messages_section? %>
+        <% messages_active = nav_active?(@sidebar.messages_index_href) %>
+        <%= link_to @sidebar.messages_index_href,
+              data: main_frame_data("active-nav-target" => "link"),
+              aria: { current: ("page" if messages_active) },
+              class: cn(nav_base, messages_active ? nav_active_cls : nav_inactive) do %>
+          <%= render "shared/nav_icon", icon: :messages, css: cn("h-4 w-4", messages_active ? icon_active_cls : icon_inactive) %>
+          Messages
+        <% end %>
+      <% end %>
+    </nav>
+
+    <%# ── Trailing controls ─────────────────────────────────────────────── %>
+    <%# Bell · theme · profile sit together on the right of the capsule,
+        separated by thin "|" dividers. Spacing tightens on small screens. %>
+    <div class="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
+      <%= render "shared/notifications_bell" %>
+
+      <span class="h-5 w-px shrink-0 bg-surface" aria-hidden="true"></span>
+
+      <button type="button"
+              data-action="click->theme#toggle"
+              class="btn-base btn-ghost btn-icon-sm text-zinc-600 dark:text-zinc-400"
+              aria-label="Toggle colour theme">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="hidden h-5 w-5 dark:block">
+          <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06L5.404 4.343a.75.75 0 0 0-1.06 1.06l1.06 1.06Z"/>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="block h-5 w-5 dark:hidden">
+          <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+
+      <span class="h-5 w-px shrink-0 bg-surface" aria-hidden="true"></span>
+
+      <%# ── Account menu ────────────────────────────────────────────────── %>
+      <div class="relative" data-controller="dropdown">
+        <button type="button"
+                data-action="click->dropdown#toggle"
+                data-dropdown-target="trigger"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="Account menu"
+                class="flex items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+          <%= user_avatar_tag(@sidebar.avatar_user, variant: :thumb, css: "h-8 w-8") %>
+        </button>
+
+        <div data-dropdown-target="menu"
+             class="absolute right-0 z-50 mt-2 hidden w-60 rounded-xl border border-surface bg-surface-raised py-1 shadow-card">
+          <div class="border-b border-surface px-4 py-3">
+            <p class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= @sidebar.display_name %></p>
+            <p class="truncate text-xs text-muted-color">Signed in</p>
+          </div>
+
+          <%= link_to @sidebar.account_href,
+                data: main_frame_data,
+                class: "flex items-center gap-3 px-4 py-2 text-sm text-base-color transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-muted-color">
+              <path fill-rule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.31 7.575a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.992 6.992 0 0 1 7.5 3.256l.34-1.452ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+            </svg>
+            Account settings
+          <% end %>
+
+          <%= link_to @sidebar.logout_href,
+                data: {
+                  turbo_frame: "_top",
+                  turbo_method: :delete,
+                  turbo_confirm: "Sign out of Code Nest?",
+                  confirm_title: "Sign out",
+                  confirm_button: "Sign out",
+                  confirm_variant: "primary"
+                },
+                class: "flex items-center gap-3 px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+              <path fill-rule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M19 10a.75.75 0 0 0-.22-.53l-3.25-3.25a.75.75 0 1 0-1.06 1.06l1.97 1.97H8.75a.75.75 0 0 0 0 1.5h7.69l-1.97 1.97a.75.75 0 1 0 1.06 1.06l3.25-3.25A.75.75 0 0 0 19 10Z" clip-rule="evenodd" />
+            </svg>
+            Logout
+          <% end %>
+        </div>
+      </div>
+
+      <span class="h-5 w-px shrink-0 bg-surface md:hidden" aria-hidden="true"></span>
+
+      <%# ── Mobile nav menu (burger) ────────────────────────────────────── %>
+      <div class="relative md:hidden" data-controller="dropdown">
+        <button type="button"
+                data-action="click->dropdown#toggle"
+                data-dropdown-target="trigger"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="Open navigation menu"
+                class="btn-base btn-ghost btn-icon-sm text-zinc-700 dark:text-zinc-200">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+               stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+
+        <% m_base       = "flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors" %>
+        <% m_active_cls = "bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300" %>
+        <% m_inactive   = "text-base-color hover:bg-zinc-100 dark:hover:bg-zinc-800" %>
+        <div data-dropdown-target="menu"
+             class="absolute right-0 z-50 mt-2 hidden w-60 rounded-xl border border-surface bg-surface-raised py-1 shadow-card"
+             data-controller="active-nav"
+             data-active-nav-active-value="<%= m_active_cls %>"
+             data-active-nav-inactive-value="<%= m_inactive %>">
+          <% @sidebar.primary_nav.each do |item| %>
+            <% active = nav_active?(item.href) %>
+            <%= link_to item.href,
+                  data: main_frame_data("active-nav-target" => "link"),
+                  aria: { current: ("page" if active) },
+                  class: cn(m_base, active ? m_active_cls : m_inactive) do %>
+              <%= render "shared/nav_icon", icon: item.icon, css: "h-5 w-5 text-muted-color" %>
+              <%= item.label %>
+            <% end %>
+          <% end %>
+
+          <% if @sidebar.show_messages_section? %>
+            <% messages_active = nav_active?(@sidebar.messages_index_href) %>
+            <%= link_to @sidebar.messages_index_href,
+                  data: main_frame_data("active-nav-target" => "link"),
+                  aria: { current: ("page" if messages_active) },
+                  class: cn(m_base, messages_active ? m_active_cls : m_inactive) do %>
+              <%= render "shared/nav_icon", icon: :messages, css: "h-5 w-5 text-muted-color" %>
+              Messages
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
