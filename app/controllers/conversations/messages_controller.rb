@@ -18,7 +18,7 @@ module Conversations
         conversation: @conversation,
         user: current_user,
         body: params.dig(:message, :body),
-        body_html: params.dig(:message, :body_html),
+        body_text: params.dig(:message, :body_text),
       )
 
       respond_to do |format|

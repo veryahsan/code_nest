@@ -1,0 +1,5 @@
+<%# Renders a message's rich body. Action Text resolves any mention attachments
+    here (via employees/_employee), so this is the single source of truth for
+    message HTML, used both by the initial server render (conversations/show)
+    and the Action Cable broadcast (Message#rendered_body_html). %>
+<%= message.body_text %>
