@@ -17,7 +17,7 @@
 
 <div class="card-grid-2">
   <%= render "components/card", title: "Details" do %>
-    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+    <dl class="grid grid-cols-1 gap-y-4 text-sm">
       <div>
         <dt class="text-xs uppercase tracking-wide text-muted-color">Type</dt>
         <dd class="mt-1"><%= badge_tag @issue.issue_type.humanize, variant: :neutral %></dd>
@@ -42,14 +42,14 @@
   <%= render "components/card", title: "Project" do %>
     <p class="text-sm text-zinc-900 dark:text-zinc-100"><%= @project.name %></p>
     <p class="text-xs text-muted-color mt-1">Lead: <%= @project.lead&.email || "Unassigned" %></p>
-    <div class="mt-4">
+    <div class="mt-6">
       <%= link_to "Back to project", project_path(@project), class: "btn-link text-sm font-medium" %>
     </div>
   <% end %>
 </div>
 
 <% if policy(@issue).destroy? %>
-  <div class="mt-8">
+  <div class="mt-10">
     <%= render "components/card", title: "Danger zone" do %>
       <%= button_to "Delete issue",
             project_issue_path(@project, @issue),

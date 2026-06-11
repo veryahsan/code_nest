@@ -77,7 +77,7 @@ export default class extends Controller {
     link.dataset.notificationId = data.id
     link.dataset.read = data.read ? "true" : "false"
     link.className =
-      "flex items-start gap-2 px-3 py-2 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" +
+      "flex items-start gap-2.5 px-4 py-3 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800" +
       (data.read ? "" : " bg-brand-50/60 dark:bg-brand-500/10")
 
     const dot = document.createElement("span")

@@ -17,7 +17,7 @@
       ] %>
 
 <%= render "components/card", title: "Connection" do %>
-  <dl class="grid grid-cols-1 gap-y-3 text-sm">
+  <dl class="grid grid-cols-1 gap-y-4 text-sm">
     <div>
       <dt class="text-xs uppercase tracking-wide text-muted-color">URL</dt>
       <dd>
@@ -37,7 +37,7 @@
       <dd>
         <% if @show_credentials %>
           <% if @resource.credentials.present? %>
-            <pre class="text-xs bg-zinc-100 dark:bg-zinc-900 rounded p-3 overflow-x-auto"><%= @resource.credentials %></pre>
+            <pre class="text-xs bg-zinc-100 dark:bg-zinc-900 rounded-lg p-4 overflow-x-auto"><%= @resource.credentials %></pre>
           <% else %>
             <span class="italic text-muted-color">No credentials stored.</span>
           <% end %>
@@ -50,7 +50,7 @@
 <% end %>
 
 <% if policy(@resource).destroy? %>
-  <div class="mt-8">
+  <div class="mt-10">
     <%= render "components/card", title: "Danger zone" do %>
       <%= button_to "Delete resource",
             project_remote_resource_path(@project, @resource),

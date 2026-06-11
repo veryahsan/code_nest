@@ -17,9 +17,9 @@
 
 <%= render "components/card" do %>
   <% if @documents.any? %>
-    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
       <% @documents.each do |doc| %>
-        <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+        <li class="py-4 first:pt-0 flex items-start justify-between gap-3">
           <div>
             <%= link_to doc.title, project_document_path(@project, doc),
                   class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>

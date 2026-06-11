@@ -26,7 +26,7 @@
   has_error   = error_msg.present?
 %>
 
-<div class="<%= ["space-y-1", extra_class].compact.join(" ") %>">
+<div class="<%= ["space-y-1.5", extra_class].compact.join(" ") %>">
   <% if fg_label.present? %>
     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
            <%= for_id.present? ? "for=\"#{for_id}\"".html_safe : "" %>>

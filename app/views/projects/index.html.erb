@@ -16,33 +16,33 @@
 
 <%= render "components/card" do %>
   <% if @projects.any? %>
-    <div class="overflow-x-auto -mx-1">
+    <div class="overflow-x-auto">
       <table class="w-full text-sm text-left">
         <thead>
           <tr class="text-xs text-muted-color border-b border-zinc-200 dark:border-zinc-800">
-            <th class="pb-2 pr-4 font-medium">Name</th>
-            <th class="pb-2 pr-4 font-medium">Members</th>
-            <th class="pb-2 pr-4 font-medium">Stack</th>
-            <th class="pb-2 font-medium">Slug</th>
+            <th class="pb-3 pr-4 font-medium">Name</th>
+            <th class="pb-3 pr-4 font-medium">Members</th>
+            <th class="pb-3 pr-4 font-medium">Stack</th>
+            <th class="pb-3 font-medium">Slug</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
           <% @projects.each do |project| %>
             <tr>
-              <td class="py-2.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
+              <td class="py-3.5 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
                 <%= link_to project.name, project_path(project), class: "hover:underline" %>
               </td>
-              <td class="py-2.5 pr-4 text-muted-color">
+              <td class="py-3.5 pr-4 text-muted-color">
                 <%= pluralize(project.users.size, "member") %>
               </td>
-              <td class="py-2.5 pr-4">
-                <div class="flex flex-wrap gap-1">
+              <td class="py-3.5 pr-4">
+                <div class="flex flex-wrap gap-1.5">
                   <% project.technologies.each do |t| %>
                     <%= badge_tag t.name, variant: :brand %>
                   <% end %>
                 </div>
               </td>
-              <td class="py-2.5 font-mono text-xs text-muted-color"><%= project.slug %></td>
+              <td class="py-3.5 font-mono text-xs text-muted-color"><%= project.slug %></td>
             </tr>
           <% end %>
         </tbody>

@@ -16,7 +16,7 @@
 
 <div class="card-grid-2">
   <%= render "components/card", title: "Details" do %>
-    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+    <dl class="grid grid-cols-1 gap-y-4 text-sm">
       <div>
         <dt class="text-xs uppercase tracking-wide text-muted-color">Name</dt>
         <dd class="font-medium text-zinc-900 dark:text-zinc-100"><%= @organisation.name %></dd>
@@ -33,7 +33,7 @@
   <% end %>
 
   <%= render "components/card", title: "Footprint" do %>
-    <ul class="space-y-2 text-sm">
+    <ul class="space-y-3 text-sm">
       <li class="flex items-center justify-between">
         <span class="text-muted-color">Users</span>
         <%= badge_tag @organisation.users.count.to_s, variant: :neutral %>
@@ -55,7 +55,7 @@
 </div>
 
 <% if policy(@organisation).destroy? %>
-  <div class="mt-8">
+  <div class="mt-10">
     <%= render "components/card", title: "Danger zone", description: "Destroy the organisation. Only allowed when no other users belong to it." do %>
       <%= button_to "Delete organisation",
             organisation_path(@organisation),

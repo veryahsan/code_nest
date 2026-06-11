@@ -1,7 +1,9 @@
-<%# Flash messages use the alert component + dismissible controller for consistency. %>
-<div id="flash-messages" class="space-y-2 mb-6">
-  <% flash.each do |key, message| %>
-    <% next if message.blank? %>
+<%# Flash messages use the alert component + dismissible controller for consistency.
+    The wrapper only reserves spacing (mb-8) when at least one message is present,
+    so empty flash never leaves a gap at the top of a page. %>
+<% visible_flashes = flash.to_h.reject { |_key, message| message.blank? } %>
+<div id="flash-messages" class="<%= "space-y-3 mb-8" if visible_flashes.any? %>">
+  <% visible_flashes.each do |key, message| %>
     <%
       variant = case key.to_sym
                 when :notice  then :success

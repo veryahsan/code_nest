@@ -17,9 +17,9 @@
 
 <%= render "components/card" do %>
   <% if @resources.any? %>
-    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
       <% @resources.each do |r| %>
-        <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+        <li class="py-4 first:pt-0 flex items-start justify-between gap-3">
           <div>
             <%= link_to r.name, project_remote_resource_path(@project, r),
                   class: "text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline" %>

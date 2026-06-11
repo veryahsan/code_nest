@@ -1,4 +1,4 @@
-<%= form_with model: project, url: form_url, method: form_method, class: "space-y-4" do |f| %>
+<%= form_with model: project, url: form_url, method: form_method, class: "space-y-6" do |f| %>
   <% if project.errors.any? %>
     <%= render "components/alert",
           variant: :danger,
@@ -40,23 +40,27 @@
 
   <% if local_assigns[:languages].present? %>
     <%= render "components/form_group", label: "Languages", hint: "Multi-select. Update later from the project page." do %>
-      <%= f.collection_check_boxes :language_ids, languages, :id, :name do |b| %>
-        <label class="inline-flex items-center mr-3 text-sm">
-          <%= b.check_box(class: "mr-1") %>
-          <%= b.text %>
-        </label>
-      <% end %>
+      <div class="flex flex-wrap gap-x-4 gap-y-2">
+        <%= f.collection_check_boxes :language_ids, languages, :id, :name do |b| %>
+          <label class="inline-flex items-center gap-1.5 text-sm">
+            <%= b.check_box %>
+            <%= b.text %>
+          </label>
+        <% end %>
+      </div>
     <% end %>
   <% end %>
 
   <% if local_assigns[:technologies].present? %>
     <%= render "components/form_group", label: "Technologies", hint: "Multi-select. Update later from the project page." do %>
-      <%= f.collection_check_boxes :technology_ids, technologies, :id, :name do |b| %>
-        <label class="inline-flex items-center mr-3 text-sm">
-          <%= b.check_box(class: "mr-1") %>
-          <%= b.text %>
-        </label>
-      <% end %>
+      <div class="flex flex-wrap gap-x-4 gap-y-2">
+        <%= f.collection_check_boxes :technology_ids, technologies, :id, :name do |b| %>
+          <label class="inline-flex items-center gap-1.5 text-sm">
+            <%= b.check_box %>
+            <%= b.text %>
+          </label>
+        <% end %>
+      </div>
     <% end %>
   <% end %>
 

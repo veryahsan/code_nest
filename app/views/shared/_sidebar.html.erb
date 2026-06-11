@@ -41,7 +41,7 @@
 
     <%# ── Primary nav ──────────────────────────────────────────────── %>
     <nav class="flex-1 overflow-y-auto px-3 py-4">
-      <ul class="flex flex-col gap-0.5">
+      <ul class="flex flex-col gap-1">
         <% @sidebar.primary_nav.each do |item| %>
           <li>
             <%= link_to item.href,
@@ -74,7 +74,7 @@
                  data-disclosure-target="panel"
                  class="mt-0.5 hidden pl-9">
               <% if @sidebar.projects? %>
-                <ul class="flex flex-col gap-0.5 border-l border-surface pl-3">
+                <ul class="flex flex-col gap-1 border-l border-surface pl-3">
                   <% @sidebar.projects.each do |project| %>
                     <li>
                       <%= link_to project.name, project.href,
@@ -103,7 +103,7 @@
 
       <%# ── Messages: DMs + groups with unread counts ──────────────────── %>
       <% if @sidebar.show_messages_section? %>
-        <div class="mt-5" data-controller="conversations-nav">
+        <div class="mt-6" data-controller="conversations-nav">
           <div class="flex items-center justify-between px-3 pb-1">
             <%= link_to "Messages", @sidebar.messages_index_href,
                   data: main_frame_data,
@@ -111,7 +111,7 @@
           </div>
 
           <% if @sidebar.conversations? %>
-            <ul class="flex flex-col gap-0.5">
+            <ul class="flex flex-col gap-1">
               <% @sidebar.conversations.each do |conversation| %>
                 <li>
                   <%= link_to conversation.href,

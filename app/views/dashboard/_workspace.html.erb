@@ -38,9 +38,9 @@
 
   <%= render "components/card", title: "Your projects" do %>
     <% if @facade.projects.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <% @facade.projects.each do |project| %>
-          <li class="py-3 first:pt-0">
+          <li class="py-4 first:pt-0">
             <div class="flex items-start justify-between gap-2">
               <div>
                 <%= link_to project.name, project_path(project),
@@ -62,9 +62,9 @@
 
   <% if @facade.direct_reports? %>
     <%= render "components/card", title: "Direct reports", description: "People who report to you" do %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <% @facade.direct_reports.each do |report| %>
-          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
+          <li class="py-4 first:pt-0 flex items-center justify-between gap-2">
             <div class="flex items-center gap-3 min-w-0">
               <%= user_avatar_tag(report.user, css: "h-8 w-8") if report.user %>
               <div class="min-w-0">

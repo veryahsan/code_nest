@@ -25,7 +25,7 @@
                             "action" => "click->notifications#markReadOptimistic",
                             "notification-id" => notification.id,
                             "read" => notification.read?),
-      class: "flex items-start gap-2 px-3 py-2 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 #{'bg-brand-50/60 dark:bg-brand-500/10' unless notification.read?}" do %>
+      class: "flex items-start gap-2.5 px-4 py-3 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 #{'bg-brand-50/60 dark:bg-brand-500/10' unless notification.read?}" do %>
   <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full <%= notification.read? ? 'bg-transparent' : 'bg-brand-500' %>"
         aria-hidden="true"></span>
   <span class="min-w-0 flex-1">

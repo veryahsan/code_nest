@@ -97,7 +97,7 @@
 
   /* ── Input ───────────────────────────────────────────────── */
   .input {
-    @apply block w-full rounded-md border px-3 py-2 text-sm shadow-sm transition-colors
+    @apply block w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm transition-colors
            bg-white text-zinc-900 border-zinc-300 placeholder:text-zinc-400
            focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30
            disabled:cursor-not-allowed disabled:opacity-50
@@ -112,15 +112,15 @@
 
   /* ── Button base & sizes ─────────────────────────────────── */
   .btn-base {
-    @apply inline-flex items-center justify-center gap-2 rounded-md font-medium
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium
            transition-all duration-150 focus-visible:outline-none
            focus-visible:ring-2 focus-visible:ring-offset-2
            focus-visible:ring-offset-white dark:focus-visible:ring-offset-aqua-surface
            disabled:pointer-events-none disabled:opacity-50 select-none;
   }
   .btn-sm      { @apply h-8  px-3 text-xs;  }
-  .btn-md      { @apply h-9  px-4 text-sm;  }
-  .btn-lg      { @apply h-11 px-5 text-base; }
+  .btn-md      { @apply h-9  px-5 text-sm;  }
+  .btn-lg      { @apply h-11 px-6 text-base; }
   .btn-icon-sm { @apply h-8  w-8;  }
   .btn-icon-md { @apply h-9  w-9;  }
   .btn-icon-lg { @apply h-11 w-11; }
@@ -161,7 +161,7 @@
 
   /* ── Badges ──────────────────────────────────────────────── */
   .badge-base {
-    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1
            text-xs font-medium ring-1 ring-inset;
   }
   .badge-neutral {
@@ -191,7 +191,7 @@
 
   /* ── Alerts ──────────────────────────────────────────────── */
   .alert-base {
-    @apply flex gap-3 rounded-lg border p-4 text-sm;
+    @apply flex gap-3 rounded-xl border p-5 text-sm;
   }
   .alert-success {
     @apply bg-emerald-50 border-emerald-200 text-emerald-900
@@ -216,30 +216,30 @@
 
   /* ── Cards ───────────────────────────────────────────────── */
   .card {
-    @apply rounded-lg border bg-white border-zinc-200
+    @apply rounded-2xl border bg-white border-zinc-200
            dark:bg-aqua-card dark:border-aqua-border;
   }
   .card-padded {
-    @apply rounded-lg border bg-white border-zinc-200 p-4
+    @apply rounded-2xl border bg-white border-zinc-200 p-6
            dark:bg-aqua-card dark:border-aqua-border;
   }
   .card-header {
-    @apply px-4 py-3 border-b border-zinc-100 dark:border-aqua-border;
+    @apply px-6 py-4 border-b border-zinc-100 dark:border-aqua-border;
   }
-  .card-body   { @apply p-4; }
+  .card-body   { @apply p-6; }
   .card-footer {
-    @apply px-4 py-3 border-t border-zinc-100 dark:border-aqua-border;
+    @apply px-6 py-4 border-t border-zinc-100 dark:border-aqua-border;
   }
 
   /* ── Layout rhythm ─────────────────────────────────────────
      Every direct child of .section-stack (card, grid, list, heading,
      anything) gets top + bottom margin so sections never collide.
      Plain margin on explicit selectors — no padding, no :where(). */
-  .section-stack       { margin-top: 1.5rem; margin-bottom: 1.5rem; }
-  .section-stack > *   { margin-top: 1.5rem; margin-bottom: 1.5rem; }
-  .card-grid           { @apply grid gap-4 md:gap-6; }
-  .card-grid-2         { @apply grid gap-4 md:gap-6 md:grid-cols-2; }
-  .card-grid-3         { @apply grid gap-4 md:gap-6 md:grid-cols-3; }
+  .section-stack       { margin-top: 2rem; margin-bottom: 2rem; }
+  .section-stack > *   { margin-top: 2rem; margin-bottom: 2rem; }
+  .card-grid           { @apply grid gap-6 md:gap-8; }
+  .card-grid-2         { @apply grid gap-6 md:gap-8 md:grid-cols-2; }
+  .card-grid-3         { @apply grid gap-6 md:gap-8 md:grid-cols-3; }
 
   /* ── Focus ring ──────────────────────────────────────────── */
   .ring-focus {
@@ -260,18 +260,33 @@
 ────────────────────────────────────────────────────────────────────────────── */
 /* Composer: editor inside one bordered, focus-aware box. */
 .composer {
-  @apply overflow-hidden rounded-xl border border-zinc-200 bg-white transition-colors
+  @apply overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-colors
          focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/30
          dark:border-aqua-border dark:bg-aqua-card dark:focus-within:border-brand-400;
 }
 
 .composer lexxy-editor {
+  /* Compact the editor: a 3-line min height instead of Lexxy's default 8lh,
+     smaller toolbar gaps/icons, and tighter content padding so the composer
+     doesn't dominate the thread. */
+  --lexxy-editor-rows: 3lh;
+  --lexxy-editor-padding: 0.5rem 0.75rem;
+  --lexxy-toolbar-gap: 1px;
+  --lexxy-toolbar-icon-size: 0.875em;
   @apply block max-h-48 min-h-[3rem] w-full overflow-y-auto border-0 bg-transparent
-         px-3 py-2.5 text-sm leading-relaxed text-zinc-900 dark:text-aqua-high;
+         text-sm leading-relaxed text-zinc-900 dark:text-aqua-high;
 }
 .composer lexxy-editor:focus,
 .composer lexxy-editor:focus-within {
   @apply outline-none;
+}
+
+/* Slim toolbar: shorter buttons and a thin divider so the icon row is minimal. */
+.composer lexxy-toolbar {
+  padding: 1px 2px;
+}
+.composer .lexxy-editor__toolbar-button {
+  block-size: 1.6lh;
 }
 
 /* Tailwind's preflight strips list markers (ul,ol { list-style: none }) and
@@ -319,3 +334,13 @@ html.dark {
 .trix-content pre {
   @apply overflow-x-auto rounded bg-black/10 px-2 py-1 font-mono text-xs dark:bg-white/10;
 }
+
+/* Message image attachments render small thumbnails (Lexxy lets them grow to
+   32rem otherwise). They open full-size in a lightbox modal on click; the
+   `image-lightbox` controller intercepts the wrapping <a> so it never navigates. */
+.trix-content .attachment--preview img,
+.trix-content img {
+  @apply max-h-48 max-w-[220px] cursor-pointer rounded-lg object-cover;
+}
+.trix-content .attachment--preview { @apply inline-block; }
+.trix-content .attachment__caption { @apply hidden; }

@@ -10,7 +10,7 @@
 
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
                  multipart: true,
-                 html: { method: :put, class: "space-y-4" }) do |f| %>
+                 html: { method: :put, class: "space-y-6" }) do |f| %>
       <%# ── Avatar ─────────────────────────────────────────────────────────── %>
       <div class="flex items-center gap-4">
         <%= user_avatar_tag(resource, variant: :profile, css: "h-16 w-16") %>
@@ -19,7 +19,7 @@
           <%= f.file_field :avatar, id: "user_avatar",
                 accept: "image/jpeg,image/png,image/webp",
                 class: "block w-full text-sm text-muted-color
-                        file:mr-3 file:rounded-md file:border-0
+                        file:mr-3 file:rounded-lg file:border-0
                         file:bg-zinc-100 file:px-3 file:py-1.5
                         file:text-sm file:font-medium file:text-zinc-700
                         hover:file:bg-zinc-200

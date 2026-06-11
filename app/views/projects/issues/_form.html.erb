@@ -1,4 +1,4 @@
-<%= form_with model: issue, url: form_url, method: form_method, scope: :issue, class: "space-y-4" do |f| %>
+<%= form_with model: issue, url: form_url, method: form_method, scope: :issue, class: "space-y-6" do |f| %>
   <% if issue.errors.any? %>
     <%= render "components/alert",
           variant: :danger,
@@ -28,7 +28,7 @@
           class: input_classes(issue.errors[:description].any?) %>
   <% end %>
 
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
     <%= render "components/form_group",
           label: "Type",
           for_id: "issue_issue_type",

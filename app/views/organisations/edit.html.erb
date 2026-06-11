@@ -22,7 +22,7 @@
             dismissible: false %>
     <% end %>
 
-    <%= form_with model: @organisation, url: organisation_path(@organisation), method: :patch, class: "space-y-4" do |f| %>
+    <%= form_with model: @organisation, url: organisation_path(@organisation), method: :patch, class: "space-y-6" do |f| %>
       <%= render "components/form_group",
             label: "Name",
             for_id: "organisation_name",

@@ -19,7 +19,7 @@
 
 <div class="card-grid-2">
   <%= render "components/card", title: "Overview" do %>
-    <dl class="grid grid-cols-1 gap-y-3 text-sm">
+    <dl class="grid grid-cols-1 gap-y-4 text-sm">
       <div>
         <dt class="text-xs uppercase tracking-wide text-muted-color">Slug</dt>
         <dd class="font-mono text-xs text-muted-color"><%= @project.slug %></dd>
@@ -79,7 +79,7 @@
     </dl>
 
     <% if policy(@project).update? %>
-      <hr class="my-4 border-zinc-200 dark:border-zinc-800" />
+      <hr class="my-6 border-zinc-200 dark:border-zinc-800" />
       <h4 class="text-xs uppercase tracking-wide text-muted-color mb-2">Attach a language</h4>
       <%= form_with url: project_project_languages_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
         <%= f.select :language_id,
@@ -89,7 +89,7 @@
         <%= render "components/btn", label: "Add", type: :submit, variant: :primary, size: :sm %>
       <% end %>
 
-      <h4 class="text-xs uppercase tracking-wide text-muted-color mt-4 mb-2">Attach a technology</h4>
+      <h4 class="text-xs uppercase tracking-wide text-muted-color mt-6 mb-2">Attach a technology</h4>
       <%= form_with url: project_project_technologies_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
         <%= f.select :technology_id,
               Technology.where.not(id: @technologies.select(:id)).order(:name).map { |t| [t.name, t.id] },
@@ -102,14 +102,14 @@
 
   <%= render "components/card", title: "Issues", description: "Tracked work items for this project" do %>
     <% if @issues.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <% @issues.each do |issue| %>
-          <li class="py-3 first:pt-0 flex items-start justify-between gap-3">
+          <li class="py-4 first:pt-0 flex items-start justify-between gap-3">
             <div>
               <%= link_to issue.issue_key, project_issue_path(@project, issue),
                     class: "text-sm font-mono font-medium text-brand-600 hover:underline dark:text-brand-400" %>
-              <p class="text-sm text-zinc-900 dark:text-zinc-100 mt-0.5"><%= issue.summary %></p>
-              <div class="flex flex-wrap gap-1.5 mt-1.5">
+              <p class="text-sm text-zinc-900 dark:text-zinc-100 mt-1"><%= issue.summary %></p>
+              <div class="flex flex-wrap gap-2 mt-2">
                 <%= badge_tag issue.status.humanize, variant: :brand %>
                 <%= badge_tag issue.priority.humanize, variant: :warning %>
               </div>
@@ -126,7 +126,7 @@
             title: "No issues yet",
             description: @can_manage_issues ? "You can create issues as project lead." : "Issues are managed by the project lead." %>
     <% end %>
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="mt-6 flex flex-wrap gap-2">
       <%= link_to "View all", project_issues_path(@project), class: "btn-link text-sm font-medium" %>
       <% if @can_manage_issues %>
         <%= render "components/btn", label: "New issue", href: new_project_issue_path(@project), variant: :primary, size: :sm %>
@@ -135,15 +135,15 @@
   <% end %>
 
   <%= render "components/card", title: "Sub-resources" do %>
-    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
-      <li class="py-3 first:pt-0 flex items-center justify-between">
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <li class="py-4 first:pt-0 flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Documents</p>
           <p class="text-xs text-muted-color"><%= pluralize(@project.project_documents.count, "doc") %> attached</p>
         </div>
         <%= link_to "Manage", project_documents_path(@project), class: "btn-link text-sm font-medium" %>
       </li>
-      <li class="py-3 flex items-center justify-between">
+      <li class="py-4 flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Remote resources</p>
           <p class="text-xs text-muted-color"><%= pluralize(@project.remote_resources.count, "resource") %> attached</p>
@@ -155,10 +155,10 @@
 
   <%= render "components/card", title: "Members", description: "People on this project and its group chat" do %>
     <% if @members.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <% @members.each do |u| %>
           <% membership = @project.project_memberships.find_by(user: u) %>
-          <li class="py-3 first:pt-0 flex items-center justify-between gap-2">
+          <li class="py-4 first:pt-0 flex items-center justify-between gap-2">
             <div class="flex items-center gap-3 min-w-0">
               <%= user_avatar_tag(u, css: "h-8 w-8") %>
               <div class="min-w-0">
@@ -198,7 +198,7 @@
 
     <% if policy(@project).update? %>
       <% available = current_organisation.users.where.not(id: @project.users.select(:id)).order(:email) %>
-      <hr class="my-4 border-zinc-200 dark:border-zinc-800" />
+      <hr class="my-6 border-zinc-200 dark:border-zinc-800" />
       <h4 class="text-xs uppercase tracking-wide text-muted-color mb-2">Add a member</h4>
       <% if available.any? %>
         <%= form_with url: project_memberships_path(@project), method: :post, class: "flex items-center gap-2", local: true do |f| %>
@@ -216,7 +216,7 @@
 </div>
 
 <% if policy(@project).destroy? %>
-  <div class="mt-8">
+  <div class="mt-10">
     <%= render "components/card", title: "Danger zone" do %>
       <%= button_to "Delete project",
             project_path(@project),

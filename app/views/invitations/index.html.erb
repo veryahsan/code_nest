@@ -15,9 +15,9 @@
 <div class="card-grid-2">
   <%= render "components/card", title: "Pending" do %>
     <% if @pending.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <% @pending.each do |inv| %>
-          <li class="py-3 first:pt-0 flex flex-wrap items-center justify-between gap-2">
+          <li class="py-4 first:pt-0 flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-3 min-w-0">
               <%= email_avatar_tag(inv.email, css: "h-8 w-8") %>
               <div class="min-w-0">
@@ -61,9 +61,9 @@
 
   <%= render "components/card", title: "Recently accepted" do %>
     <% if @accepted.any? %>
-      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <% @accepted.each do |inv| %>
-          <li class="py-3 first:pt-0">
+          <li class="py-4 first:pt-0">
             <div class="flex items-center gap-3">
               <%= email_avatar_tag(inv.email, css: "h-8 w-8") %>
               <div>

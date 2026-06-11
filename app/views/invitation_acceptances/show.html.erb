@@ -9,7 +9,7 @@
     <%= form_with url: submit_invitation_acceptance_path(@invitation.token),
           method: :post,
           scope: :invitation_acceptance,
-          class: "space-y-4" do |f| %>
+          class: "space-y-6" do |f| %>
       <p class="text-sm text-zinc-700 dark:text-zinc-300">
         Email: <strong><%= @invitation.email %></strong>
       </p>

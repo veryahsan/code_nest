@@ -16,7 +16,7 @@
       ] %>
 
 <%= render "components/card", title: "Details" do %>
-  <dl class="grid grid-cols-1 gap-y-3 text-sm">
+  <dl class="grid grid-cols-1 gap-y-4 text-sm">
     <div>
       <dt class="text-xs uppercase tracking-wide text-muted-color">URL</dt>
       <dd>
@@ -35,7 +35,7 @@
       <dt class="text-xs uppercase tracking-wide text-muted-color">Metadata</dt>
       <dd>
         <% if @document.metadata.present? %>
-          <pre class="text-xs bg-zinc-100 dark:bg-zinc-900 rounded p-3 overflow-x-auto"><%= JSON.pretty_generate(@document.metadata) %></pre>
+          <pre class="text-xs bg-zinc-100 dark:bg-zinc-900 rounded-lg p-4 overflow-x-auto"><%= JSON.pretty_generate(@document.metadata) %></pre>
         <% else %>
           <span class="italic text-muted-color">—</span>
         <% end %>
@@ -45,7 +45,7 @@
 <% end %>
 
 <% if policy(@document).destroy? %>
-  <div class="mt-8">
+  <div class="mt-10">
     <%= render "components/card", title: "Danger zone" do %>
       <%= button_to "Delete document",
             project_document_path(@project, @document),

@@ -10,7 +10,7 @@
 
 <div class="flex justify-center">
   <%= render "components/card", extra_class: "w-full max-w-lg" do %>
-    <%= form_with model: @invitation, url: invitations_path, method: :post, class: "space-y-4" do |f| %>
+    <%= form_with model: @invitation, url: invitations_path, method: :post, class: "space-y-6" do |f| %>
       <% if @invitation.errors.any? %>
         <%= render "components/alert",
               variant: :danger,

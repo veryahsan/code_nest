@@ -68,15 +68,15 @@
               </div>
 
               <div class="grid grid-cols-3 gap-3">
-                <div class="rounded-lg border border-surface bg-surface p-3">
+                <div class="rounded-xl border border-surface bg-surface p-4">
                   <p class="text-xs text-muted-color">Projects</p>
                   <p class="mt-1 text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">12</p>
                 </div>
-                <div class="rounded-lg border border-surface bg-surface p-3">
+                <div class="rounded-xl border border-surface bg-surface p-4">
                   <p class="text-xs text-muted-color">Messages</p>
                   <p class="mt-1 text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">47</p>
                 </div>
-                <div class="rounded-lg border border-surface bg-surface p-3">
+                <div class="rounded-xl border border-surface bg-surface p-4">
                   <p class="text-xs text-muted-color">Invites</p>
                   <p class="mt-1 text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">8</p>
                 </div>
@@ -89,7 +89,7 @@
                   ["Mobile",           "5 members"],
                   ["Data & ML",        "4 members"],
                 ].each do |name, count| %>
-                  <li class="py-2.5 flex items-center justify-between">
+                  <li class="py-3 flex items-center justify-between">
                     <span class="text-sm text-zinc-900 dark:text-zinc-100"><%= name %></span>
                     <%= badge_tag count, variant: :neutral %>
                   </li>
@@ -152,7 +152,7 @@
       %>
       <% features.each do |feature| %>
         <%= render "components/card", shadow: true do %>
-          <div class="flex h-10 w-10 items-center justify-center rounded-md bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 mb-4">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                  stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
               <%= feature[:svg].html_safe %>
@@ -262,7 +262,7 @@
       </p>
     </div>
 
-    <div class="max-w-3xl mx-auto space-y-3">
+    <div class="max-w-3xl mx-auto space-y-4">
       <%
         faqs = [
           {
@@ -292,7 +292,7 @@
         ]
       %>
       <% faqs.each do |faq| %>
-        <details class="group rounded-lg border border-surface bg-surface-raised p-5 open:shadow-card">
+        <details class="group rounded-xl border border-surface bg-surface-raised p-6 open:shadow-card">
           <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
             <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= faq[:q] %></span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
@@ -308,7 +308,7 @@
     <%# Closing CTA — modest card, not a full-width band %>
     <div class="max-w-3xl mx-auto mt-12">
       <%= render "components/card", shadow: true do %>
-        <div class="text-center py-2">
+        <div class="text-center py-4">
           <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Ready to organise your engineering knowledge?
           </h3>

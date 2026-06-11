@@ -7,15 +7,24 @@
   # Or call:  document.getElementById('my-modal')?.dispatchEvent(new CustomEvent('modal:open'))
   #
   # Optional:
-  #   id           unique HTML id (required for targeting)
-  #   title        modal heading
-  #   size         :sm | :md | :lg | :xl  (default :md)
-  #   hide_close   true/false  (default false)
+  #   id              unique HTML id (required for targeting)
+  #   title           modal heading
+  #   size            :sm | :md | :lg | :xl  (default :md)
+  #   hide_close      true/false  (default false)
+  #   z               root z-index utility (default "z-50"); raise it to sit
+  #                   above pinned chrome like the sidebar (e.g. "z-[60]")
+  #   backdrop_class  backdrop styling (default a translucent dark blur)
+  #   panel_class     extra classes appended to the panel wrapper
+  #   body_padding    body padding utilities (default "px-6 py-5")
 
-  modal_id    = local_assigns.fetch(:id, "modal-#{rand(10_000)}")
-  modal_title = local_assigns.fetch(:title, nil)
-  sz          = local_assigns.fetch(:size, :md).to_sym
-  hide_close  = local_assigns.fetch(:hide_close, false)
+  modal_id       = local_assigns.fetch(:id, "modal-#{rand(10_000)}")
+  modal_title    = local_assigns.fetch(:title, nil)
+  sz             = local_assigns.fetch(:size, :md).to_sym
+  hide_close     = local_assigns.fetch(:hide_close, false)
+  z_cls          = local_assigns.fetch(:z, "z-50")
+  backdrop_class = local_assigns.fetch(:backdrop_class, "bg-black/50 backdrop-blur-sm")
+  panel_class    = local_assigns.fetch(:panel_class, nil)
+  body_padding   = local_assigns.fetch(:body_padding, "px-6 py-5")
 
   size_cls = {
     sm: "max-w-sm",
@@ -27,23 +36,23 @@
 
 <div id="<%= modal_id %>"
      data-controller="modal"
-     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     class="hidden fixed inset-0 <%= z_cls %> flex items-center justify-center p-4"
      role="dialog"
      aria-modal="true"
      <% if modal_title.present? %>aria-labelledby="<%= modal_id %>-title"<% end %>>
 
   <%# Backdrop %>
   <div data-action="click->modal#closeOnBackdrop"
-       class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+       class="absolute inset-0 <%= backdrop_class %> transition-opacity"
        aria-hidden="true"></div>
 
   <%# Panel %>
   <div data-modal-target="panel"
-       class="relative z-10 w-full <%= size_cls %> rounded-xl bg-white shadow-overlay
-              dark:bg-zinc-900 transform transition-all">
+       class="relative z-10 w-full <%= size_cls %> rounded-2xl bg-white shadow-overlay
+              dark:bg-zinc-900 transform transition-all <%= panel_class %>">
 
     <% if modal_title.present? || !hide_close %>
-      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
         <% if modal_title.present? %>
           <h2 id="<%= modal_id %>-title"
               class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -65,7 +74,7 @@
       </div>
     <% end %>
 
-    <div class="px-6 py-4">
+    <div class="<%= body_padding %>">
       <%= yield %>
     </div>
   </div>
