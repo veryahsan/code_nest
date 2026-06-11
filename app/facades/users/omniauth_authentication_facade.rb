@@ -24,16 +24,25 @@
 #        sign-ups (whose `after_confirmation` hook is bypassed by
 #        `skip_confirmation!`).
 #
+# When the SSO request originated from the sign-in page, the controller
+# forwards `flow: "login"`. In that case the 4th branch is skipped: we
+# refuse to silently create an account from /login and return an
+# "account not found" failure so the visitor is told to register first.
+# Sign-up (`/register`) sends no flow flag, so it keeps creating accounts.
+#
 # Both providers configured in Devise (Google, GitHub) return only verified
 # emails, so trusting `auth.info.email` is safe. If that ever changes, this
 # facade is the single place to tighten the check.
 module Users
   class OmniauthAuthenticationFacade < ApplicationFacade
     EMAIL_MISSING_ERROR = "the identity provider did not return an email address"
+    ACCOUNT_NOT_FOUND_ERROR = "no account found for that email - please register first"
+    LOGIN_FLOW = "login"
 
-    def initialize(auth:, current_user: nil)
+    def initialize(auth:, current_user: nil, flow: nil)
       @auth = auth
       @current_user = current_user
+      @flow = flow
     end
 
     def call
@@ -46,6 +55,8 @@ module Users
 
       local_user = User.find_by(email: email)
       return link_identity_to(local_user) if local_user
+
+      return failure(ACCOUNT_NOT_FOUND_ERROR) if @flow.to_s == LOGIN_FLOW
 
       create_user_and_finish_onboarding
     end

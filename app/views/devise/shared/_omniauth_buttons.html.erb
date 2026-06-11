@@ -9,16 +9,19 @@
 
   Optional locals:
     title:  heading text   (default: "Or continue with")
+    flow:   origin hint forwarded through the OAuth round-trip
+            (e.g. "login" so the callback refuses to create an account)
 %>
 <%
   providers = resource_class.respond_to?(:omniauth_providers) ? resource_class.omniauth_providers : []
+  flow = local_assigns[:flow]
 %>
 
 <% if providers.any? %>
   <div class="space-y-3 py-6">
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-<%= providers.size %>">
       <% providers.each do |provider| %>
-        <%= button_to omniauth_authorize_path(resource_name, provider),
+        <%= button_to omniauth_authorize_path(resource_name, provider, flow.present? ? { flow: flow } : {}),
               method: :post,
               data: { turbo: false },
               class: "btn-base btn-secondary btn-md w-full justify-center inline-flex items-center gap-2" do %>

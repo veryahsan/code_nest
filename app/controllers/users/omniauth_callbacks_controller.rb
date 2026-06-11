@@ -33,6 +33,7 @@ module Users
       result = Users::OmniauthAuthenticationFacade.call(
         auth: request.env["omniauth.auth"],
         current_user: current_user,
+        flow: request.env["omniauth.params"]&.fetch("flow", nil),
       )
 
       if result.success?

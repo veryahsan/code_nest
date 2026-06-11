@@ -105,6 +105,37 @@ RSpec.describe Users::OmniauthAuthenticationFacade, type: :facade do
       end
     end
 
+    context "when flow is login (SSO started on the sign-in page)" do
+      it "refuses to create a brand-new account and returns account-not-found" do
+        expect {
+          result = described_class.call(auth: auth, flow: "login")
+          expect(result).to be_failure
+          expect(result.error).to eq(described_class::ACCOUNT_NOT_FOUND_ERROR)
+        }.not_to change { [ User.count, Identity.count ] }
+      end
+
+      it "still auto-links the identity when a local user owns the email" do
+        local_user = create(:user, email: "sam@acme-sso.dev")
+
+        expect {
+          result = described_class.call(auth: auth, flow: "login")
+          expect(result).to be_success
+          expect(result.value).to eq(local_user)
+        }.to change { local_user.identities.count }.by(1)
+      end
+
+      it "still signs in a returning user with an existing identity" do
+        existing_user = create(:user)
+        create(:identity, user: existing_user, provider: "google_oauth2", uid: "google-uid-1")
+
+        expect {
+          result = described_class.call(auth: auth, flow: "login")
+          expect(result).to be_success
+          expect(result.value).to eq(existing_user)
+        }.not_to change { [ User.count, Identity.count ] }
+      end
+    end
+
     context "when the provider returns no email" do
       it "fails fast without touching the database" do
         emailless = OmniAuth::AuthHash.new(

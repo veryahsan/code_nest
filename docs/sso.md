@@ -32,7 +32,10 @@ both paths.
    3. **Local user** with the same email → attach identity to that user.
    4. **Brand-new visitor** → create a confirmed `User` + `Identity`,
       then run `Users::PostConfirmationFacade` so domain auto-attach &
-      onboarding work the same as a confirmed sign-up.
+      onboarding work the same as a confirmed sign-up. **Skipped when the
+      request started on `/login`** (see "Origin flag" below): the facade
+      returns an *"account not found — please register first"* failure
+      instead of creating an account.
 5. Devise signs the user in. They land on `/dashboard` (or `/admin`
    for super admins, via `ApplicationController#after_sign_in_path_for`).
 
@@ -63,6 +66,7 @@ available if they ever want to add a local password later.
         ├── Users::FindByOmniauthIdentityService ─────────► sign_in
         ├── current_user present ─────────────────────────► Users::LinkOmniauthIdentityService, sign_in
         ├── User.find_by(email:) present ─────────────────► Users::LinkOmniauthIdentityService, sign_in
+        ├── flow == "login" ──────────────────────────────► failure: account not found, register first
         └── neither ─────► Users::CreateFromOmniauthService ──┐
                                                               └─► Users::PostConfirmationFacade
                                                                       │
@@ -156,6 +160,9 @@ return link_identity_to(@current_user) if @current_user
 local = User.find_by(email: email)
 return link_identity_to(local) if local
 
+# Refuse to silently create an account when SSO started on /login.
+return failure(ACCOUNT_NOT_FOUND_ERROR) if @flow.to_s == "login"
+
 create_user_and_finish_onboarding
 ```
 
@@ -190,7 +197,29 @@ The four-branch resolution covers these real-world cases:
 | Returning SSO user                                                                             | Existing identity     |
 | Logged-in local-password user clicks **Link GitHub** in settings                               | `current_user` branch |
 | User with a local-password account uses Google for the first time (provider email matches)     | Email-match branch    |
-| Brand-new visitor signs in with GitHub                                                         | Create-user branch    |
+| Brand-new visitor signs in from `/register`                                                    | Create-user branch    |
+| Brand-new visitor signs in from `/login`                                                       | Account-not-found failure (no create) |
+
+### Origin flag — why `/login` cannot create accounts
+
+Both `/login` and `/register` render the same `_omniauth_buttons` partial
+pointing at the identical `omniauth_authorize_path`, so the callback has
+no built-in way to know which page started the flow. To distinguish them
+we thread a single origin hint through the OAuth round-trip:
+
+- `app/views/devise/sessions/new.html.erb` renders the buttons with
+  `flow: "login"`; `/register` passes no flag.
+- `_omniauth_buttons.html.erb` appends that value as a `?flow=login`
+  query param on the authorize URL.
+- OmniAuth's request phase stores request query params in the session and
+  re-exposes them at the callback as `request.env["omniauth.params"]`.
+- `Users::OmniauthCallbacksController` forwards
+  `request.env["omniauth.params"]["flow"]` into the facade as `flow:`.
+- When `flow == "login"`, the facade returns
+  `ACCOUNT_NOT_FOUND_ERROR` instead of running the create branch. Every
+  earlier branch (existing identity, settings link, email auto-link) is
+  unaffected, so returning and email-matched users still sign in from
+  `/login` — only brand-new account *creation* is refused there.
 
 ---
 
@@ -298,7 +327,7 @@ GitHub's OAuth app expects `Authorization callback URL` to be **exact**
 - `app/models/user.rb` — adds `:omniauthable` with `omniauth_providers: %i[google_oauth2 github]`, `has_many :identities, dependent: :destroy`, and the `password_required?` override above.
 
 ### Facades
-- `app/facades/users/omniauth_authentication_facade.rb` — orchestrates the four-branch decision tree and re-runs `Users::PostConfirmationFacade` for new SSO sign-ups.
+- `app/facades/users/omniauth_authentication_facade.rb` — orchestrates the four-branch decision tree, refuses to create an account when `flow == "login"`, and re-runs `Users::PostConfirmationFacade` for new SSO sign-ups.
 
 ### Services
 - `app/services/users/find_by_omniauth_identity_service.rb` — read-only lookup by `(provider, uid)`.
@@ -306,7 +335,7 @@ GitHub's OAuth app expects `Authorization callback URL` to be **exact**
 - `app/services/users/create_from_omniauth_service.rb` — creates a confirmed user + first identity in one transaction.
 
 ### Controllers & routes
-- `app/controllers/users/omniauth_callbacks_controller.rb` — thin HTTP shell over the facade.
+- `app/controllers/users/omniauth_callbacks_controller.rb` — thin HTTP shell over the facade; forwards the `flow` origin hint from `request.env["omniauth.params"]`.
 - `config/routes.rb` — `devise_for :users, controllers: { omniauth_callbacks: "users/omniauth_callbacks" }`.
 
 ### Configuration
@@ -314,10 +343,10 @@ GitHub's OAuth app expects `Authorization callback URL` to be **exact**
 - `config/locales/en.yml` — `devise.omniauth.providers.<provider>` button labels.
 
 ### Views
-- `app/views/devise/shared/_omniauth_buttons.html.erb` — the POST buttons.
+- `app/views/devise/shared/_omniauth_buttons.html.erb` — the POST buttons; accepts an optional `flow:` local and appends it as a `?flow=` query param on the authorize URL.
 - `app/views/devise/shared/_omniauth_icon.html.erb` — inline brand glyphs.
-- `app/views/devise/sessions/new.html.erb` — renders the buttons under the password form.
-- `app/views/devise/registrations/new.html.erb` — renders the buttons under the create-account form.
+- `app/views/devise/sessions/new.html.erb` — renders the buttons under the password form with `flow: "login"` so SSO from sign-in never creates an account.
+- `app/views/devise/registrations/new.html.erb` — renders the buttons under the create-account form (no flow flag, so SSO sign-up still creates accounts).
 
 ### Specs
 - `spec/models/identity_spec.rb`

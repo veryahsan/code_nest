@@ -57,6 +57,45 @@ RSpec.describe "Users::OmniauthCallbacks", type: :request do
         expect(flash[:alert]).to match(/google.*cancelled or failed/i)
       end
     end
+
+    context "when the SSO request originated from the sign-in page (flow=login)" do
+      it "refuses to create a new account and redirects to /login with a not-found flash" do
+        mock_omniauth(:google_oauth2,
+          uid: "g-login-only-1",
+          email: "stranger@no-account.example",
+          name: "Stranger",
+        )
+
+        expect {
+          # The request phase stores the `flow` query param in the session;
+          # following the redirect surfaces it as request.env["omniauth.params"].
+          post user_google_oauth2_omniauth_authorize_path(flow: "login")
+          follow_redirect!
+        }.not_to change { [ User.count, Identity.count ] }
+
+        expect(response).to redirect_to(new_user_session_path)
+        follow_redirect!
+        expect(flash[:alert]).to match(/register first/i)
+      end
+
+      it "still signs in a returning user who already has an identity" do
+        user = create(:user, email: "returning@acme.example")
+        create(:identity, user: user, provider: "google_oauth2", uid: "g-login-known-1")
+
+        mock_omniauth(:google_oauth2,
+          uid: "g-login-known-1",
+          email: "returning@acme.example",
+          name: "Returning User",
+        )
+
+        expect {
+          post user_google_oauth2_omniauth_authorize_path(flow: "login")
+          follow_redirect!
+        }.not_to change { [ User.count, Identity.count ] }
+
+        expect(response).to redirect_to(dashboard_path)
+      end
+    end
   end
 
   describe "GET /users/auth/github/callback" do

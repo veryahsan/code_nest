@@ -2,6 +2,7 @@
 
 <div class="flex justify-center">
   <%= render "components/card",
+        boxed: true,
         title: "Welcome back",
         description: "Sign in to continue collaborating with your team.",
         extra_class: "w-full max-w-lg" do %>
@@ -64,7 +65,8 @@
     <% end %>
 
     <%= render "devise/shared/omniauth_buttons",
-          title: "Or sign in with" %>
+          title: "Or sign in with",
+          flow: "login" %>
 
   <% end %>
 </div>
