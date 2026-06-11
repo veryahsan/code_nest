@@ -2,14 +2,17 @@
 
 # Central event bus for domain events.
 #
-# Maps a named event to one or more subscriber job classes. Each subscriber is
-# enqueued independently so failures in one channel (e.g. email) never block
-# another (e.g. in-app notification). PublishService itself is synchronous and
-# fast — it only enqueues jobs, it never does the work directly.
+# Maps a named event to one or more generic channel jobs (Mailers::DeliveryJob
+# for email, Notifications::DeliveryJob for in-app notifications). Each channel
+# is enqueued independently so a failure in one (e.g. email) never blocks
+# another (e.g. notification). PublishService itself is synchronous and fast —
+# it only enqueues jobs, it never does the work directly.
 #
-# To add a new subscriber: add its class name to the SUBSCRIBERS hash under the
-# relevant event key and implement the job. Jobs follow the same thin-delegate
-# pattern as the rest of the app (job → service).
+# The per-event *content* (which mailer/recipients/kind) lives in declarative
+# route registries (Events::EmailRoutes, Events::NotificationRoutes), so adding
+# a new event is a registry entry plus a channel mapping here — no new job
+# class. The event name is forwarded to the channel job so it can look up its
+# route.
 #
 # Usage:
 #   Events::PublishService.call(event: "user.signed_up", user: user)
@@ -17,10 +20,12 @@
 module Events
   class PublishService < ApplicationService
     SUBSCRIBERS = {
-      "user.signed_up"      => %w[Mailers::WelcomeEmailJob],
-      "devise.notification" => %w[Mailers::DeviseNotificationJob],
-      "invitation.created"  => %w[Mailers::InvitationEmailJob],
-      "message.created"     => %w[Notifications::FanoutJob Mentions::NotifyJob],
+      "user.signed_up"             => %w[Mailers::DeliveryJob],
+      "devise.notification"        => %w[Mailers::DeliveryJob],
+      "invitation.created"         => %w[Mailers::DeliveryJob],
+      "invitation.accepted"        => %w[Mailers::DeliveryJob Notifications::DeliveryJob],
+      "project_membership.created" => %w[Mailers::DeliveryJob Notifications::DeliveryJob],
+      "message.created"            => %w[Notifications::DeliveryJob]
     }.freeze
 
     def initialize(event:, **payload)
@@ -30,7 +35,7 @@ module Events
 
     def call
       SUBSCRIBERS.fetch(@event, []).each do |job_class_name|
-        job_class_name.constantize.perform_later(**@payload)
+        job_class_name.constantize.perform_later(event: @event, **@payload)
       end
       success(nil)
     end
