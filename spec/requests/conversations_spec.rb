@@ -100,15 +100,16 @@ RSpec.describe "Conversations", type: :request do
       }.to change(conversation.messages, :count).by(1)
     end
 
-    it "stores sanitized rich html and derived plain text from body_html" do
+    it "stores rich Action Text content and derives plain text from body_text" do
       conversation.add_participant(user)
       sign_in user
 
       post conversation_messages_path(conversation),
-           params: { message: { body_html: "<div><strong>bold</strong> hi</div>" } }
+           params: { message: { body_text: "<div><strong>bold</strong> hi</div>" } }
 
       message = conversation.messages.last
-      expect(message.body_html).to include("<strong>bold</strong>")
+      expect(message).to be_rich
+      expect(message.body_text.to_plain_text).to include("bold")
       expect(message.body).to eq("bold hi")
     end
   end

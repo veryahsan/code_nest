@@ -8,6 +8,13 @@ RSpec.describe Messages::CreateService, type: :service do
 
   before { conversation.add_participant(member) }
 
+  # Builds the Action Text markup Lexxy stores for an @mention: an attachment
+  # carrying the employee's signed global id.
+  def mention_tag(employee)
+    %(<action-text-attachment sgid="#{employee.attachable_sgid}" ) +
+      %(content-type="#{Employee::MENTION_CONTENT_TYPE}"></action-text-attachment>)
+  end
+
   it "persists a message for a participant" do
     result = described_class.call(conversation: conversation, user: member, body: "Hello")
 
@@ -31,103 +38,84 @@ RSpec.describe Messages::CreateService, type: :service do
     let(:org) { conversation.organisation }
     let(:alice) { create(:user, organisation: org) }
     let(:bob)   { create(:user, organisation: org) }
+    let!(:author_employee) { create(:employee, user: member, organisation: org, handle: "author") }
+    let!(:alice_employee)  { create(:employee, user: alice, organisation: org, handle: "alice") }
+    let!(:bob_employee)    { create(:employee, user: bob, organisation: org, handle: "bob") }
 
-    before do
-      create(:employee, user: member, organisation: org, handle: "author")
-      create(:employee, user: alice, organisation: org, handle: "alice")
-      create(:employee, user: bob, organisation: org, handle: "bob")
-      conversation.add_participant(alice)
-    end
+    before { conversation.add_participant(alice) }
 
     it "persists a MessageMention for a mentioned participant" do
-      result = described_class.call(conversation: conversation, user: member, body: "hey @alice")
+      result = described_class.call(
+        conversation: conversation,
+        user: member,
+        body_text: "<div>hey #{mention_tag(alice_employee)}</div>",
+      )
 
       expect(result).to be_success
       expect(result.value.mentioned_users).to contain_exactly(alice)
     end
 
-    it "ignores a handle that is not a participant" do
-      result = described_class.call(conversation: conversation, user: member, body: "hi @bob")
+    it "derives the plain-text body from the mention attachment" do
+      result = described_class.call(
+        conversation: conversation,
+        user: member,
+        body_text: "<div>hey #{mention_tag(alice_employee)}</div>",
+      )
+
+      expect(result.value.body).to include("hey", "@alice")
+    end
+
+    it "ignores a mention of someone who is not a participant" do
+      result = described_class.call(
+        conversation: conversation,
+        user: member,
+        body_text: "<div>hi #{mention_tag(bob_employee)}</div>",
+      )
 
       expect(result.value.mentioned_users).to be_empty
     end
 
     it "does not mention the author themselves" do
-      result = described_class.call(conversation: conversation, user: member, body: "@author @alice")
+      result = described_class.call(
+        conversation: conversation,
+        user: member,
+        body_text: "<div>#{mention_tag(author_employee)} #{mention_tag(alice_employee)}</div>",
+      )
 
       expect(result.value.mentioned_users).to contain_exactly(alice)
     end
 
-    it "deduplicates repeated mentions of the same handle" do
-      result = described_class.call(conversation: conversation, user: member, body: "@alice @alice hi")
+    it "deduplicates repeated mentions of the same employee" do
+      result = described_class.call(
+        conversation: conversation,
+        user: member,
+        body_text: "<div>#{mention_tag(alice_employee)} #{mention_tag(alice_employee)}</div>",
+      )
 
       expect(result.value.message_mentions.count).to eq(1)
     end
-
-    it "does not treat an email local-part as a mention" do
-      result = described_class.call(conversation: conversation, user: member, body: "email me at foo@alice")
-
-      expect(result.value.mentioned_users).to be_empty
-    end
-
-    it "resolves mentions from rich HTML via the derived plain text" do
-      result = described_class.call(
-        conversation: conversation,
-        user: member,
-        body_html: "<div>hi <strong>@alice</strong></div>",
-      )
-
-      expect(result).to be_success
-      expect(result.value.body).to eq("hi @alice")
-      expect(result.value.mentioned_users).to contain_exactly(alice)
-    end
   end
 
-  describe "rich text (body_html)" do
-    it "stores sanitized HTML and derives plain text when formatting is present" do
+  describe "rich text (body_text)" do
+    it "stores Action Text content and derives plain text" do
       result = described_class.call(
         conversation: conversation,
         user: member,
-        body_html: "<div><strong>bold</strong> and plain</div>",
+        body_text: "<div><strong>bold</strong> and plain</div>",
       )
 
       expect(result).to be_success
       message = result.value
       expect(message).to be_rich
-      expect(message.body_html).to include("<strong>bold</strong>")
+      expect(message.body_text.to_plain_text).to include("bold and plain")
       expect(message.body).to eq("bold and plain")
     end
 
-    it "drops disallowed tags and scripts" do
+    it "rejects rich content that flattens to an empty body" do
       result = described_class.call(
         conversation: conversation,
         user: member,
-        body_html: "<div><strong>safe</strong><script>alert(1)</script></div>",
-      )
-
-      expect(result.value.body_html).to include("<strong>safe</strong>")
-      expect(result.value.body_html).not_to include("script")
-      expect(result.value.body_html).not_to include("alert(1)")
-    end
-
-    it "stores plain text only when the rich content carries no formatting" do
-      result = described_class.call(
-        conversation: conversation,
-        user: member,
-        body_html: "<div>just text</div>",
-      )
-
-      expect(result).to be_success
-      expect(result.value).not_to be_rich
-      expect(result.value.body_html).to be_nil
-      expect(result.value.body).to eq("just text")
-    end
-
-    it "rejects rich content that sanitizes to an empty body" do
-      result = described_class.call(
-        conversation: conversation,
-        user: member,
-        body_html: "<div>   </div>",
+        body_text: "<div>   </div>",
       )
 
       expect(result).to be_failure

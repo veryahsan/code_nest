@@ -24,4 +24,30 @@ RSpec.describe Message, type: :model do
       }.to have_broadcasted_to(conversation).from_channel(ConversationChannel)
     end
   end
+
+  describe "#rendered_body_html" do
+    let(:conversation) { create(:conversation) }
+    let(:author) { create(:user, organisation: conversation.organisation) }
+
+    before { conversation.add_participant(author) }
+
+    it "is nil for a plain-text message" do
+      message = create(:message, conversation: conversation, user: author, body: "plain")
+      expect(message.rendered_body_html).to be_nil
+    end
+
+    it "renders rich content with mentions resolved to the employee partial" do
+      mentioned = create(:user, organisation: conversation.organisation)
+      employee = create(:employee, user: mentioned, organisation: conversation.organisation, handle: "casey")
+      conversation.add_participant(mentioned)
+
+      html = %(<div>hi <action-text-attachment sgid="#{employee.attachable_sgid}" ) +
+             %(content-type="#{Employee::MENTION_CONTENT_TYPE}"></action-text-attachment></div>)
+      message = Messages::CreateService.call(conversation: conversation, user: author, body_text: html).value
+
+      rendered = message.rendered_body_html
+      expect(rendered).to include("mention")
+      expect(rendered).to include("@casey")
+    end
+  end
 end
