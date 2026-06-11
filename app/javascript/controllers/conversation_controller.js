@@ -2,22 +2,22 @@ import { Controller } from "@hotwired/stimulus"
 import consumer from "channels/consumer"
 
 // Subscribes to a single ConversationChannel and renders messages pushed
-// over the Redis-backed Action Cable stream. New messages are sent back
-// over the same channel (no full page round-trip).
+// over the Redis-backed Action Cable stream. New messages are composed in the
+// Lexxy editor and sent back over the same channel (no full page round-trip).
+//
+// Message bodies are rendered to HTML on the server (Action Text resolves
+// @mention attachments to the employees/_employee partial), so the client only
+// injects that trusted HTML and flags the viewer's own mentions per-viewer.
 //
 // Read receipts: only the latest message shows avatars. While connected and
 // visible, the client marks itself read (over the channel), which broadcasts a
 // { user_id, last_message_id } event. Other clients clone that user's avatar
 // from the hidden roster and place it under the latest message.
 export default class extends Controller {
-  static targets = ["list", "input", "form", "empty", "roster", "reactionTemplate", "participants"]
-  static values = { id: Number, userId: Number, currentHandle: String }
-
-  // Matches an @handle token (not preceded by a word char, so emails are skipped).
-  static MENTION_PATTERN = /(?<!\w)@([a-z0-9_]+)/gi
+  static targets = ["list", "input", "form", "empty", "roster", "reactionTemplate"]
+  static values = { id: Number, userId: Number, currentEmployeeId: Number }
 
   connect() {
-    this.mentionHandles = this.#loadMentionHandles()
     this.lastMessageId = this.#currentLastMessageId()
 
     this.subscription = consumer.subscriptions.create(
@@ -50,45 +50,177 @@ export default class extends Controller {
     }
     document.addEventListener("visibilitychange", this.onVisibilityChange)
 
+    // Enter-to-send: intercept in the capture phase so we win over Lexical's own
+    // Enter handler. Enter always sends; Shift+Enter adds a new line (a new
+    // bullet when inside a list). When the @mention menu is open we bow out so
+    // Enter selects the highlighted suggestion instead.
+    if (this.hasInputTarget) {
+      this.onEditorKeydown = this.onKeydown.bind(this)
+      this.inputTarget.addEventListener("keydown", this.onEditorKeydown, true)
+    }
+
+    // Lexxy applies a list per block, so a multi-line paragraph (lines joined by
+    // soft <br> breaks) collapses into a single bullet. Intercept the list
+    // buttons and split the caret's paragraph so each line from the cursor down
+    // becomes its own list item, leaving earlier lines as a paragraph.
+    if (this.hasInputTarget) {
+      this.onListButtonClick = this.#onListButtonClick.bind(this)
+      this.inputTarget.addEventListener("click", this.onListButtonClick, true)
+    }
+
+    this.#applySelfMentions(this.listTarget)
     this.scrollToBottom()
+  }
+
+  #onListButtonClick(event) {
+    const btn = event.target.closest('button[name="unordered-list"], button[name="ordered-list"]')
+    if (!btn) return
+
+    const ed = this.inputTarget
+    const ordered = btn.getAttribute("name") === "ordered-list"
+
+    const newValue = this.#listFromCursor(ed, ordered)
+    if (newValue != null) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      ed.value = newValue
+      ed.focus()
+    }
+  }
+
+  // Builds new editor HTML that turns the caret's line (and the lines below it)
+  // within the current paragraph into list items. Returns null when the default
+  // Lexxy behavior should be used (caret not in a multi-line paragraph).
+  #listFromCursor(ed, ordered) {
+    const liveContent = ed.querySelector(".lexxy-editor__content")
+    const selection = window.getSelection()
+    if (!liveContent || !selection || selection.rangeCount === 0) return null
+
+    const anchorNode = selection.anchorNode
+    if (!anchorNode || !liveContent.contains(anchorNode)) return null
+
+    // The top-level block (direct child of the content root) holding the caret.
+    let liveBlock = anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement
+    while (liveBlock && liveBlock.parentElement !== liveContent) {
+      liveBlock = liveBlock.parentElement
+    }
+    if (!liveBlock || liveBlock.tagName !== "P") return null
+
+    const liveBreaks = Array.from(liveBlock.querySelectorAll("br"))
+    if (liveBreaks.length === 0) return null // single line: let Lexxy handle it
+
+    // Which line the caret sits on = number of <br>s that precede it.
+    const lineIndex = liveBreaks.filter(
+      (br) => br.compareDocumentPosition(anchorNode) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).length
+
+    const blockIndex = Array.from(liveContent.children).indexOf(liveBlock)
+    if (blockIndex < 0) return null
+
+    // Operate on the canonical serialized value so @mention attachments survive.
+    const doc = new DOMParser().parseFromString(ed.value || "", "text/html")
+    const valueBlock = doc.body.children[blockIndex]
+    if (!valueBlock || valueBlock.tagName !== "P") return null
+
+    const lines = this.#splitNodesByBreak(doc, Array.from(valueBlock.childNodes))
+    if (lineIndex >= lines.length) return null
+
+    const keep = lines.slice(0, lineIndex)
+    let listLines = lines.slice(lineIndex)
+    // Drop a single trailing empty line (e.g. caret left a dangling <br>).
+    if (listLines.length > 1 && listLines[listLines.length - 1].trim() === "") {
+      listLines = listLines.slice(0, -1)
+    }
+    if (listLines.length === 0) return null
+
+    const tag = ordered ? "ol" : "ul"
+    const items = listLines.map((html) => `<li>${html || "<br>"}</li>`).join("")
+    const replacement = (keep.length ? `<p>${keep.join("<br>")}</p>` : "") + `<${tag}>${items}</${tag}>`
+
+    const before = Array.from(doc.body.children).slice(0, blockIndex).map((el) => el.outerHTML).join("")
+    const after = Array.from(doc.body.children).slice(blockIndex + 1).map((el) => el.outerHTML).join("")
+    return before + replacement + after
+  }
+
+  // Splits a list of nodes into per-line HTML strings, breaking on <br> and
+  // serializing each segment (preserving element nodes like attachments).
+  #splitNodesByBreak(doc, nodes) {
+    const lines = []
+    let current = doc.createElement("div")
+    for (const node of nodes) {
+      if (node.nodeType === 1 && node.tagName === "BR") {
+        lines.push(current.innerHTML)
+        current = doc.createElement("div")
+      } else {
+        current.appendChild(node.cloneNode(true))
+      }
+    }
+    lines.push(current.innerHTML)
+    return lines
   }
 
   disconnect() {
     if (this.subscription) this.subscription.unsubscribe()
     document.removeEventListener("visibilitychange", this.onVisibilityChange)
+    if (this.hasInputTarget && this.onEditorKeydown) {
+      this.inputTarget.removeEventListener("keydown", this.onEditorKeydown, true)
+    }
+    if (this.hasInputTarget && this.onListButtonClick) {
+      this.inputTarget.removeEventListener("click", this.onListButtonClick, true)
+    }
     clearTimeout(this.readTimer)
   }
 
   submit(event) {
     event.preventDefault()
+    if (!this.hasInputTarget) return
 
-    const trix = this.#trixElement
-    if (!trix) return
+    const editor = this.inputTarget
+    // The Lexxy editor stringifies to its plain text; skip empty sends.
+    if (editor.toString().trim() === "") return
 
-    // Guard on the editor's plain text so an "empty" document (e.g. <div><br></div>)
-    // isn't sent. The hidden input carries the HTML the server sanitizes.
-    if (trix.editor.getDocument().toString().trim() === "") return
+    this.subscription.perform("speak", { body_text: editor.value })
 
-    this.subscription.perform("speak", { body_html: this.inputTarget.value })
-
-    trix.editor.loadHTML("")
-    this.inputTarget.value = ""
-    trix.focus()
+    editor.value = ""
+    editor.focus()
   }
 
-  // Trix never submits the form on Enter (it inserts a newline), so send on
-  // Enter here. Shift+Enter keeps a newline, and a key the mention autocomplete
-  // already consumed (event.defaultPrevented) is left alone. Use Shift+Enter for
-  // multi-line messages.
+  // Bound as a capture-phase listener on the Lexxy editor (see connect). Enter
+  // always sends; Shift+Enter adds a new line (a new bullet inside a list). The
+  // mention menu takes Enter to pick a suggestion.
   onKeydown(event) {
-    if (event.key !== "Enter" || event.shiftKey || event.defaultPrevented) return
+    if (event.key !== "Enter") return
+    if (document.querySelector(".lexxy-prompt-menu--visible")) return
 
+    if (event.shiftKey) {
+      // New line. Inside a list, turn the soft break into a new bullet by
+      // re-issuing a plain Enter, which Lexical converts to a new list item.
+      // Elsewhere, fall through to Lexxy's default soft line break.
+      if (this.#caretElement()?.closest("li") && !this.insertingListItem) {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        this.insertingListItem = true
+        event.target.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true }),
+        )
+        this.insertingListItem = false
+      }
+      return
+    }
+
+    // The re-dispatched Enter above must build the list item, not send.
+    if (this.insertingListItem) return
+
+    // Plain Enter sends in every context.
     event.preventDefault()
+    event.stopImmediatePropagation()
     this.submit(event)
   }
 
-  get #trixElement() {
-    return this.element.querySelector("trix-editor")
+  // The element holding the text caret, or null when there is no selection.
+  #caretElement() {
+    const anchor = window.getSelection()?.anchorNode
+    return anchor && anchor.nodeType === 1 ? anchor : anchor?.parentElement
   }
 
   // Picker emitted a chosen emoji (reaction-picker:selected). Toggle it.
@@ -157,8 +289,8 @@ export default class extends Controller {
 
     const bubble = document.createElement("div")
     bubble.className = mine
-      ? "max-w-[75%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white"
-      : "max-w-[75%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color"
+      ? "max-w-[85%] rounded-2xl rounded-br-sm bg-brand-600 px-3 py-2 text-sm text-white"
+      : "max-w-[85%] rounded-2xl rounded-bl-sm bg-surface-raised border border-surface px-3 py-2 text-sm text-base-color"
     this.#renderBody(bubble, message)
 
     row.appendChild(bubble)
@@ -264,99 +396,28 @@ export default class extends Controller {
       .forEach((node) => node.remove())
   }
 
-  // Set of participant handles (lowercased) used to highlight mentions. Mirrors
-  // the server-side highlight_mentions helper so live and seeded messages match.
-  #loadMentionHandles() {
-    const set = new Set()
-    if (!this.hasParticipantsTarget) return set
-    try {
-      JSON.parse(this.participantsTarget.textContent || "[]").forEach((p) => {
-        if (p.handle) set.add(p.handle.toLowerCase())
-      })
-    } catch {
-      // ignore malformed JSON
-    }
-    return set
-  }
-
-  // Render a message bubble. Rich messages carry server-sanitized HTML; plain
-  // messages are built from text + span nodes. Either way @mention highlighting
-  // is applied client-side so the viewer's own-handle highlight stays per-viewer.
+  // Render a message bubble. Rich messages carry server-rendered, sanitized
+  // HTML (with @mentions already resolved to pills), so we inject it directly;
+  // plain messages fall back to their text body.
   #renderBody(el, message) {
     if (message.body_html) {
-      el.classList.add("trix-content")
-      this.#renderRichBody(el, message.body_html)
+      el.innerHTML = message.body_html
+      this.#applySelfMentions(el)
     } else {
-      this.#appendMentionNodes(el, message.body || "")
+      el.textContent = message.body || ""
     }
   }
 
-  // The HTML is already sanitized by the server (see Messages::CreateService),
-  // so we can parse it; we then rewrite @mentions inside its text nodes (mirrors
-  // ApplicationHelper#highlight_mentions_html), skipping links and code.
-  #renderRichBody(el, html) {
-    const template = document.createElement("template")
-    template.innerHTML = html
+  // Highlight the viewer's own @mentions. A shared server broadcast can't bake
+  // in per-viewer styling, so each client flags the mentions that point at its
+  // own employee record (matched by data-mention-employee-id).
+  #applySelfMentions(root) {
+    const id = this.currentEmployeeIdValue
+    if (!root || !id) return
 
-    this.#mentionableTextNodes(template.content).forEach((node) => {
-      const frag = document.createDocumentFragment()
-      this.#appendMentionNodes(frag, node.textContent)
-      node.replaceWith(frag)
-    })
-
-    el.appendChild(template.content)
-  }
-
-  // Text nodes eligible for mention highlighting (not inside <a> or <pre>).
-  #mentionableTextNodes(root) {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode: (node) => {
-        for (let p = node.parentElement; p && p !== root; p = p.parentElement) {
-          if (p.tagName === "A" || p.tagName === "PRE") return NodeFilter.FILTER_REJECT
-        }
-        return NodeFilter.FILTER_ACCEPT
-      },
-    })
-
-    const nodes = []
-    while (walker.nextNode()) nodes.push(walker.currentNode)
-    return nodes
-  }
-
-  // Append `text` to `el` (an element or fragment) as text + span nodes (never
-  // innerHTML), wrapping @handles that match a known participant.
-  #appendMentionNodes(el, text) {
-    const pattern = this.constructor.MENTION_PATTERN
-    pattern.lastIndex = 0
-    const current = (this.currentHandleValue || "").toLowerCase()
-
-    let lastIndex = 0
-    let match
-    while ((match = pattern.exec(text)) !== null) {
-      const handle = match[1].toLowerCase()
-
-      if (match.index > lastIndex) {
-        el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)))
-      }
-
-      if (this.mentionHandles.has(handle)) {
-        const span = document.createElement("span")
-        span.className =
-          current !== "" && handle === current
-            ? "rounded bg-brand-100 px-0.5 font-medium text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
-            : "font-medium text-brand-600 dark:text-brand-400"
-        span.textContent = `@${match[1]}`
-        el.appendChild(span)
-      } else {
-        el.appendChild(document.createTextNode(match[0]))
-      }
-
-      lastIndex = pattern.lastIndex
-    }
-
-    if (lastIndex < text.length) {
-      el.appendChild(document.createTextNode(text.slice(lastIndex)))
-    }
+    root
+      .querySelectorAll(`.mention[data-mention-employee-id="${id}"]`)
+      .forEach((node) => node.classList.add("is-self"))
   }
 
   #currentLastMessageId() {

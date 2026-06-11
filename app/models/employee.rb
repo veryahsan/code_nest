@@ -1,10 +1,20 @@
 # frozen_string_literal: true
 
 class Employee < ApplicationRecord
+  # Lets an Employee be embedded in Action Text as a mention attachment. Lexxy's
+  # @-prompt inserts an <action-text-attachment> carrying this record's signed
+  # global id; Action Text resolves it back to the Employee on render and uses
+  # the `employees/_employee` partial (see #content_type) to display it.
+  include ActionText::Attachable
+
   # An @mention handle is restricted to this grammar so it has unambiguous
   # boundaries when parsed out of free-text message bodies.
   HANDLE_FORMAT = /\A[a-z0-9_]+\z/
   HANDLE_SUFFIX_LENGTH = 6
+
+  # Marks the stored attachment so Lexxy's `<lexxy-prompt name="mention">`
+  # activates for it and Action Text renders mentions through our partial.
+  MENTION_CONTENT_TYPE = "application/vnd.actiontext.mention"
 
   belongs_to :user
   belongs_to :organisation
@@ -42,6 +52,25 @@ class Employee < ApplicationRecord
       candidate = "#{base}_#{SecureRandom.alphanumeric(HANDLE_SUFFIX_LENGTH).downcase}"
       return candidate unless exists?(organisation_id: organisation_id, handle: candidate)
     end
+  end
+
+  # Content type Action Text stamps on the stored attachment. Must match the
+  # `name` on the matching `<lexxy-prompt>` (so "mention" -> this value).
+  def content_type
+    MENTION_CONTENT_TYPE
+  end
+
+  # Display name shown in the mention pill / prompt menu, with a sensible
+  # fallback so a blank profile still renders something meaningful.
+  def mention_label
+    display_name.presence || handle
+  end
+
+  # Plain-text form of a mention. Action Text calls this when flattening a rich
+  # body to plain text (Message#body), keeping previews/search readable as
+  # "@handle" rather than an empty attachment placeholder.
+  def attachable_plain_text_representation(_caption = nil)
+    "@#{handle}"
   end
 
   def self.ransackable_attributes(_auth_object = nil)

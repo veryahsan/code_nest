@@ -1,0 +1,13 @@
+<%# One selectable entry in Lexxy's @-mention prompt. `search` is what Lexxy
+    filters against as the user types; `sgid` is the signed global id Action
+    Text stores so the mention resolves back to this exact Employee (no handle
+    re-parsing). The editor template reuses the canonical mention partial so the
+    inserted pill matches how the sent message renders. %>
+<lexxy-prompt-item search="<%= "#{employee.handle} #{employee.mention_label}" %>"
+                   sgid="<%= employee.attachable_sgid %>">
+  <template type="menu">
+    <span class="font-medium text-base-color"><%= employee.mention_label %></span>
+    <span class="text-xs text-muted-color">@<%= employee.handle %></span>
+  </template>
+  <template type="editor"><%= render "employees/employee", employee: employee %></template>
+</lexxy-prompt-item>
