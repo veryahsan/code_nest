@@ -8,7 +8,7 @@ class HomeController < ApplicationController
 
     if current_user.super_admin?
       redirect_to admin_root_path
-    elsif current_user.organisation.present?
+    else
       redirect_to dashboard_path
     end
   end

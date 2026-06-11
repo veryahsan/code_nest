@@ -11,7 +11,7 @@
   extra_class  = local_assigns.fetch(:extra_class, nil)
 %>
 
-<div class="<%= ["mb-6", extra_class].compact.join(" ") %>">
+<div class="<%= ["mb-4", extra_class].compact.join(" ") %>">
   <% if breadcrumbs.any? %>
     <nav class="flex items-center gap-1.5 text-xs text-muted-color mb-2" aria-label="Breadcrumb">
       <% breadcrumbs.each_with_index do |crumb, i| %>
@@ -31,7 +31,7 @@
     </nav>
   <% end %>
 
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
     <div>
       <h1 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
         <%= ph_title %>
