@@ -27,6 +27,7 @@ gem "stimulus-rails"
 gem "tailwindcss-rails"
 gem "dartsass-rails"
 gem "image_processing", "~> 1.13"
+gem "lexxy", "~> 0.1.26.beta" # Lexical-based rich text editor with native Action Text mentions
 
 # ---------------------------------------------------------------------------
 # Background jobs (Sidekiq, per stack.md)

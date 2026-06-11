@@ -220,26 +220,26 @@
            dark:bg-aqua-card dark:border-aqua-border;
   }
   .card-padded {
-    @apply rounded-lg border bg-white border-zinc-200 p-6
+    @apply rounded-lg border bg-white border-zinc-200 p-4
            dark:bg-aqua-card dark:border-aqua-border;
   }
   .card-header {
-    @apply px-6 py-4 border-b border-zinc-100 dark:border-aqua-border;
+    @apply px-4 py-3 border-b border-zinc-100 dark:border-aqua-border;
   }
-  .card-body   { @apply p-6; }
+  .card-body   { @apply p-4; }
   .card-footer {
-    @apply px-6 py-4 border-t border-zinc-100 dark:border-aqua-border;
+    @apply px-4 py-3 border-t border-zinc-100 dark:border-aqua-border;
   }
 
   /* ── Layout rhythm ─────────────────────────────────────────
      Every direct child of .section-stack (card, grid, list, heading,
      anything) gets top + bottom margin so sections never collide.
      Plain margin on explicit selectors — no padding, no :where(). */
-  .section-stack       { margin-top: 2.5rem; margin-bottom: 2.5rem; }
-  .section-stack > *   { margin-top: 2.5rem; margin-bottom: 2.5rem; }
-  .card-grid           { @apply grid gap-6 md:gap-8; }
-  .card-grid-2         { @apply grid gap-6 md:gap-8 md:grid-cols-2; }
-  .card-grid-3         { @apply grid gap-6 md:gap-8 md:grid-cols-3; }
+  .section-stack       { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+  .section-stack > *   { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+  .card-grid           { @apply grid gap-4 md:gap-6; }
+  .card-grid-2         { @apply grid gap-4 md:gap-6 md:grid-cols-2; }
+  .card-grid-3         { @apply grid gap-4 md:gap-6 md:grid-cols-3; }
 
   /* ── Focus ring ──────────────────────────────────────────── */
   .ring-focus {
@@ -251,57 +251,56 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   TRIX
-   The composer uses a standalone <trix-editor>; messages render its sanitized
-   HTML inside `.trix-content`. Tailwind's preflight strips list markers and
-   heading sizes, so restore the formatting we allow through the sanitizer and
-   theme the toolbar for both modes.
+   COMPOSER + MESSAGE CONTENT (Lexxy + Action Text)
+   The composer uses a <lexxy-editor> (Lexxy ships its own toolbar/editor
+   styling via lexxy.css); we only wrap it in a bordered, focus-aware box.
+   Messages render Action Text HTML inside `.trix-content` — Tailwind's preflight
+   strips list markers and heading sizes, so restore the formatting here. @mentions
+   are styled via `.mention` (with `.is-self` for the viewer's own mentions).
 ────────────────────────────────────────────────────────────────────────────── */
-/* Composer: toolbar + editable area inside one bordered, focus-aware box. */
+/* Composer: editor inside one bordered, focus-aware box. */
 .composer {
   @apply overflow-hidden rounded-xl border border-zinc-200 bg-white transition-colors
          focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/30
          dark:border-aqua-border dark:bg-aqua-card dark:focus-within:border-brand-400;
 }
 
-.composer trix-toolbar {
-  @apply border-b border-zinc-200 px-2 py-1.5 dark:border-aqua-border;
-}
-.composer trix-toolbar .trix-button-row {
-  @apply flex flex-wrap items-center gap-1;
-}
-.composer trix-toolbar .trix-button-group {
-  @apply mb-0 mr-1 flex overflow-hidden rounded-md border border-zinc-200 dark:border-aqua-border;
-}
-/* Attachments are intentionally unsupported for messages. */
-.composer trix-toolbar .trix-button-group--file-tools {
-  @apply hidden;
-}
-/* Opacity (not background) drives hover/active so the dark-mode icon invert
-   below doesn't clash with themed colors. */
-.composer trix-toolbar .trix-button {
-  @apply m-0 h-8 w-8 border-0 bg-transparent opacity-60 transition-opacity;
-}
-.composer trix-toolbar .trix-button:not(:first-child) {
-  @apply border-l border-zinc-200 dark:border-aqua-border;
-}
-.composer trix-toolbar .trix-button:hover,
-.composer trix-toolbar .trix-button.trix-active {
-  @apply opacity-100;
-}
-.composer trix-toolbar .trix-button.trix-active {
-  @apply bg-brand-50 dark:bg-brand-500/15;
-}
-.dark .composer trix-toolbar .trix-button {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-.composer trix-editor {
+.composer lexxy-editor {
   @apply block max-h-48 min-h-[3rem] w-full overflow-y-auto border-0 bg-transparent
          px-3 py-2.5 text-sm leading-relaxed text-zinc-900 dark:text-aqua-high;
 }
-.composer trix-editor:focus {
+.composer lexxy-editor:focus,
+.composer lexxy-editor:focus-within {
   @apply outline-none;
+}
+
+/* Tailwind's preflight strips list markers (ul,ol { list-style: none }) and
+   Lexxy only styles its content with zero-specificity :where() rules, so the
+   editor's own list items lose bullets/numbers. Restore them here. */
+.composer lexxy-editor ul { @apply list-disc pl-5; }
+.composer lexxy-editor ol { @apply list-decimal pl-5; }
+.composer lexxy-editor li { @apply my-0.5; }
+
+/* Lexxy ships light-only CSS variables (defined on :root). Remap its ink scale
+   for dark mode so the toolbar, buttons, menus, borders and code blocks follow
+   the app theme instead of staying white. --lexxy-color-canvas/-text derive
+   from these via var(), so overriding the scale cascades to all chrome. */
+html.dark {
+  --lexxy-color-ink: oklch(96% 0 0);
+  --lexxy-color-ink-medium: oklch(78% 0 0);
+  --lexxy-color-ink-light: oklch(62% 0 0);
+  --lexxy-color-ink-lighter: oklch(42% 0 0);
+  --lexxy-color-ink-lightest: oklch(30% 0 0);
+  --lexxy-color-ink-inverted: oklch(25% 0 0);
+}
+
+/* @mention pill. The base color matches the editor representation; the viewer's
+   own mentions get a distinct, highlighted look applied client-side (is-self). */
+.mention {
+  @apply font-medium text-brand-600 dark:text-brand-400;
+}
+.mention.is-self {
+  @apply rounded bg-brand-100 px-0.5 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300;
 }
 
 /* Rendered message bodies and the editor's own content area. */

@@ -54,5 +54,11 @@ module CodeNest
 
     # Treat /api requests as API-only (no flash, no cookies for sessions).
     config.api_only = false # we keep Hotwire web alongside JSON API
+
+    # Lexxy ships as the Action Text editor but we opt in explicitly via
+    # `form.lexxy_rich_text_area` (see conversations/show) rather than globally
+    # replacing Trix, so the default `rich_text_area` helper stays on Trix until
+    # the messaging stack is fully migrated.
+    config.lexxy.override_action_text_defaults = false
   end
 end

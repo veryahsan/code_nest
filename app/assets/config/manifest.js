@@ -2,3 +2,8 @@
 //= link_tree ../builds
 //= link_directory ../javascripts .js
 //= link_tree ../../javascript .js
+//= link lexxy.css
+//= link lexxy-content.css
+//= link lexxy-editor.css
+//= link lexxy-variables.css
+//= link lexxy.js
