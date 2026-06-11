@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe SidebarFacade, type: :facade do
+RSpec.describe MenuCapsuleFacade, type: :facade do
   let(:url_helpers) { Rails.application.routes.url_helpers }
 
   describe "for a regular organisation member" do
@@ -26,7 +26,7 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(labels).to eq(%w[Dashboard Projects Employees])
     end
 
-    it "only includes the user's own projects (up to MAX_PROJECTS_IN_SIDEBAR)" do
+    it "only includes the user's own projects (up to MAX_PROJECTS_IN_MENU_CAPSULE)" do
       mine   = create(:project, organisation: org, name: "Alpha")
       create(:project, organisation: org, name: "Zeta")
       create(:project_membership, project: mine, user: user)
@@ -36,13 +36,13 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(names).not_to include("Zeta")
     end
 
-    it "caps the projects list at MAX_PROJECTS_IN_SIDEBAR" do
-      (described_class::MAX_PROJECTS_IN_SIDEBAR + 3).times do |i|
+    it "caps the projects list at MAX_PROJECTS_IN_MENU_CAPSULE" do
+      (described_class::MAX_PROJECTS_IN_MENU_CAPSULE + 3).times do |i|
         project = create(:project, organisation: org, name: "Project #{format('%02d', i)}")
         create(:project_membership, project: project, user: user)
       end
 
-      expect(facade.projects.size).to eq(described_class::MAX_PROJECTS_IN_SIDEBAR)
+      expect(facade.projects.size).to eq(described_class::MAX_PROJECTS_IN_MENU_CAPSULE)
     end
 
     it "show_projects_section? is true" do
@@ -232,13 +232,13 @@ RSpec.describe SidebarFacade, type: :facade do
       expect(facade.conversations.first.unread_count).to eq(1)
     end
 
-    it "caps the conversation list at MAX_CONVERSATIONS_IN_SIDEBAR" do
-      (described_class::MAX_CONVERSATIONS_IN_SIDEBAR + 2).times do |i|
+    it "caps the conversation list at MAX_CONVERSATIONS_IN_MENU_CAPSULE" do
+      (described_class::MAX_CONVERSATIONS_IN_MENU_CAPSULE + 2).times do |i|
         c = create(:conversation, organisation: org, title: "Chat #{i}")
         c.add_participant(user)
       end
 
-      expect(facade.conversations.size).to eq(described_class::MAX_CONVERSATIONS_IN_SIDEBAR)
+      expect(facade.conversations.size).to eq(described_class::MAX_CONVERSATIONS_IN_MENU_CAPSULE)
     end
   end
 end

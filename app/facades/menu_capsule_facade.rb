@@ -4,11 +4,11 @@
 # needs to render itself, so the views never have to query the model layer or
 # branch on user role inline.
 #
-# Set on the request via the `prepare_sidebar` before_action in
-# `ApplicationController`. Views read structured fields from `@sidebar`.
-class SidebarFacade < ApplicationFacade
-  MAX_PROJECTS_IN_SIDEBAR      = 8
-  MAX_CONVERSATIONS_IN_SIDEBAR = 12
+# Set on the request via the `prepare_menu_capsule` before_action in
+# `ApplicationController`. Views read structured fields from `@menu_capsule`.
+class MenuCapsuleFacade < ApplicationFacade
+  MAX_PROJECTS_IN_MENU_CAPSULE      = 8
+  MAX_CONVERSATIONS_IN_MENU_CAPSULE = 12
 
   ProjectEntry      = Struct.new(:name, :href, keyword_init: true)
   NavItem           = Struct.new(:label, :href, :icon, keyword_init: true)
@@ -87,7 +87,7 @@ class SidebarFacade < ApplicationFacade
   def build_project_entries
     return [] unless show_projects_section?
 
-    @user.projects.order(:name).limit(MAX_PROJECTS_IN_SIDEBAR).map do |project|
+    @user.projects.order(:name).limit(MAX_PROJECTS_IN_MENU_CAPSULE).map do |project|
       ProjectEntry.new(name: project.name, href: @h.project_path(project))
     end
   end
@@ -130,7 +130,7 @@ class SidebarFacade < ApplicationFacade
     convos = @user.conversations
                   .includes(:participants)
                   .order(updated_at: :desc)
-                  .limit(MAX_CONVERSATIONS_IN_SIDEBAR)
+                  .limit(MAX_CONVERSATIONS_IN_MENU_CAPSULE)
                   .to_a
     return [] if convos.empty?
 

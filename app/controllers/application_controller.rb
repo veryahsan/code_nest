@@ -6,7 +6,7 @@ class ApplicationController < ActionController::Base
 
   layout :resolved_layout
 
-  before_action :prepare_sidebar
+  before_action :prepare_menu_capsule
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
@@ -63,12 +63,12 @@ class ApplicationController < ActionController::Base
     request.headers["Turbo-Frame"]
   end
 
-  # Prepares the structured data the signed-in chrome (sidebar + mobile
+  # Prepares the structured data the signed-in chrome (menu capsule + mobile
   # topbar) needs to render itself.
-  def prepare_sidebar
+  def prepare_menu_capsule
     return unless user_signed_in?
     return if turbo_frame_request?
 
-    @sidebar = SidebarFacade.call(user: current_user, url_helpers: self).value
+    @menu_capsule = MenuCapsuleFacade.call(user: current_user, url_helpers: self).value
   end
 end

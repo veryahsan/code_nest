@@ -1,7 +1,7 @@
 <%#
-  Renders one of the sidebar nav icons. The mapping lives here so the
-  sidebar view stays pure markup — pass `icon:` (symbol from
-  `SidebarFacade::NavItem#icon`) and optionally `css:` for extra classes.
+  Renders one of the menu capsule nav icons. The mapping lives here so the
+  menu capsule view stays pure markup — pass `icon:` (symbol from
+  `MenuCapsuleFacade::NavItem#icon`) and optionally `css:` for extra classes.
 %>
 <%
   icon = local_assigns.fetch(:icon, :dashboard).to_sym

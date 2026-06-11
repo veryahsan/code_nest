@@ -7,9 +7,9 @@ import consumer from "channels/consumer"
 //   - opening a conversation (Turbo navigation to /conversations/:id) clears
 //     its badge, mirroring the server-side mark-as-read in ConversationsController
 //
-// Counts are seeded server-side by SidebarFacade; this only adjusts them so the
-// sidebar (which lives outside the Turbo main frame and does not re-render on
-// frame navigation) stays accurate without a full reload.
+// Counts are seeded server-side by MenuCapsuleFacade; this only adjusts them so
+// the menu capsule (which lives outside the Turbo main frame and does not
+// re-render on frame navigation) stays accurate without a full reload.
 export default class extends Controller {
   static targets = ["badge"]
 

@@ -1,8 +1,8 @@
 <%# Notifications bell + unread badge + dropdown panel. The `dropdown`
     controller handles open/close; the `notifications` controller owns the
     live ActionCable feed and badge count. Seeded server-side from
-    @sidebar so the count/list reflect the DB on first paint. %>
-<% count = @sidebar.unread_notifications_count %>
+    @menu_capsule so the count/list reflect the DB on first paint. %>
+<% count = @menu_capsule.unread_notifications_count %>
 <div class="relative"
      data-controller="dropdown notifications"
      data-notifications-count-value="<%= count %>"
@@ -37,17 +37,17 @@
       <%# Explicit partial path so collection lookup isn't prefixed with the
           current controller's namespace (e.g. `users/` under Devise). %>
       <%= render partial: "notifications/notification",
-            collection: @sidebar.recent_notifications,
+            collection: @menu_capsule.recent_notifications,
             as: :notification %>
     </div>
 
     <p data-notifications-target="empty"
-       class="px-3 py-6 text-center text-sm text-muted-color <%= 'hidden' if @sidebar.recent_notifications.any? %>">
+       class="px-3 py-6 text-center text-sm text-muted-color <%= 'hidden' if @menu_capsule.recent_notifications.any? %>">
       You're all caught up.
     </p>
 
     <div class="border-t border-surface px-4 py-3 text-center">
-      <%= link_to "View all", @sidebar.notifications_index_href,
+      <%= link_to "View all", @menu_capsule.notifications_index_href,
             data: main_frame_data,
             class: "text-xs font-medium text-brand-600 hover:underline dark:text-brand-400" %>
     </div>
