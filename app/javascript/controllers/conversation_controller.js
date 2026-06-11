@@ -15,7 +15,7 @@ import consumer from "channels/consumer"
 // from the hidden roster and place it under the latest message.
 export default class extends Controller {
   static targets = ["list", "input", "form", "empty", "roster", "reactionTemplate"]
-  static values = { id: Number, userId: Number, currentEmployeeId: Number }
+  static values = { id: Number, userId: Number }
 
   connect() {
     this.lastMessageId = this.#currentLastMessageId()
@@ -410,13 +410,13 @@ export default class extends Controller {
 
   // Highlight the viewer's own @mentions. A shared server broadcast can't bake
   // in per-viewer styling, so each client flags the mentions that point at its
-  // own employee record (matched by data-mention-employee-id).
+  // own user record (matched by data-mention-user-id).
   #applySelfMentions(root) {
-    const id = this.currentEmployeeIdValue
+    const id = this.userIdValue
     if (!root || !id) return
 
     root
-      .querySelectorAll(`.mention[data-mention-employee-id="${id}"]`)
+      .querySelectorAll(`.mention[data-mention-user-id="${id}"]`)
       .forEach((node) => node.classList.add("is-self"))
   }
 

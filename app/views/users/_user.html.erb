@@ -1,0 +1,7 @@
+<%# Canonical rendering of an @mention. Used both as the Action Text attachment
+    partial (stored messages) and as the Lexxy editor representation, so the
+    pill looks identical while composing and after sending. The `mention` class
+    + data-mention-user-id let the conversation controller flag the viewer's
+    own mentions per-viewer (a shared server broadcast can't bake that in). %>
+<span class="mention font-medium text-brand-600 dark:text-brand-400"
+      data-mention-user-id="<%= user.id %>">@<%= user.mention_handle %></span>

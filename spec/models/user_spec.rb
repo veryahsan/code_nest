@@ -167,7 +167,7 @@ RSpec.describe User, type: :model do
 
   describe "#enqueue_welcome_email (after_create_commit trigger)" do
     # The callback is a thin trigger that publishes through the event bus.
-    # Mailers::WelcomeEmailJob (and any future subscribers) pick it up from there.
+    # Mailers::DeliveryJob picks it up and routes it via Events::EmailRoutes.
     it "publishes user.signed_up through Events::PublishService" do
       user = build(:user)
       allow(Events::PublishService).to receive(:call)

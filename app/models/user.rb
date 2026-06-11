@@ -1,6 +1,17 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
+  # Lets any User be embedded in Action Text as an @mention attachment, so a
+  # conversation can mention every participant — not only the curated subset
+  # that has an Employee (HR) record. Lexxy's @-prompt inserts an
+  # <action-text-attachment> carrying this record's signed global id; Action
+  # Text resolves it back to the User on render via the `users/_user` partial.
+  include ActionText::Attachable
+
+  # Marks the stored attachment so Lexxy's `<lexxy-prompt name="mention">`
+  # activates for it and Action Text renders mentions through our partial.
+  MENTION_CONTENT_TYPE = "application/vnd.actiontext.mention"
+
   devise :database_authenticatable, :registerable, :confirmable,
          :recoverable, :rememberable, :validatable,
          :omniauthable, omniauth_providers: %i[google_oauth2 github]
@@ -46,8 +57,9 @@ class User < ApplicationRecord
   after_create_commit :enqueue_welcome_email
 
   # Route Devise notification emails (confirmation, password reset, …) through
-  # the fan-out event bus. Mailers::DeviseNotificationJob picks them up and
-  # enqueues them onto the centralized email outbox at high priority.
+  # the fan-out event bus. Mailers::DeliveryJob picks them up (via the
+  # devise.notification entry in Events::EmailRoutes) and enqueues them onto the
+  # centralized email outbox at high priority.
   def send_devise_notification(notification, *args)
     Events::PublishService.call(
       event:        "devise.notification",
@@ -63,6 +75,33 @@ class User < ApplicationRecord
   def after_confirmation
     super
     Users::PostConfirmationFacade.call(user: self)
+  end
+
+  # Content type Action Text stamps on the stored attachment. Must match the
+  # `name` on the matching `<lexxy-prompt>` (so "mention" -> this value).
+  def content_type
+    MENTION_CONTENT_TYPE
+  end
+
+  # The @handle shown in the mention pill / prompt. Prefers the Employee handle
+  # (curated, org-unique) and otherwise derives a readable one from the email
+  # local-part so mentions still work for users without an Employee record.
+  def mention_handle
+    employee&.handle.presence ||
+      Employee.normalize_handle(email.to_s.split("@").first).presence ||
+      "user"
+  end
+
+  # Human label shown in the prompt menu, mirroring user_avatar_label so the
+  # mention UI matches avatars elsewhere.
+  def mention_label
+    employee&.display_name.presence || email.to_s.split("@").first
+  end
+
+  # Plain-text form of a mention. Action Text calls this when flattening a rich
+  # body to plain text, keeping previews/search readable as "@handle".
+  def attachable_plain_text_representation(_caption = nil)
+    "@#{mention_handle}"
   end
 
   def organisation_admin?

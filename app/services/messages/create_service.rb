@@ -10,10 +10,10 @@
 # attachments). The canonical plain text in `body` is derived from that rich
 # content and is what notification previews and search read.
 #
-# @mentions arrive as Action Text attachments carrying each mentioned
-# employee's signed global id, so the mentioned users are read straight off the
-# resolved attachables (no handle re-parsing) and persisted as MessageMention
-# rows inside the same transaction as the message.
+# @mentions arrive as Action Text attachments carrying each mentioned user's
+# signed global id, so the mentioned users are read straight off the resolved
+# attachables (no handle re-parsing) and persisted as MessageMention rows inside
+# the same transaction as the message.
 module Messages
   class CreateService < ApplicationService
     def initialize(conversation:, user:, body: nil, body_text: nil)
@@ -65,7 +65,7 @@ module Messages
     def persist_mentions(message)
       return if message.body_text.body.blank?
 
-      mentioned_user_ids = message.body_text.body.attachables.grep(Employee).map(&:user_id).uniq
+      mentioned_user_ids = message.body_text.body.attachables.grep(User).map(&:id).uniq
       return if mentioned_user_ids.empty?
 
       user_ids = @conversation.participants
