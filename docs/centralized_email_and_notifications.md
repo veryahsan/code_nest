@@ -137,11 +137,19 @@ mail, options are to shorten the tick, run a dedicated faster tick for `high`,
 or give the `high` tier a direct fast lane that still passes through the
 rate limiter.
 
-### Call sites migrated onto the outbox
+### Generic email channel onto the outbox
 
-- `User#send_devise_notification` -> `high` ([app/models/user.rb](../app/models/user.rb)).
-- `Invitations::CreationFacade` -> `default` ([app/facades/invitations/creation_facade.rb](../app/facades/invitations/creation_facade.rb)).
-- `Mailers::WelcomeEmailJob` -> `low`, triggered by `User#after_create_commit` (skips super admins) ([app/jobs/mailers/welcome_email_job.rb](../app/jobs/mailers/welcome_email_job.rb)).
+All email events go through a single generic subscriber,
+`Mailers::DeliveryJob` ([app/jobs/mailers/delivery_job.rb](../app/jobs/mailers/delivery_job.rb)),
+which looks the event up in the declarative `Events::EmailRoutes` registry
+([app/services/events/email_routes.rb](../app/services/events/email_routes.rb))
+and enqueues the resulting mailer invocation onto the outbox. Adding an email
+for a new event is a registry row, not a new job class. Current routes:
+
+- `devise.notification` -> `high` (transactional Devise mail).
+- `invitation.created` -> `default`; `invitation.accepted` -> `low`.
+- `user.signed_up` -> `low` (skips super admins).
+- `project_membership.created` -> `default`.
 
 ### Testing
 
@@ -150,37 +158,41 @@ The test environment points `REDIS_POOL` at a single in-memory `MockRedis`
 and rate-limiter specs exercise real list/sorted-set semantics without a
 running Redis server.
 
-## Part 2 - Notifications and mentions (future phase)
+## Part 2 - Notifications and mentions
 
-Not yet implemented. The intended design extends the same fan-out principle to
-in-app notifications and real-time delivery.
+Implemented. The same fan-out principle drives in-app notifications, through a
+generic notification channel mirroring the email one.
 
 ```mermaid
 flowchart LR
-  msg["Message#after_create_commit"] --> bus["Events::Publish"]
-  bus --> rt["ConversationChannel broadcast (exists)"]
-  bus --> scan["Mentions::ScanJob"]
-  bus --> fan["Notifications::FanoutJob"]
-  scan --> notif[("Notification rows")]
-  fan --> notif
+  msg["Message#after_create_commit"] --> bus["Events::PublishService"]
+  bus --> rt["ConversationChannel broadcast (parallel)"]
+  bus --> nd["Notifications::DeliveryJob"]
+  nd --> rec["Notifications::RecordJob (per recipient)"]
+  rec --> notif[("Notification rows")]
   notif --> nchan["NotificationsChannel<br/>(per-user stream)"]
-  fan -.optional email.-> outbox["Mailers::Outbox"]
 ```
 
-Planned pieces:
+Pieces:
 
-- `Events::PublishService` - a small registry mapping a domain event name to a
-  set of subscriber jobs, each enqueued onto its appropriate Sidekiq queue so
-  handlers run concurrently.
-- `Notification` model - the in-app notification record (recipient, actor,
-  notifiable, kind, read state), written per recipient.
-- `NotificationsChannel` - a per-user Action Cable stream mirroring the
-  participation gating used by `ConversationChannel`
-  ([app/channels/conversation_channel.rb](../app/channels/conversation_channel.rb)).
-- `Mentions::ScanJob` - parses `@handles` out of `Message#body` and emits a
-  `user.mentioned` event per mentioned user.
-- Per-recipient fan-out for group messages, inserting notifications in bulk and
-  optionally enqueuing email through `Mailers::Outbox`.
+- `Events::PublishService` - registry mapping a domain event name to the generic
+  channel jobs (`Mailers::DeliveryJob`, `Notifications::DeliveryJob`), each
+  enqueued independently so channels fail in isolation.
+- `Events::NotificationRoutes` - declarative per-event registry returning the
+  deliveries (recipients, actor, notifiable, kind). One event can yield several
+  deliveries (e.g. `message.created` -> `message_created` for all participants
+  plus `user_mentioned` for mentions).
+- `Notifications::DeliveryJob` - generic dispatcher; enqueues one
+  `Notifications::RecordJob` per recipient.
+- `Notifications::RecordJob` - upserts the `Notification` row (idempotent on
+  recipient + notifiable + kind) and broadcasts to `NotificationsChannel`.
+- `Notification` model - the in-app notification record (recipient, optional
+  actor, polymorphic notifiable, kind, read state), written per recipient.
+- `NotificationsChannel` - a per-user Action Cable stream.
+
+Events currently producing notifications: `message.created`,
+`invitation.accepted` (notifies the inviter), `project_membership.created`
+(notifies the added user).
 
 Design notes for that phase:
 
