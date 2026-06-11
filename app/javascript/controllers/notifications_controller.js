@@ -89,15 +89,34 @@ export default class extends Controller {
 
     const actor = document.createElement("span")
     actor.className = "block truncate font-medium text-base-color"
-    actor.textContent = data.actor_label || "Someone"
-    const caption = document.createElement("span")
-    caption.className = "font-normal text-muted-color"
-    caption.textContent =
-      data.kind === "user_mentioned" ? " mentioned you" : " sent a message"
-    actor.appendChild(caption)
+
+    let lead = data.actor_label || "Someone"
+    let captionText = ""
+    switch (data.kind) {
+      case "user_mentioned":
+        captionText = "mentioned you"
+        break
+      case "invitation_accepted":
+        captionText = "accepted your invitation"
+        break
+      case "project_membership_created":
+        lead = `You were added to ${data.body_preview || "a project"}`
+        break
+      default:
+        captionText = "sent a message"
+    }
+
+    actor.textContent = lead
+    if (captionText) {
+      const caption = document.createElement("span")
+      caption.className = "font-normal text-muted-color"
+      caption.textContent = ` ${captionText}`
+      actor.appendChild(caption)
+    }
     body.appendChild(actor)
 
-    if (data.body_preview) {
+    // The project name is already shown in the lead, so skip the preview line.
+    if (data.body_preview && data.kind !== "project_membership_created") {
       const preview = document.createElement("span")
       preview.className = "block truncate text-xs text-muted-color"
       preview.textContent = data.body_preview
