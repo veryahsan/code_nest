@@ -6,7 +6,7 @@
 # unauthenticated sockets), so current_user is always present here. No further
 # participation check is needed — users only receive their own notifications.
 #
-# Broadcasts are sent by Notifications::DeliverJob whenever a Notification row
+# Broadcasts are sent by Notifications::RecordJob whenever a Notification row
 # is created for this user.
 class NotificationsChannel < ApplicationCable::Channel
   def subscribed

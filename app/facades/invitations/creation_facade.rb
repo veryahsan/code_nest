@@ -2,8 +2,8 @@
 
 # Creates a pending Invitation, sets a default expiry (14 days), and
 # publishes an "invitation.created" event through the fan-out bus.
-# Mailers::InvitationEmailJob picks it up and enqueues it onto the centralized
-# email outbox at default priority.
+# Mailers::DeliveryJob picks it up (via Events::EmailRoutes) and enqueues it
+# onto the centralized email outbox at default priority.
 module Invitations
   class CreationFacade < ApplicationFacade
     DEFAULT_EXPIRY = 14.days

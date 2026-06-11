@@ -54,4 +54,15 @@ RSpec.describe Invitations::AcceptFacade, type: :facade do
     invitation.update_column(:expires_at, 1.hour.ago)
     expect(described_class.call(token: invitation.token)).to be_failure
   end
+
+  it "publishes invitation.accepted after a successful acceptance" do
+    invitation # realise the record (and its inviter) before spying
+    allow(Events::PublishService).to receive(:call).and_call_original
+
+    result = described_class.call(token: invitation.token, password: "newpass12345")
+
+    expect(result).to be_success
+    expect(Events::PublishService).to have_received(:call)
+      .with(event: "invitation.accepted", invitation: invitation)
+  end
 end

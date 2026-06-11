@@ -1,0 +1,14 @@
+<h2>You've been added to <%= @project.name %></h2>
+
+<p>
+  You're now a member of <strong><%= @project.name %></strong> in
+  <strong><%= @organisation.name %></strong> on Code Nest.
+</p>
+
+<% if @project.description.present? %>
+  <p><%= @project.description %></p>
+<% end %>
+
+<p>
+  <a href="<%= @project_url %>">Open the project</a>
+</p>

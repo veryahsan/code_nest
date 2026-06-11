@@ -1,0 +1,6 @@
+Invitation accepted.
+
+<%= @accepted_email %> has accepted your invitation to join <%= @organisation.name %>
+on Code Nest as a <%= @invitation.invite_admin? ? "organisation administrator" : "member" %>.
+
+View your organisation's invitations: <%= @members_url %>

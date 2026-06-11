@@ -1,0 +1,11 @@
+<h2>Invitation accepted</h2>
+
+<p>
+  <strong><%= @accepted_email %></strong> has accepted your invitation to join
+  <strong><%= @organisation.name %></strong> on Code Nest as a
+  <strong><%= @invitation.invite_admin? ? "organisation administrator" : "member" %></strong>.
+</p>
+
+<p>
+  <a href="<%= @members_url %>">View your organisation's invitations</a>
+</p>

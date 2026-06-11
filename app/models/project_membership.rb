@@ -19,6 +19,7 @@ class ProjectMembership < ApplicationRecord
   validate :within_capacity, on: :create
 
   after_create_commit :join_project_group
+  after_create_commit :publish_membership_event
   after_destroy_commit :leave_project_group
 
   def self.ransackable_attributes(_auth_object = nil)
@@ -60,5 +61,12 @@ class ProjectMembership < ApplicationRecord
 
   def leave_project_group
     project.group_conversation&.remove_participant(user)
+  end
+
+  # Fan out to the email + notification channels (the added user is told they
+  # were added to the project). Published after commit so subscribers never see
+  # uncommitted data, and from the model so every creation path is covered.
+  def publish_membership_event
+    Events::PublishService.call(event: "project_membership.created", project_membership: self)
   end
 end

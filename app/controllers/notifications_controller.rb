@@ -31,13 +31,16 @@ class NotificationsController < ApplicationController
     @notification = current_user.notifications.find(params[:id])
   end
 
-  # Resolve where a notification should take the user. Today every notifiable
-  # is a Message, so we land on its conversation; unknown types fall back to
-  # the notifications list.
+  # Resolve where a notification should take the user, based on its notifiable:
+  # a Message lands on its conversation, a Project on the project page, an
+  # accepted Invitation on the invitations list. Unknown/deleted notifiables
+  # fall back to the notifications list.
   def notification_target_path(notification)
-    notifiable = notification.notifiable
-    return conversation_path(notifiable.conversation_id) if notifiable.is_a?(Message)
-
-    notifications_path
+    case notification.notifiable
+    when Message    then conversation_path(notification.notifiable.conversation_id)
+    when Project    then project_path(notification.notifiable)
+    when Invitation then invitations_path
+    else notifications_path
+    end
   end
 end

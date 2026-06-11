@@ -57,4 +57,17 @@ RSpec.describe ProjectMembership, type: :model do
       expect(project.group_conversation.participant?(user)).to be false
     end
   end
+
+  describe "event publishing" do
+    it "publishes project_membership.created on create" do
+      project = create(:project)
+      user = create(:user, organisation: project.organisation)
+      allow(Events::PublishService).to receive(:call).and_call_original
+
+      membership = create(:project_membership, project: project, user: user)
+
+      expect(Events::PublishService).to have_received(:call)
+        .with(event: "project_membership.created", project_membership: membership)
+    end
+  end
 end

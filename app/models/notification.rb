@@ -2,16 +2,18 @@
 
 # A single in-app notification delivered to one recipient.
 #
-# Created by Notifications::FanoutJob when a domain event occurs (e.g. a new
-# message in a conversation the recipient participates in). The same job also
-# broadcasts the payload to NotificationsChannel so connected clients receive
-# the badge update in real time.
+# Created by Notifications::RecordJob when a domain event occurs (the fan-out
+# bus routes events through Events::NotificationRoutes -> Notifications::
+# DeliveryJob -> RecordJob). The same job also broadcasts the payload to
+# NotificationsChannel so connected clients receive the badge update in real
+# time. The notifiable is polymorphic (Message, Project, Invitation, …) and the
+# actor is optional (system notifications have none).
 #
 # Uniqueness (recipient + notifiable + kind) prevents duplicate rows when a job
 # retries — use find_or_create_by! on those three columns when inserting.
 class Notification < ApplicationRecord
   belongs_to :recipient, class_name: "User"
-  belongs_to :actor,     class_name: "User"
+  belongs_to :actor,     class_name: "User", optional: true
   belongs_to :notifiable, polymorphic: true
 
   validates :kind, presence: true

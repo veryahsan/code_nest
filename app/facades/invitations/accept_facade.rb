@@ -44,6 +44,10 @@ module Invitations
         invitation.update!(accepted_at: Time.current)
       end
 
+      # Published after the transaction commits (per the post-commit convention)
+      # so the fan-out bus notifies the inviter their invitation was accepted.
+      Events::PublishService.call(event: "invitation.accepted", invitation: invitation)
+
       success(@user)
     end
 
