@@ -70,8 +70,9 @@ Rails.application.routes.draw do
   end
 
   # Real-time messaging: direct messages and group conversations.
-  resources :conversations, only: %i[index show new create] do
+  resources :conversations, only: %i[index show new create destroy] do
     resources :messages, only: %i[index create], controller: "conversations/messages"
+    resources :participants, only: %i[destroy], controller: "conversations/participants"
     member do
       patch :read
     end

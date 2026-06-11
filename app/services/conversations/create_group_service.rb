@@ -26,7 +26,7 @@ module Conversations
           title: @title,
           created_by: @creator,
         )
-        conversation.conversation_participants.create!(user: @creator)
+        conversation.conversation_participants.create!(user: @creator, admin: true)
         members.each do |member|
           next if member == @creator
 

@@ -45,6 +45,21 @@ class Conversation < ApplicationRecord
     conversation_participants.exists?(user_id: user.id)
   end
 
+  # Group admins can manage the group (remove members, delete it). The
+  # creator is seeded as admin; the flag lives on conversation_participants.
+  def admin?(user)
+    return false if user.blank?
+
+    conversation_participants.exists?(user_id: user.id, admin: true)
+  end
+
+  # Whether this conversation can be managed from the messaging UI. Only
+  # standalone groups qualify: project channels are driven by the project's
+  # roster and are removed when the project is deleted, and DMs have no admin.
+  def manageable?
+    group? && project_id.nil?
+  end
+
   def add_participant(user)
     return if user.blank?
 

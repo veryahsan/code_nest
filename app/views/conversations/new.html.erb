@@ -10,7 +10,7 @@
 
 <div class="flex justify-center">
   <%= render "components/card", extra_class: "w-full max-w-2xl" do %>
-    <%= form_with url: conversations_path, method: :post, class: "space-y-4", local: true do |f| %>
+    <%= form_with url: conversations_path, method: :post, class: "space-y-6", local: true do |f| %>
       <%= render "components/form_group", label: "Group name", for_id: "title", required: true do %>
         <%= f.text_field :title, id: "title", autofocus: true, class: input_classes %>
       <% end %>
@@ -19,7 +19,7 @@
             label: "Members",
             hint: "Pick up to #{Conversation::GROUP_CAPACITY - 1} people. You're added automatically." do %>
         <% if @contacts.any? %>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto">
             <% @contacts.each do |u| %>
               <label class="inline-flex items-center gap-2 text-sm">
                 <%= check_box_tag "user_ids[]", u.id, false, class: "rounded border-zinc-300 dark:border-zinc-700" %>

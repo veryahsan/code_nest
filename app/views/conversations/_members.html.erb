@@ -1,0 +1,40 @@
+<%# Roster for a group conversation. `conversation` is required. Admins
+    (ConversationPolicy#remove_member?) see a per-row Remove control; the
+    last remaining admin is never removable (also enforced server-side). %>
+<% can_manage = policy(conversation).remove_member? %>
+<% participants = conversation.conversation_participants.includes(user: :employee).to_a %>
+<% admin_count = participants.count(&:admin?) %>
+
+<ul class="divide-y divide-surface">
+  <% participants.each do |cp| %>
+    <% member = cp.user %>
+    <li class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+      <div class="flex min-w-0 items-center gap-3">
+        <%= user_avatar_tag(member, css: "h-9 w-9") %>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <p class="truncate text-sm font-medium text-base-color">
+              <%= user_avatar_label(member) %>
+              <% if member == current_user %><span class="text-muted-color">(you)</span><% end %>
+            </p>
+            <% if cp.admin? %>
+              <%= badge_tag "Admin", variant: :brand, dot: true %>
+            <% end %>
+          </div>
+          <p class="truncate text-xs text-muted-color"><%= member.email %></p>
+        </div>
+      </div>
+
+      <% if can_manage %>
+        <% removable = !(cp.admin? && admin_count <= 1) %>
+        <% if removable %>
+          <%= button_to "Remove",
+                conversation_participant_path(conversation, cp),
+                method: :delete,
+                data: { turbo_confirm: "Remove #{user_avatar_label(member)} from the group?" },
+                class: "btn-base btn-ghost btn-sm shrink-0" %>
+        <% end %>
+      <% end %>
+    </li>
+  <% end %>
+</ul>

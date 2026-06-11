@@ -12,11 +12,11 @@
   <div class="lg:col-span-2">
     <%= render "components/card", title: "Conversations" do %>
       <% if @conversations.any? %>
-        <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 -mx-1">
+        <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
           <% @conversations.each do |conversation| %>
-            <li class="py-3 first:pt-0">
+            <li class="py-4 first:pt-0">
               <%= link_to conversation_path(conversation),
-                    class: "flex items-center justify-between gap-3 rounded-lg px-1 py-1 hover:bg-zinc-50 dark:hover:bg-zinc-800/50" do %>
+                    class: "flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50" do %>
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
                     <%= conversation.display_title(current_user) %>

@@ -5,7 +5,7 @@
 # initial render, history, and conversation creation.
 class ConversationsController < ApplicationController
   before_action :authenticate_user!
-  before_action :load_conversation, only: %i[show read]
+  before_action :load_conversation, only: %i[show read destroy]
 
   def index
     @conversations = policy_scope(Conversation)
@@ -54,6 +54,14 @@ class ConversationsController < ApplicationController
   def read
     mark_read
     head :no_content
+  end
+
+  # Delete a standalone group. Authorised via ConversationPolicy#destroy?
+  # (group admin or super_admin); participants and messages cascade via
+  # `dependent: :destroy`.
+  def destroy
+    @conversation.destroy
+    redirect_to conversations_path, notice: "Group deleted."
   end
 
   private
