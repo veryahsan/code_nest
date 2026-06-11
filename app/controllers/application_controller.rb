@@ -10,7 +10,23 @@ class ApplicationController < ActionController::Base
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
+  # Actions opted into the generic show-page overlay. These always render inside
+  # the `modal` Turbo Frame — both when reached via a frame request (a link with
+  # data-turbo-frame="modal") and on a direct/full load (hard reload, bookmark,
+  # typed URL), so the page is the modal rather than a full-page render.
+  class_attribute :modal_show_actions, default: [], instance_writer: false
+
+  # Declare which actions should render in the overlay.
+  #   show_in_modal :show
+  def self.show_in_modal(*actions)
+    self.modal_show_actions = actions.map(&:to_sym)
+  end
+
   private
+
+  def modal_show_request?
+    self.class.modal_show_actions.include?(action_name.to_sym)
+  end
 
   def user_not_authorized(_exception)
     flash[:alert] = "You are not authorized to perform this action."
@@ -33,6 +49,10 @@ class ApplicationController < ActionController::Base
 
       return "turbo_frame"
     end
+
+    # Direct/full load of an overlay action: still render the modal, now on top
+    # of the signed-in chrome (see layouts/modal_show.html.erb).
+    return "modal_show" if user_signed_in? && modal_show_request?
 
     "application"
   end

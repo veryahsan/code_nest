@@ -3,6 +3,8 @@
 class EmployeesController < ApplicationController
   include TenantScoped
 
+  show_in_modal :show
+
   before_action :load_employee, only: %i[show edit update destroy]
   before_action :build_employee, only: %i[new create]
 

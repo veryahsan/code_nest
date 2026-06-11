@@ -1,0 +1,24 @@
+<%# Persistent show-page overlay host. Links targeting this frame render their
+    show page inside a 95vw/95vh modal (see layouts/modal_show.html.erb); the
+    modal-frame controller toggles the overlay chrome on/off.
+
+    Locals:
+      body          optional pre-rendered overlay markup to seed the frame with
+                    on a direct/full load, so the modal is visible immediately
+                    without a second request. Defaults to empty (the frame is
+                    filled lazily by a link click).
+      fallback_url  where to navigate when the modal is closed but there is no
+                    in-app history to go back to (i.e. the show page was deep
+                    loaded). Only relevant when `body` is seeded. %>
+<% body         = local_assigns.fetch(:body, nil) %>
+<% fallback_url = local_assigns.fetch(:fallback_url, nil) %>
+<%= turbo_frame_tag "modal",
+      class: ("hidden" unless body.present?),
+      data: {
+        controller: "modal-frame",
+        turbo_action: "advance",
+        action: "turbo:frame-load->modal-frame#onFrameLoad",
+        modal_frame_fallback_url_value: fallback_url
+      }.compact do %>
+  <%= body %>
+<% end %>

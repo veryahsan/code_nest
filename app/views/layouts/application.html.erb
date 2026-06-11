@@ -3,48 +3,7 @@
       data-controller="theme"
       data-theme-default-value="system">
   <head>
-    <title><%= content_for(:title) || "Code Nest" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1C2333">
-
-    <%# Avoid FOUC: apply stored theme (Aqua dark / light) before first paint. %>
-    <script>
-      (function() {
-        const t = localStorage.getItem("cn-theme") || "system";
-        const dark = t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.classList.toggle("dark", dark);
-        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-        const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute("content", dark ? "#1C2333" : "#F8FAFC");
-      })();
-    </script>
-
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
-
-    <meta name="turbo-prefetch" content="false">
-
-    <%# Lexxy resets its editor on turbo:before-cache, so a cached snapshot/preview
-        restores an empty editor (the composer fails to render after a frame
-        navigation). Opt out of Turbo's snapshot cache so pages always render fresh. %>
-    <meta name="turbo-cache-control" content="no-cache">
-
-    <%= yield :head %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Brand display face — Space Grotesk for the logo wordmark. %>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-
-    <%= stylesheet_link_tag "lexxy", "data-turbo-track": "reload" %>
-    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
-    <%= javascript_importmap_tags %>
+    <%= render "shared/app_head" %>
   </head>
 
   <body class="min-h-full bg-surface text-base-color">
@@ -61,16 +20,7 @@
         </main>
       </div>
 
-      <%# Generic show-page overlay. Links targeting this frame render their
-          show page inside a 95vw/95vh modal (see layouts/modal_show.html.erb);
-          the modal-frame controller toggles the overlay chrome on/off. %>
-      <%= turbo_frame_tag "modal",
-            class: "hidden",
-            data: {
-              controller: "modal-frame",
-              turbo_action: "advance",
-              action: "turbo:frame-load->modal-frame#onFrameLoad"
-            } %>
+      <%= render "shared/modal_host" %>
     <% else %>
       <div class="flex min-h-full flex-col">
         <%= render "shared/navbar" %>

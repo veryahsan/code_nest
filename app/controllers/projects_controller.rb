@@ -3,6 +3,8 @@
 class ProjectsController < ApplicationController
   include TenantScoped
 
+  show_in_modal :show
+
   before_action :load_project, only: %i[show edit update destroy]
   before_action :build_project, only: %i[new create]
 

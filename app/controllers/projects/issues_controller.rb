@@ -4,6 +4,8 @@ module Projects
   class IssuesController < ApplicationController
     include TenantScoped
 
+    show_in_modal :show
+
     before_action :load_project
     before_action :load_issue, only: %i[show edit update destroy]
 
